@@ -1,0 +1,169 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{estilo_capstone}
+
+\titulo{Plan de pruebas — Evento Cultural}
+\subtitulo{Plan de pruebas y evidencias (artefacto 7 del marco ágil, anexo metodológico)}
+\autor{Roberto Riffo · José Miguel Moncada (QA) · David Herrera}
+\fecha{25 de septiembre de 2026}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\definecolor{rojo}{HTML}{B03A3A}   % misma definición del documento técnico
+
+\begin{document}
+\maketitlecapstone
+
+\section{Propósito y alcance}
+
+Este plan organiza la verificación del proyecto según la exigencia del anexo
+metodológico (pruebas unitarias, de integración, de rendimiento y de seguridad)
+y la relaciona con los requisitos no funcionales priorizados en Fase 1
+(RNF-01 a RNF-12) y con la verificación ya ejecutada. Declara el estado real:
+lo ejecutado con su resultado, y lo pendiente sin asumirlo como hecho.
+
+\section{Estado actual de las pruebas}
+
+\begin{table}[h!]
+\centering\small
+\begin{tabular}{@{}L{5.2cm}L{4.6cm}L{5.0cm}@{}}
+\toprule
+\textbf{Suite} & \textbf{Alcance} & \textbf{Comando} \\
+\midrule
+Pruebas unitarias del scraper (14 módulos) & Conectores, normalización, filtro cultural, deduplicación, checkpoints y exportación & \code{python -m unittest discover -s tests -v} \\
+Pruebas del frontend (Vitest) & Servicios y lógica de componentes & \code{npm test} \\
+\bottomrule
+\end{tabular}
+\caption{Suites de pruebas existentes y su ejecución.}
+\end{table}
+
+\section{Cobertura por requisito no funcional}
+
+\begin{longtable}{@{}L{1.6cm}L{4.4cm}L{3.6cm}L{5.2cm}@{}}
+\toprule
+\textbf{RNF} & \textbf{Requisito} & \textbf{Tipo de prueba} & \textbf{Estado} \\
+\midrule
+\endhead
+RNF-01 & Interfaz clara e intuitiva & Usabilidad & Pendiente: evaluación con usuarios (ver §5) \\
+RNF-02 & Diseño responsive / multiplataforma & Funcional manual & \textbf{Ejecutada}: desbordes revisados en 320--1440 px; verificación manual en navegador y emulador de dispositivos \\
+RNF-03 & Tiempos de carga aceptables & Rendimiento & Parcial: skeletons y estados de carga implementados; medición formal pendiente \\
+RNF-04 & Protección de datos de usuarios y organizadores & Seguridad & Pendiente en frontend (no hay datos personales: estado mock); RLS de Supabase documentada, validación de políticas pendiente \\
+RNF-04 & Control de acceso por rol & Seguridad & Pendiente: autenticación real no conectada \\
+RNF-06 & Disponibilidad del servicio & Disponibilidad & Parcial: workflow de GitHub Actions operativo con ejecución manual y cron diario activo desde el 24-09 (verificado en GitHub Actions: corridas \#9--\#11 del 25 al 27-09); pendiente una ejecución automática completa tras corregir la prueba dependiente del tiempo (§5.1) \\
+RNF-07 & Soporte de crecimiento de datos & Rendimiento & Parcial: paginación/búsqueda indexada no medida con volumen real \\
+RNF-08 & Consistencia y normalización & Funcional automatizada & \textbf{Ejecutada}: pruebas del pipeline (normalización y deduplicación) en la suite del scraper \\
+RNF-09 & Código mantenible y documentado & Estático & \code{npm run lint} sin errores; lint de Python por revisión manual \\
+RNF-10 & Contenido en español y contexto chileno & Funcional manual & \textbf{Ejecutada}: interfaz en es-CL; catálogo con comunas y regiones de Chile \\
+RNF-11 & Despliegue reproducible & Integración & En curso: workflow del scraper desplegado y en testeo del despliegue (evidencia de GitHub Actions); alojamiento web en Vercel y conversión a app con Capacitor en preparación \\
+RNF-11/12 & Accesibilidad web & Accesibilidad & Parcial: contraste AA/AAA calculado, teclado y foco verificados en navegador; prueba con lectores de pantalla pendiente \\
+\bottomrule
+\end{longtable}
+
+\section{Pruebas pendientes según el anexo}
+
+\begin{table}[h!]
+\centering\small
+\begin{tabular}{@{}L{3.4cm}L{11.4cm}@{}}
+\toprule
+\textbf{Tipo (anexo)} & \textbf{Plan para cubrirla} \\
+\midrule
+Integración & End-to-end scraper$\rightarrow$Supabase$\rightarrow$frontend: ejecutar el pipeline con sincronización a Supabase y validar el catálogo resultante; y conexión real del frontend a Supabase (hoy mock), verificando el contrato de \code{recomendacion.model.ts} \\
+Rendimiento & Medir tiempos de carga del frontend con el catálogo sincronizado y la consulta a Supabase en volumen; repetir \code{cargarEventos} con datos reales \\
+Seguridad & Validar las políticas RLS de Supabase con roles reales (anónimo, autenticado) y revisar el manejo de secretos del workflow \\
+Usabilidad (RNF-01) & Evaluación con usuarios objetivo; puede integrarse con la validación de historias de usuario HU-01--15 \\
+\bottomrule
+\end{tabular}
+\caption{Pruebas pendientes y cómo se cubrirán.}
+\end{table}
+
+\subsection{Planificación de las pruebas pendientes}
+
+La planificación se organiza en tres bloques en cascada, porque cada uno habilita al
+siguiente; el orden respeta la situación real del proyecto (datos de ejemplo en el
+frontend, integración con Supabase pendiente):
+
+\begin{enumerate}[leftmargin=1.6em]
+    \item \textbf{Bloque 1 --- Integración de datos (habilita a los demás):}
+    sincronización scraper$\rightarrow$Supabase con validación del catálogo resultante
+    (RNF-06/08); conexión real del frontend a Supabase sustituyendo
+    \code{data/mock-eventos.ts}, verificando el contrato de \code{recomendacion.model.ts}.
+    \emph{Criterio de salida:} el catálogo consultado por el frontend proviene de
+    Supabase y las pruebas de la suite del scraper pasan contra el entorno real.
+    \item \textbf{Bloque 2 --- Medición sobre datos reales:} tiempos de carga del
+    frontend (RNF-03), consulta a Supabase con volumen real (RNF-07) y validación de
+    políticas RLS con roles reales (RNF-04/05). \emph{Criterio de salida:} métricas
+    registradas en la §5 con fecha y volumen de eventos.
+    \item \textbf{Bloque 3 --- Validación con usuarios y accesibilidad:} evaluación de
+    usabilidad (RNF-01) integrada con la revisión de HU-01--15, y prueba con lectores
+    de pantalla (RNF-12). \emph{Criterio de salida:} acta de resultados por historia y
+    registro de hallazgos de accesibilidad.
+\end{enumerate}
+
+Los bloques 1 y 2 dependen del despliegue/estado del catálogo real; el bloque 3 puede
+planificarse en paralelo al 2. Cada ejecución se agrega a la §5 sin reescribir el
+histórico, y el responsable de cada bloque queda \textcolor{capstoneprimario}{\textbf{por
+asignar por el equipo}} (roles de referencia: BD/QA para bloques 1 y 2, Frontend/UX para
+el 3).
+
+\section{Registro de resultados}
+
+Los resultados de las pruebas ya ejecutadas están documentados en la
+documentación técnica (\code{Documento\_Tecnico\_Capstone}, sección de pruebas)
+y en el control de cambios del frontend. Este plan se actualizará con cada
+ronda de pruebas; los resultados nuevos se agregan sin reescribir el histórico.
+
+\subsection{Incidencia de integración continua (27-09-2026)}
+
+Fallo registrado en GitHub Actions durante la ejecución automática de la suite del
+scraper (corrida \#11, \code{scrape-events.yml}, disparo programado del cron diario,
+27-09-2026 09:12 UTC, commit \code{63e310c}; verificado contra la API pública de
+GitHub Actions). Se consigna aquí como registro detallado del incidente (no existe un
+artefacto separado de incidencias en el repositorio).
+
+\begin{table}[h!]
+\centering\small
+\begin{tabular}{@{}L{3.4cm}L{11.4cm}@{}}
+\toprule
+\textbf{Campo} & \textbf{Detalle} \\
+\midrule
+Fecha & 27-09-2026 \\
+Componente & Scraper de eventos culturales \\
+Entorno & GitHub Actions (integración continua), corrida \#11 de \code{scrape-events.yml} \\
+Tipo & Fallo de prueba automatizada dependiente del tiempo \\
+Severidad & Baja \\
+Impacto & Ninguno en producción; bloqueo del workflow antes de ejecutar la extracción (pasos de extracción y sincronización saltados) \\
+Prueba afectada & \code{test\_ceina\_cards\_are\_mapped\_to\_canonical\_event\_fields} \\
+Resultado & 138 pruebas ejecutadas: 137 correctas, 1 fallida (\code{AssertionError: 0 != 1}) \\
+Causa raíz & La prueba simulaba un evento de CEINA entre el 24 y el 26-09-2026 y congelaba la fecha del parser en el 21-09 (\code{chile\_now}); la comprobación de vigencia \code{is\_upcoming()} de \code{sanitization.py} no estaba bajo ese reloj simulado y usó la fecha real de ejecución (27-09), descartando el evento como vencido. Verificado en el código fuente del repositorio: \code{tests/test\_event\_sources.py} y \code{eventos/sanitization.py} \\
+Aclaración & No se evidenció caída de CEINA ni fallo de Supabase, NVIDIA o del proceso real de extracción; los mensajes \code{ERROR:root} del registro eran excepciones simuladas por pruebas que finalizaron correctamente \\
+Acción correctiva & Congelar en la prueba tanto la fecha utilizada por el parser como la utilizada por \code{is\_upcoming()} (reloj controlado); recomendación extendida a toda prueba que evalúe vigencia \\
+Estado & \textcolor{rojo}{\textbf{Pendiente de corrección}}: no se marca resuelto sin evidencia de una ejecución posterior exitosa (la corrida del 26-09, \#10, sí pasó; la falla específica surgió al vencer las fechas simuladas) \\
+Criterios de cierre & (1) la prueba específica termina correctamente; (2) las 138 pruebas terminan correctamente; (3) GitHub Actions finaliza con código de salida 0 \\
+Aprendizaje & Las pruebas que evalúan vigencia de eventos deben utilizar un reloj controlado y no depender de la fecha real del sistema \\
+\bottomrule
+\end{tabular}
+\caption{Incidencia de CI: prueba dependiente del tiempo en la suite del scraper.}
+\label{tab:incidencia-ci}
+\end{table}
+
+\begin{pendienteenv}
+resultados medibles (tiempos, cobertura, volumen) a medida que se ejecuten las
+pruebas pendientes de la §4.
+\end{pendienteenv}
+
+\subsection{Limitación operativa: capa gratuita de NVIDIA Build}
+
+Las pruebas que involucran el enriquecimiento con IA están sujetas a la cuota de la
+capa gratuita de \textbf{NVIDIA Build} (modelos en la nube, 40 peticiones por minuto
+global): no se puede planificar una batería intensiva de pruebas sobre el pipeline
+completo sin agotar la cuota ni saturar la latencia. Por ello, las corridas de prueba
+del pipeline deben planificarse por muestras (subconjuntos de fuentes o de fichas) y
+aprovechar el mecanismo de checkpoints, que evita reprocesar lo ya completado. Si la
+ejecución se interrumpe por la cuota, se reanuda sin repetir trabajo.
+
+\begin{pendienteenv}
+calendario de corridas de prueba (fechas y tamaño de muestra) una vez que el equipo
+defina la ventana de pruebas del bloque 1.
+\end{pendienteenv}
+
+\end{document}

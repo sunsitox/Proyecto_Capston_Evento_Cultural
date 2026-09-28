@@ -1,0 +1,226 @@
+% =====================================================================
+% PARTE 1 — Arquitecturas (general, scraper, frontend)
+% =====================================================================
+
+\section{Arquitectura general del sistema}
+\label{sec:arq}
+
+\subsection{Visión general}
+
+El sistema sigue una arquitectura de tres bloques desacoplados que se comunican a través de
+la base de datos, más un actor de automatización:
+
+\begin{itemize}[leftmargin=1.4em]
+    \item \textbf{Scraper (Python):} recolecta eventos desde fuentes públicas chilenas,
+    los normaliza y los enriquece selectivamente con NVIDIA NIM.
+    \item \textbf{Base de datos (Supabase/PostgreSQL):} catálogo canónico con Row Level
+    Security, bitácora de ejecuciones y evidencia de extracción.
+    \item \textbf{Frontend (Angular 22 + Ionic 9):} aplicación web y móvil para descubrir,
+    filtrar y publicar eventos.
+    \item \textbf{GitHub Actions:} automatiza la ejecución del scraper, ejecuta las pruebas
+    y sincroniza la base de datos.
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{01_arquitectura_general.pdf}
+\caption{Arquitectura general del sistema (fuente editable: \texttt{Diagramas/01\_arquitectura\_general.mmd}, Mermaid).}
+\label{fig:arq}
+\end{figure}
+
+\subsection{Comunicación entre servicios}
+
+\begin{table}[ht]
+\centering\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{p{3.4cm} p{4.0cm} p{7.4cm}}
+\toprule
+\textbf{Origen $\rightarrow$ Destino} & \textbf{Mecanismo} & \textbf{Detalle} \\
+\midrule
+GitHub Actions $\rightarrow$ Scraper & Ejecución de \texttt{scrape\_events.py} & Fases separables (\texttt{-{}-phase extract} / \texttt{-{}-phase process}); estado restaurado por artefactos \\
+Scraper $\rightarrow$ Fuentes & HTTP directo o Playwright & Caché condicional (ETag/Last-Modified), límites por dominio, respeto de \texttt{robots.txt} y \texttt{Retry-After} \\
+Scraper $\rightarrow$ NVIDIA NIM & API de inferencia & Limitador global de 40 RPM con reintentos \\
+Scraper $\rightarrow$ SQLite & Checkpoints por fuente y ficha & Reanudación de OCR/IA pendiente en futuras ejecuciones \\
+Scraper $\rightarrow$ Supabase & API REST (upserts idempotentes) & Carga por lotes (\texttt{SUPABASE\_BATCH\_SIZE}); borrado de vencidos y conciliación configurables \\
+Frontend $\rightarrow$ Supabase & Cliente/API REST & \textbf{Pendiente:} hoy consume datos de ejemplo en memoria \\
+\bottomrule
+\end{tabular}
+\caption{Comunicación entre servicios del sistema.}
+\label{tab:com}
+\end{table}
+
+Cada fuente se procesa de manera independiente: si una falla, las demás continúan. Solo se
+publican eventos vigentes; la conciliación retira registros antiguos únicamente cuando la
+extracción fue completa y segura (diagrama de arquitectura de Fase 2).
+
+\subsection{Estado de la integración frontend--base de datos}
+
+El frontend entregado funciona con \textbf{datos de ejemplo en memoria}
+(\texttt{src/app/data/mock-eventos.ts}) según su propio README; los formularios de inicio de
+sesión y publicación simulan el flujo. La documentación del scraper y del frontend define el
+punto de integración futuro (\texttt{EventosService}). \seccionpendiente{cronograma y
+responsables de la conexión real a Supabase y de la autenticación real.}
+
+\section{Arquitectura del scraper}
+\label{sec:scraper}
+
+\subsection{Modelo general}
+
+Pipeline por fases con conectores intercambiables. Los ejecutables de la raíz
+(\texttt{scrape\_events.py}, \texttt{add\_source.py}, \texttt{validate\_sources.py}) reciben
+la orden; el trabajo reside en el paquete \texttt{eventos/}. El flujo principal, según
+\texttt{docs/ARCHITECTURE.md}, es:
+
+\begin{enumerate}[leftmargin=1.6em]
+    \item \texttt{SourceRepository} carga y valida los archivos de \texttt{sources/}.
+    \item El pipeline agrupa fuentes por dominio y las procesa con un pool acotado.
+    \item \texttt{ConnectorFactory} selecciona una Strategy según el campo \texttt{connector};
+    cada conector devuelve objetos \texttt{Event} con el mismo esquema.
+    \item \texttt{EventSanitizer} limpia los campos, limita descripciones y descarta vencidos.
+    \item Deduplicación por fuente y global, fijando el identificador estable.
+    \item \texttt{LocationNormalizer} aplica valores por defecto, reglas y, solo si falta
+    información, IA.
+    \item Filtro regional y ubicación canónica.
+    \item \texttt{DatasetExporter} escribe el respaldo local (JSON/CSV por región).
+    \item Si Supabase está habilitado, \texttt{SupabaseExporter} sincroniza con upserts
+    idempotentes y elimina vencidos remotos.
+\end{enumerate}
+
+\subsection{Conectores y fuentes}
+
+\begin{table}[ht]
+\centering\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{l p{9.2cm}}
+\toprule
+\textbf{Conector} & \textbf{Uso} \\
+\midrule
+\texttt{wordpress\_rest} & APIs WordPress REST con \texttt{field\_map} declarativo \\
+\texttt{json\_api} & APIs JSON genéricas con paginación \\
+\texttt{json\_ld} & Sitios con datos estructurados Schema.org \\
+\texttt{html\_cards} & Carteleras HTML estáticas con selectores CSS declarativos \\
+\texttt{eventon}, \texttt{tribe} & Plugins de eventos (EventON, The Events Calendar) \\
+\texttt{ticketplus}, \texttt{maipu}, \texttt{fisa} & Conectores especializados \\
+\texttt{generic} & Busca JSON-LD primero; usa NVIDIA NIM solo si faltan datos estructurados \\
+\bottomrule
+\end{tabular}
+\caption{Conectores disponibles en el paquete \texttt{eventos/connectors/}.}
+\label{tab:conn}
+\end{table}
+
+Las fuentes se declaran en \texttt{sources/*.json}: 20 permanentes más 1 estacional de
+septiembre (tabla completa en el README del scraper), con plantillas por familia en
+\texttt{sources/templates/}.
+
+\subsection{Enriquecimiento selectivo con NVIDIA NIM}
+
+Solo los eventos nuevos o modificados pasan por OCR, normalización de ubicación y redacción
+editorial; los eventos sin cambios se reutilizan por hash de entrada. Las tareas pendientes
+quedan en la cola persistente del checkpoint SQLite y se recuperan en ejecuciones futuras.
+El limitador global \texttt{NVIDIA\_RPM\_LIMIT=40} espacia las peticiones aunque varios
+conectores terminen simultáneamente.
+
+\subsection{Pipeline reanudable y concurrencia}
+
+Cada fuente y resultado de IA se guarda en \texttt{state/pipeline.sqlite3} (ver
+\texttt{docs/RESUMABLE\_PIPELINE.md}). El workflow de GitHub Actions restaura y conserva este
+estado mediante artefactos. Con \texttt{SOURCE\_WORKERS=4} se crean trabajadores internos;
+las fuentes de un mismo dominio se procesan en serie (\emph{bulkhead} por dominio) y la
+salida es determinista. La caché HTTP condicional persistente (ETag/Last-Modified) evita
+descargas innecesarias.
+
+\subsection{Patrones de diseño aplicados}
+
+Strategy (conectores), Registry/Factory, Repository, inyección de dependencias para pruebas,
+Adapter (\texttt{SupabaseExporter}), Chain of Responsibility (ubicación), Rate Limiter global
+(NVIDIA), Bulkhead por dominio, Cache-Aside condicional y post-processing pipeline
+obligatorio de saneamiento y vigencia (un conector nuevo no puede saltárselo).
+
+\subsection{Pendientes de la arquitectura del scraper}
+
+\begin{itemize}[leftmargin=1.4em]
+    \item La periodicidad del workflow quedó resuelta: el bloque \texttt{schedule}
+    está activo desde el 24-09-2026 con cron diario a las 00:37 (America/Santiago),
+    verificado en GitHub Actions (corridas \#9--\#11 del 25 al 27-09-2026). Queda como
+    mejora pendiente congelar el reloj en las pruebas de vigencia para que las corridas
+    programadas no fallen por fechas simuladas vencidas (ver sección de pruebas).
+    \seccionpendiente{primera ejecución automática completa con la suite en verde.}
+    \item La carpeta \texttt{supabase/} con las migraciones SQL no está incluida en la copia
+    entregada (la documentación la referencia). \seccionpendiente{confirmar su presencia en
+    el repositorio oficial.}
+\end{itemize}
+
+\section{Arquitectura del frontend}
+\label{sec:frontend}
+
+\subsection{Stack real}
+
+\begin{table}[ht]
+\centering\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{l l}
+\toprule
+\textbf{Componente} & \textbf{Versión} \\
+\midrule
+Angular & 22.0.1 (componentes standalone, sin NgModules) \\
+Ionic Framework & \textasciicircum 9.0.0 \\
+Capacitor & 8.x (app, haptics, keyboard, status-bar) \\
+TypeScript & \textasciitilde 6.0.0 \\
+Pruebas & Vitest \textasciicircum 4.0.8 (con jsdom) \\
+Lint & ESLint \textasciicircum 9.16.0 + angular-eslint 22.0.0 \\
+\bottomrule
+\end{tabular}
+\caption{Stack del frontend según \texttt{package.json}.}
+\label{tab:stack}
+\end{table}
+
+\subsection{Estructura y navegación}
+
+La aplicación organiza el código en \texttt{core/} (modelos \texttt{Evento} y
+\texttt{Recomendacion}; servicios con signals: \texttt{EventosService},
+\texttt{RecomendacionService}, \texttt{ToastService} y \texttt{ViewPreferencesService}),
+\texttt{features/home/} (descubrimiento y layouts de inicio), \texttt{layout/}
+(\texttt{MainLayoutComponent}) y \texttt{pages/}. Las rutas registradas
+(\texttt{app.routes.ts}) son: \texttt{/home}, \texttt{/para-ti}, \texttt{/calendario},
+\texttt{/mapa}, \texttt{/evento/:id}, \texttt{/publicar}, \texttt{/perfil} y \texttt{/login},
+con redirecciones de compatibilidad (\texttt{/buscar} y \texttt{/favoritos}).
+
+La navegación es adaptativa sin JavaScript adicional: tab bar inferior en móvil y barra
+superior en escritorio, ambas dentro de \texttt{MainLayoutComponent} mediante las clases
+responsive de Ionic. La identidad visual (paleta terracota/verde/ámbar y tipografías
+Fraunces/Inter) está centralizada en \texttt{src/theme/variables.scss}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.92\textwidth]{02_componentes.pdf}
+\caption{Diagrama de componentes del sistema (fuente editable: \texttt{Diagramas/02\_componentes.mmd}, Mermaid).}
+\label{fig:comp}
+\end{figure}
+
+\subsection{Filtros y funcionalidad}
+
+\texttt{EventosService} implementa orden por fecha, nombre, categoría, cercanía y
+actualización, y filtros combinables: texto, categorías múltiples, región, comuna, rango de
+fechas, gratuito, modalidad (presencial/virtual/híbrido), público objetivo y accesibilidad.
+La vista ``para ti'' (\texttt{RecomendacionService}) sustituyó a favoritos como experiencia
+de recomendación.
+
+\subsection{Estrategia de despliegue}
+
+Decisión del equipo (comunicada el 24-09-2026), consistente con el stack definido en Fase 1:
+
+\begin{itemize}[leftmargin=1.4em]
+    \item \textbf{Web:} despliegue en \textbf{Vercel} (ya figuraba como hosting previsto en
+    el design brief de Fase 1). A la fecha no existe evidencia de un despliegue ejecutado.
+    \item \textbf{Android:} la aplicación móvil se compila con \textbf{Capacitor 8}
+    (dependencias presentes en \texttt{package.json}) y \textbf{Android Studio}.
+    \item \textbf{Scraper:} automatización con \textbf{GitHub Actions} (workflow
+    \texttt{scrape-events.yml}).
+    \item \textbf{No se utilizará Docker} como mecanismo de despliegue
+    (ver Sección~\ref{sec:docker}).
+\end{itemize}
+
+\subsection{Pendientes del frontend}
+
+\seccionpendiente{conexión real a Supabase (sustituir los datos mock por el cliente de la
+API), activación de la autenticación real y persistencia de favoritos del usuario.}

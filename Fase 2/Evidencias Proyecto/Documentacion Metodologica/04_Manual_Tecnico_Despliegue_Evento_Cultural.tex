@@ -1,0 +1,148 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{estilo_capstone}
+
+\titulo{Manual técnico y de despliegue — Evento Cultural}
+\subtitulo{Manual técnico/despliegue (artefacto 8 del marco ágil, anexo metodológico)}
+\autor{Roberto Riffo (frontend) · José Miguel Moncada (BD/QA) · David Herrera (backend e integraciones)}
+\fecha{25 de septiembre de 2026}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\begin{document}
+\maketitlecapstone
+
+\section{Composición del sistema}
+
+\begin{table}[h!]
+\centering\small
+\begin{tabular}{@{}L{3.2cm}L{5.4cm}L{6.2cm}@{}}
+\toprule
+\textbf{Parte} & \textbf{Tecnología} & \textbf{Rol} \\
+\midrule
+Scraper & Python (conectores, NVIDIA NIM, checkpoints SQLite) & Recolección, normalización y enriquecimiento de eventos desde 21 fuentes públicas \\
+Base de datos & Supabase (PostgreSQL + RLS) & Catálogo canónico, bitácora de ejecuciones y evidencia de extracción \\
+Frontend & Angular 22 + Ionic 9 (web y móvil) & Descubrimiento: búsqueda, filtros, mapa, calendario y recomendaciones \\
+Automatización & GitHub Actions & Ejecución periódica/manual del scraper con pruebas \\
+\bottomrule
+\end{tabular}
+\caption{Componentes del sistema.}
+\end{table}
+
+\section{Ejecución local}
+
+\subsection{Scraper (Windows)}
+
+\begin{verbatim}
+instalar.bat        REM crea venv, instala dependencias y Chromium de Playwright
+ejecutar.bat        REM pipeline completo (extraccion + exportacion + sincronizacion opcional)
+python -m unittest discover -s tests -v
+\end{verbatim}
+
+Las variables de entorno se documentan en \code{.env.example} del proyecto;
+incluyen credenciales de Supabase y el endpoint de NVIDIA NIM. \textbf{No}
+versionar secretos: el workflow los consume como secretos de GitHub.
+
+\subsection{Frontend}
+
+\begin{verbatim}
+npm install
+npm start           # ng serve en http://localhost:8100
+ng test             # pruebas (Vitest)
+npx ng build --configuration production
+\end{verbatim}
+
+En Windows existen además \code{install.bat} y \code{run.bat} para el entorno
+local. El frontend funciona con catálogo mock en memoria; la conexión a
+Supabase es un pendiente declarado.
+
+\section{Estrategia de despliegue (sin Docker)}
+
+El equipo decidió \textbf{no usar Docker}; el anexo metodológico se cumple
+documentando esta decisión y el estado real. El despliegue se compone así:
+
+El sistema no se aloja en contenedores: las plataformas de alojamiento y
+automatización son GitHub Actions, Vercel y Capacitor. El estado de cada
+componente:
+
+\begin{table}[h!]
+\centering\small
+\begin{tabular}{@{}L{3.0cm}L{5.6cm}L{6.2cm}@{}}
+\toprule
+\textbf{Componente} & \textbf{Plataforma} & \textbf{Estado} \\
+\midrule
+Scraper & GitHub Actions (workflow \code{scrape-events.yml}) & \textbf{Desplegado, con ejecución manual y cron diario activo} desde el 24-09 (00:37, America/Santiago; corridas \#9--\#11 verificadas del 25 al 27-09, evidencia en Evidencias Proyecto); la corrida del 27-09 falló en pruebas (Plan de pruebas §5.1) \\
+Web & Vercel & La página se alojará en Vercel: despliegue en preparación \\
+Móvil (Android) & Capacitor 8 + Android Studio & La misma web se convertirá en aplicación mediante Capacitor 8: conversión en preparación (dependencias presentes en \code{package.json}) \\
+\bottomrule
+\end{tabular}
+\caption{Estrategia de despliegue por componente y su estado real.}
+\end{table}
+
+\subsection{Scraper en GitHub Actions (desplegado, en testeo)}
+
+\begin{itemize}
+  \item El workflow está desplegado y el equipo se encuentra probando el
+        despliegue: correr el pipeline con pruebas y sincronización a
+        Supabase, usando secretos de repositorio (nunca credenciales en el
+        código).
+  \item Evidencia de ejecución: captura \code{Evidencia\_ejecución\_scraper\_en
+        \_GitHub\_Actions.PNG} en Evidencias Proyecto.
+  \item La periodicidad ya está definida y activa: \code{schedule} con cron diario
+        a las 00:37 (America/Santiago) desde el 24-09. Para dar el despliegue por
+        completado, el equipo debe corregir la prueba dependiente del tiempo del 27-09
+        (Plan de pruebas §5.1) y obtener una corrida programada completa en verde.
+\end{itemize}
+
+\subsection{Web en Vercel (alojamiento en preparación)}
+
+\begin{enumerate}
+  \item Conectar el repositorio del frontend a Vercel (framework Angular/Ionic
+        detectado automáticamente o con \code{ng build --configuration
+        production} como comando de build).
+  \item Configurar variables de entorno de Supabase en el proyecto de Vercel
+        (mismas claves que \code{.env.example}).
+  \item Publicar y registrar la URL como evidencia de despliegue.
+\end{enumerate}
+
+\subsection{De la web a la app: Capacitor (conversión en preparación)}
+
+La aplicación Android es la misma web envuelta con Capacitor; pasos de la
+conversión:
+
+\begin{enumerate}
+  \item \code{npx cap add android} (si la plataforma no existe) y
+        \code{npx cap sync}.
+  \item Abrir en Android Studio, compilar el APK/AAB de prueba y registrar la
+        evidencia de la compilación.
+\end{enumerate}
+
+\section{Variables de entorno}
+
+\begin{table}[h!]
+\centering\small
+\begin{tabular}{@{}L{5.2cm}L{9.6cm}@{}}
+\toprule
+\textbf{Grupo} & \textbf{Uso} \\
+\midrule
+Supabase (URL y clave de servicio) & Sincronización del scraper y, en el futuro, del frontend \\
+NVIDIA NIM (endpoint y clave) & Enriquecimiento de eventos en el pipeline \\
+\bottomrule
+\end{tabular}
+\caption{Grupos de variables de entorno (nombres exactos en \code{.env.example}).}
+\end{table}
+
+\section{Solución de problemas comunes}
+
+\begin{itemize}
+  \item \textbf{Pipeline detenido a mitad:} los checkpoints en SQLite permiten
+        reanudar; volver a ejecutar \code{ejecutar.bat}.
+  \item \textbf{Consola del navegador con rechazos de View Transitions:} los
+        rechazos benignos ya se suprimen en \code{main.ts}; cualquier otro
+        error de consola se trata como falla de la verificación.
+  \item \textbf{Puerto 8100 ocupado:} liberar el proceso de \code{ng serve}
+        previo.
+\end{itemize}
+
+\end{document}

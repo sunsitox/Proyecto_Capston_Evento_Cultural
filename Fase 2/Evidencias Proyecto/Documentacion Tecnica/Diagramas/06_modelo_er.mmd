@@ -1,0 +1,107 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial, Helvetica, sans-serif","fontSize":"13px","primaryColor":"#FBF7F2","primaryTextColor":"#1F1A14","primaryBorderColor":"#5A4D42","lineColor":"#5A4D42"}}}%%
+erDiagram
+  %% ===== Nucleo del scraper =====
+  sources ||--o{ events : "1:N"
+  organizers |o--o{ events : "0..1 : N"
+  communes |o--o{ events : "0..1 : N"
+  categories ||--o{ event_categories : "1:N"
+  events ||--o{ event_categories : "1:N"
+  events ||--o{ media_assets : "1:N"
+  events ||--o| event_provenance : "1 : 0..1"
+  events ||--o{ favorites : "1:N"
+  profiles ||--o{ favorites : "1:N"
+  events ||--o{ reports : "1:N"
+  profiles ||--o{ reports : "1:N"
+
+  sources {
+    uuid id PK
+    text name
+    text website_url
+    boolean is_active
+    timestamp last_seen_at
+    timestamp created_at
+    timestamp updated_at
+  }
+  organizers {
+    uuid id PK
+    text name
+    text entity_type
+  }
+  communes {
+    uuid id PK
+    text name
+    text region
+    text country
+  }
+  categories {
+    uuid id PK
+    text name
+  }
+  events {
+    uuid id PK "UUID v5 determinista"
+    text external_key UK "clave externa unica"
+    uuid source_id FK "hacia sources"
+    uuid organizer_id FK "hacia organizers"
+    uuid commune_id FK "hacia communes"
+    text title
+    timestamp start_at
+    timestamp end_at
+    text venue
+    text address
+    text city
+    text region
+    text country
+    text status
+    text audience
+    boolean is_free
+    text description
+    text price_text
+    text currency
+    text image_url
+    text source_url
+    text official_url
+    text extraction_method
+    timestamp scraped_at
+    timestamp last_seen_at
+  }
+  event_categories {
+    uuid event_id FK
+    uuid category_id FK
+  }
+  media_assets {
+    uuid id PK
+    uuid event_id FK
+    text tipo
+    text url
+    jsonb metadata
+  }
+  event_provenance {
+    uuid id PK
+    uuid event_id FK
+    text texto_original
+    text ocr
+    text url_canonica
+  }
+  scrape_runs {
+    uuid id PK
+    timestamp started_at
+    timestamp finished_at
+    text status "running o succeeded o failed"
+    integer events_count
+    text error_message
+    jsonb metadata
+  }
+  profiles {
+    uuid id PK
+    text role "RLS"
+  }
+  favorites {
+    uuid user_id FK
+    uuid event_id FK
+  }
+  reports {
+    uuid id PK
+    uuid user_id FK
+    uuid event_id FK
+    text estado
+  }

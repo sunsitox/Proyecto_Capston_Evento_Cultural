@@ -1,0 +1,85 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{estilo_capstone}
+
+\titulo{Definition of Done — Evento Cultural}
+\subtitulo{Criterios de terminación del trabajo (artefacto 4 del marco ágil, anexo metodológico)}
+\autor{Roberto Riffo · José Miguel Moncada · David Herrera}
+\fecha{25 de septiembre de 2026}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\begin{document}
+\maketitlecapstone
+
+\section{Propósito y alcance}
+
+Este documento define los criterios que debe cumplir una historia de usuario o
+tarea del equipo para considerarse \textbf{terminada}. Se elabora a partir de
+los criterios de aceptación ya definidos en el backlog de historias de usuario
+(\code{Historias\_de\_Usuario\_Plataforma\_Cultural.xlsx}) y en la matriz de
+requerimientos adaptada a Fase 2
+(\code{Requerimientos\_...\_MoSCoW\_ADAPTADO\_Fase2.xlsx}). No declara
+verificaciones que el equipo no haya ejecutado: dónde falta ratificar un
+criterio, se marca como pendiente de decisión del equipo.
+
+\section{Criterios de terminación}
+
+\begin{enumerate}
+  \item \textbf{Funcionalidad implementada} según la historia o tarea, sin
+        funcionalidad inventada: lo declarado como implementado debe existir en
+        el código.
+  \item \textbf{Datos vigentes:} ninguna vista muestra eventos vencidos; el
+        estado del evento se deriva de sus fechas o se declara explícitamente
+        (suspendido/cancelado).
+  \item \textbf{Origen del dato visible:} todo evento presenta su
+        \code{fuente} y \code{ultimaComprobacion}; los enlaces no disponibles
+        se muestran como tales, sin anclas rotas.
+  \item \textbf{Verificación del frontend aprobada:} \code{ng build
+        --configuration production}, \code{npm run lint} y \code{npm test}
+        (Vitest) sin errores, y consola del navegador limpia en el recorrido de
+        la funcionalidad.
+  \item \textbf{Verificación del scraper aprobada:} la prueba unitaria del
+        módulo o conector afectado pasa (\code{python -m unittest discover -s
+        tests}), y la ejecución completa del pipeline termina sin error,
+        dejando registro en la bitácora de ejecuciones.
+  \item \textbf{Accesibilidad mínima verificada:} recorrido por teclado,
+        foco visible, \code{aria-pressed}/\code{aria-live} donde corresponde y
+        áreas táctiles de al menos 44 px, conforme a la verificación previa del
+        frontend.
+  \item \textbf{Estados de interfaz completos:} carga (skeleton), vacío y
+        error con recuperación (``Reintentar'' / ``Limpiar filtros'').
+  \item \textbf{Diseño con tokens:} sin colores ni medidas hardcodeadas; el
+        estilo consume los tokens primitivos \code{--pr-*} y semánticos
+        \code{--ec-*}.
+  \item \textbf{Movimiento reducido respetado:} las animaciones nuevas se
+        desactivan o reducen con \code{prefers-reduced-motion}.
+  \item \textbf{Documentación al día:} si el cambio afecta pantallas,
+        servicios o el modelo de datos, la documentación técnica del frontend
+        (\code{documentacion-frontend.tex}, control de cambios §14) o la del
+        scraper se actualiza en la misma intervención.
+  \item \textbf{Historia documentada:} la historia de usuario queda con su
+        criterio de aceptación, prioridad MoSCoW y estado de evidencia en el
+        backlog; la fila correspondiente del tablero Trello se cierra.
+  \item \textbf{Sin secretos ni credenciales} en el repositorio; las
+        variables de entorno van documentadas en \code{.env.example}.
+\end{enumerate}
+
+\section{Criterios para historias de recomendación (``para ti'')}
+
+Además de los anteriores, una historia del sistema de recomendaciones se
+considera terminada cuando: cada recomendación muestra un motivo legible para
+la persona (``Porque exploraste\ldots''), el puntaje de afinidad se compone de
+las señales registradas en la visita, y ``No me interesa'' retira el evento de
+las recomendaciones de forma inmediata.
+
+\section{Pendiente de decisión del equipo}
+
+\begin{pendienteenv}
+ratificación de este Definition of Done por los tres integrantes y, si el
+equipo lo aprueba, su publicación en el tablero Trello como parte del flujo
+Scrumban.
+\end{pendienteenv}
+
+\end{document}

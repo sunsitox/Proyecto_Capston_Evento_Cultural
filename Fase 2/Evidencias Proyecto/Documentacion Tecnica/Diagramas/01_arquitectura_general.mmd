@@ -1,0 +1,71 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial, Helvetica, sans-serif","fontSize":"13px","primaryColor":"#FBF7F2","primaryTextColor":"#1F1A14","primaryBorderColor":"#5A4D42","lineColor":"#5A4D42","clusterBkg":"transparent","clusterBorder":"#5A4D42"},"flowchart":{"curve":"basis","nodeSpacing":36,"rankSpacing":46,"htmlLabels":true}}}%%
+flowchart TB
+  T["Diagrama de arquitectura general — Evento Cultural"]
+  classDef tit fill:#C9622D,stroke:#8A4520,color:#FFFFFF,font-weight:bold
+  classDef caja fill:#FFFFFF,stroke:#5A4D42,color:#1F1A14
+  classDef nv fill:#FCF6E3,stroke:#B98A2D,color:#1F1A14
+  classDef sup fill:#EEF6F5,stroke:#1F5C57,color:#1F1A14
+  classDef fe fill:#F2ECF8,stroke:#6B4E9B,color:#1F1A14
+  classDef mock fill:#FBF0EF,stroke:#B03A3A,color:#1F1A14
+  classDef gha fill:#F4F4F4,stroke:#8A8A8A,color:#444444
+  classDef hostc fill:#FFFFFF,stroke:#9A9A9A,color:#444444
+
+  SRC["Fuentes públicas chilenas<br/>(21 agendas configuradas)"]
+  GHA["GitHub Actions<br/>workflow scrape-events.yml"]
+  NIM["NVIDIA NIM<br/>(40 RPM globales)"]
+  USR["Visitante / Organizador<br/>(web y móvil)"]
+  HOST["Vercel<br/>(hosting previsto, sin evidencia de despliegue)"]
+
+  subgraph G1["Scraper (Python)"]
+    PIPE["<b>pipeline.py</b><br/>Orquestación por fases"]
+    CONN["<b>connectors/</b><br/>Strategy por familia de fuentes"]
+    NVD["<b>services/nvidia.py</b><br/>OCR · ubicación · redacción"]
+    ST["<b>state.py — checkpoints</b><br/>SQLite (reanudable)"]
+    EXP["<b>exporters.py</b><br/>JSON / CSV por región"]
+    SAN["Sanitización · filtro cultural<br/>deduplicación · ubicación"]
+  end
+
+  subgraph G2["Supabase — PostgreSQL + RLS"]
+    B1["events · categories<br/>event_categories · media_assets"]
+    B2["sources · organizers<br/>communes · scrape_runs"]
+    B3["event_provenance<br/>(evidencia privada)"]
+    B4["profiles · favorites · reports<br/>(app futura · RLS)"]
+  end
+
+  subgraph G3["Frontend — Angular 22 + Ionic 9"]
+    F1["Pages: home · mapa · calendario<br/>para-ti · detalle · publicar"]
+    F2["core/services (signals):<br/>Eventos · Recomendaciones"]
+    F3["Navegación adaptativa<br/>(tab bar móvil / nav escritorio)"]
+    F4["data/mock-eventos.ts<br/>(datos de ejemplo)"]
+  end
+
+  SRC -->|"HTTP · Playwright"| G1
+  GHA -->|ejecuta| G1
+  NIM -->|"IA selectiva"| G1
+  PIPE -->|"fuentes validadas"| CONN
+  CONN -->|"Event normalizado"| SAN
+  SAN -->|"respaldo local"| EXP
+  PIPE -->|"solo nuevos/modificados"| NVD
+  PIPE -->|checkpoint| ST
+  G1 -->|"upsert idempotente"| G2
+  F1 --> F2
+  F2 -.->|"consume hoy"| F4
+  G2 -.->|"integración pendiente<br/>(hoy mock)"| G3
+  USR -->|consulta| G3
+  G3 -.->|"despliegue previsto"| HOST
+
+  style G1 fill:#FAF3EC,stroke:#C9622D
+  style G2 fill:#EEF6F5,stroke:#1F5C57
+  style G3 fill:#F2ECF8,stroke:#6B4E9B
+  class T tit
+  class SRC sup
+  class GHA gha
+  class NIM nv
+  class USR fe
+  class HOST hostc
+  class PIPE,CONN,ST,EXP,SAN caja
+  class NVD nv
+  class B1,B2,B3,B4 caja
+  class F1,F2,F3 caja
+  class F4 mock
+  linkStyle default stroke-width:1.5px

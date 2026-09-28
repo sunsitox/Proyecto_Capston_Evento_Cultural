@@ -1,0 +1,66 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial, Helvetica, sans-serif","fontSize":"13px","primaryColor":"#FBF7F2","primaryTextColor":"#1F1A14","primaryBorderColor":"#5A4D42","lineColor":"#5A4D42"},"class":{"hideEmptyMembersBox":true}}}%%
+classDiagram
+  direction TB
+
+  class EventPipeline {
+    -fuentes : SourceRepository
+    -fase : extract | process
+    +run() void
+    -deduplicar() void
+    -filtrar_regional() void
+  }
+  class ConnectorFactory {
+    -registro : Registry
+    +crear(cfg) Connector
+    }
+  class Connector {
+    <<interface>>
+    +collect() Event[]
+    }
+  class SourceConfig {
+    +connector : str
+    +url : str
+    +field_map : dict
+    +worker : int
+  }
+  class Event {
+    +id : UUID v5
+    +external_key : str
+    +title : str
+    +start_at : datetime
+    +location_canonical : str
+    +categories : list~str~
+  }
+  class EventSanitizer {
+    +limpiar(e) void
+  }
+  class LocationNormalizer {
+    +normalizar(e) void
+  }
+  class NvidiaService {
+    +ocr() void
+    +redactar() void
+    +enriquecer_ubicacion() void
+  }
+  class SupabaseExporter {
+    +upsert(eventos) void
+    +eliminar_vencidos() void
+  }
+  class DatasetExporter {
+    +escribir_json_csv() void
+  }
+  class PipelineState {
+    +checkpoint(fuente, hash) void
+    +cola_ia_pendiente() list
+  }
+
+  EventPipeline ..> ConnectorFactory : usa
+  EventPipeline --> "1..*" Connector : ejecuta
+  Connector --> "0..*" Event : produce
+  ConnectorFactory ..> SourceConfig : lee
+  EventPipeline ..> EventSanitizer : aplica
+  EventPipeline ..> LocationNormalizer : aplica
+  EventPipeline ..> DatasetExporter : escribe
+  EventPipeline ..> SupabaseExporter : sincroniza (opcional)
+  EventPipeline ..> NvidiaService : enriquece (selectivo)
+  EventPipeline ..> PipelineState : persiste

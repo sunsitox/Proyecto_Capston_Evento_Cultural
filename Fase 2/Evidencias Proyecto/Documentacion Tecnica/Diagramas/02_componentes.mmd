@@ -1,0 +1,69 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial, Helvetica, sans-serif","fontSize":"13px","primaryColor":"#FBF7F2","primaryTextColor":"#1F1A14","primaryBorderColor":"#5A4D42","lineColor":"#5A4D42","clusterBkg":"transparent","clusterBorder":"#5A4D42"},"flowchart":{"curve":"basis","nodeSpacing":36,"rankSpacing":46,"htmlLabels":true}}}%%
+flowchart TB
+  T["Diagrama de componentes — Evento Cultural"]
+  classDef tit fill:#C9622D,stroke:#8A4520,color:#FFFFFF,font-weight:bold
+  classDef caja fill:#FFFFFF,stroke:#5A4D42,color:#1F1A14
+  classDef nv fill:#FCF6E3,stroke:#B98A2D,color:#1F1A14
+  classDef sup fill:#EEF6F5,stroke:#1F5C57,color:#1F1A14
+  classDef fe fill:#F2ECF8,stroke:#6B4E9B,color:#1F1A14
+  classDef mock fill:#FBF0EF,stroke:#B03A3A,color:#1F1A14
+  classDef gha fill:#F4F4F4,stroke:#8A8A8A,color:#444444
+  classDef nota fill:#FBF0EF,stroke:#B03A3A,color:#1F1A14,font-style:italic
+
+  subgraph FE["Frontend (Angular 22 + Ionic 9)"]
+    SHELL["<b>MainLayoutComponent</b><br/>navegación adaptativa"]
+    PAGES["<b>Pages</b><br/>home · mapa · calendario · para-ti<br/>detalle · publicar · login · perfil"]
+    ROUTES["<b>app.routes.ts</b><br/>rutas con carga diferida"]
+    DISC["<b>features/home</b><br/>discover · layouts de inicio"]
+    SVC["<b>core/services</b><br/>EventosService · RecomendacionService<br/>toast · view-preferences"]
+    MODELS["<b>core/models</b><br/>Evento · Recomendacion"]
+    MOCK["<b>data/mock-eventos.ts</b><br/>(datos de ejemplo)"]
+  end
+
+  subgraph SC["Scraper (Python)"]
+    CLI["<b>scrape_events.py</b><br/>CLI y fases"]
+    PIPE["<b>pipeline.py</b><br/>orquestación"]
+    CONN["<b>connectors/</b><br/>Strategy por familia de fuentes"]
+    SAN["sanitization · cultural_filter<br/>consolidation · locations"]
+    NVD["<b>services/nvidia.py</b><br/>OCR · redacción"]
+    STT["<b>state.py</b><br/>checkpoints SQLite"]
+    EXP["<b>exporters</b><br/>JSON/CSV · Supabase"]
+  end
+
+  DB["<b>Supabase</b><br/>PostgreSQL + Row Level Security"]
+  GHA["GitHub Actions<br/>workflow scrape-events.yml"]
+  NIM["NVIDIA NIM<br/>(40 RPM globales)"]
+  USR["Usuario final<br/>(web y móvil)"]
+  NOTA["Nota: el frontend aún no consume la API;<br/>usa datos mock (mock-eventos.ts)."]
+
+  SHELL --> PAGES
+  ROUTES -.->|declara| PAGES
+  PAGES -->|usa| SVC
+  SVC -->|usa| MODELS
+  SVC -.->|"consume hoy"| MOCK
+  DISC -->|usa| SVC
+  CLI --> PIPE
+  PIPE --> CONN
+  CONN --> SAN
+  SAN --> EXP
+  PIPE -.->|selectivo| NVD
+  PIPE --> STT
+  EXP -->|"upsert idempotente"| DB
+  SVC -.->|"integración pendiente"| DB
+  GHA -->|ejecuta| SC
+  NIM -->|"IA selectiva"| SC
+  USR -->|consulta| FE
+
+  style FE fill:#F2ECF8,stroke:#6B4E9B
+  style SC fill:#FAF3EC,stroke:#C9622D
+  class T tit
+  class SHELL,PAGES,ROUTES,DISC,SVC,MODELS caja
+  class MOCK mock
+  class CLI,PIPE,CONN,SAN,STT,EXP caja
+  class NVD nv
+  class DB sup
+  class GHA gha
+  class NIM nv
+  class USR fe
+  class NOTA nota
+  linkStyle default stroke-width:1.5px

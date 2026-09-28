@@ -1,0 +1,95 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Helvetica, Arial, sans-serif","fontSize":"13px","primaryColor":"#FFFFFF","primaryTextColor":"#1F1A14","primaryBorderColor":"#6C8EBF","lineColor":"#6C8EBF","clusterBkg":"transparent","clusterBorder":"#6C8EBF"},"flowchart":{"curve":"basis","nodeSpacing":40,"rankSpacing":50,"htmlLabels":true}}}%%
+flowchart TB
+  classDef tit fill:#6a3fc9,stroke:#4a2b8f,color:#FFFFFF,font-weight:bold
+  classDef api fill:#EBF3FF,stroke:#6C8EBF,color:#1F1A14
+  classDef cfg fill:#FFF4E6,stroke:#D79B00,color:#1F1A14
+  classDef proc fill:#EAF7EE,stroke:#82B366,color:#1F1A14
+  classDef db fill:#E3F2FD,stroke:#10739E,color:#1F1A14
+  classDef gha fill:#F4F4F4,stroke:#8A8A8A,color:#444444
+  classDef nota fill:#FFFDE7,stroke:#B98A2D,color:#1F1A14
+  classDef cloud fill:#FFFFFF,stroke:#6C8EBF,color:#1F1A14,stroke-dasharray:5 3
+
+  T["Arquitectura del scraper — Evento Cultural"]
+
+  subgraph SF["Fuentes externas"]
+    direction LR
+    A1(["APIs públicas<br/>Chile Cultura · WordPress"])
+    A2(["Carteleras HTML<br/>Municipios y centros culturales"])
+    A3(["Tiqueteras<br/>Ticketplus y otras"])
+    A4(["Páginas dinámicas<br/>Playwright"])
+  end
+
+  subgraph CE["Configuración y extracción"]
+    direction TB
+    J["Archivos JSON<br/>de fuentes"]
+    FC["Factory de conectores"]
+    C["Conectores especializados"]
+    H["Cliente HTTP<br/>(caché y límites por dominio)"]
+    PW["Cliente Playwright<br/>(páginas dinámicas)"]
+    N1["Cada fuente se procesa de manera independiente.<br/>Si una falla, las demás continúan."]
+    J --> FC --> C
+    H --> C
+    PW --> C
+  end
+
+  subgraph EI["Enriquecimiento selectivo"]
+    direction TB
+    CMP["Comparación con<br/>registros existentes"]
+    Q["Cola pendiente<br/>de OCR e IA"]
+    NIM["NVIDIA NIM<br/>OCR · ubicación · parafraseo"]
+    CMP -->|"nuevos o modificados"| Q
+    Q -->|"respeta 40 RPM y Retry-After"| NIM
+  end
+
+  subgraph PC["Procesamiento común"]
+    direction TB
+    SAN["Saneamiento HTML y<br/>validación de fechas"]
+    GEO["Normalización<br/>geográfica"]
+    FIL["Filtro cultural global"]
+    DED["Deduplicación<br/>(URL o título + fecha + lugar)"]
+    VAL["Validación de URLs<br/>y disponibilidad"]
+    SAN --> GEO --> FIL --> DED --> VAL
+  end
+
+  subgraph PE["Persistencia"]
+    direction LR
+    EL["Exportador local"]
+    JSON["JSON / CSV<br/>por región"]
+    ES["Exportador Supabase"]
+    SB[("Supabase<br/>PostgreSQL")]
+    EL --> JSON
+    ES --> SB
+  end
+
+  GHA["GitHub Actions<br/>(ejecución manual o periódica)"]
+  ST[("Checkpoint SQLite<br/>detalles · hashes · cola de IA")]
+
+  A1 --> H
+  A2 --> H
+  A3 --> H
+  A4 --> PW
+  GHA -->|"inicia fase extract"| J
+  GHA -.->|"guarda avances<br/>por fuente y ficha"| ST
+  ST -.->|"restauración y respaldo<br/>en futuras ejecuciones"| GHA
+  C --> CMP
+  ST -.->|"URL · identidad · hashes"| SB
+  NIM -.->|"guarda resultados"| ST
+  NIM --> SAN
+  CMP -.->|"reutiliza eventos sin cambios"| CMP
+  DED -.-> CMP
+  VAL -->|"solo eventos vigentes"| EL
+  VAL --> ES
+
+  NOTE["Solo se publican eventos vigentes. La conciliación elimina<br/>registros antiguos cuando la extracción fue completa y segura."]
+
+  class T tit
+  class A1,A2,A3,A4 api
+  class J,FC,C,H,PW cfg
+  class CMP,Q,NIM proc
+  class SAN,GEO,FIL,DED,VAL proc
+  class EL,JSON,ES db
+  class SB db
+  class GHA gha
+  class ST db
+  class N1,NOTE nota
+  linkStyle default stroke-width:1.5px

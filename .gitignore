@@ -1,0 +1,51 @@
+# ============================================================
+# .gitignore — Capstone APT122 "Evento Cultural"
+# Ubicación: raíz de CAPSTONE_ (junto a README.md)
+# Objetivo: que GitHub reciba solo la documentación y evidencias,
+# no artefactos regenerables ni archivos temporales.
+# ============================================================
+
+# --- Artefactos de compilación LaTeX (regenerables con pdflatex) ---
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.nav
+*.snm
+*.vrb
+*.bcf
+*.run.xml
+
+# Excepción: master.aux en secciones/ SÍ se conserva
+# (lo requiere la compilación individual de secciones vía xr-hyper)
+!Fase 2/Evidencias Proyecto/Documentacion Tecnica/secciones/master.aux
+
+# --- Archivos temporales y de trabajo del agente/sesiones ---
+galeria_qa.html
+tmp_*
+*.tmp
+*.bak
+~$*
+*.crdownload
+*.part
+
+# --- Paquetes de sistema que pertenecen a la carpeta del sistema, no al repo ---
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# --- Carpeta de descarga de Google Drive (nunca debe subirse) ---
+# (si algún día se clona el repo junto a esta carpeta)
+CAPSTONE -20260924T184555Z-1-001/
+
+# --- Copias comprimidas de carpetas (regenerables; la carpeta fuente ya está en el repo) ---
+# Descomenta si decides no versionar los zips:
+# "Fase 2/Evidencias Proyecto/Documentacion Tecnica.zip"

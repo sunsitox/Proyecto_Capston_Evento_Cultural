@@ -1,0 +1,61 @@
+---
+config:
+  theme: base
+  themeVariables:
+    fontFamily: "Arial, Helvetica, sans-serif"
+    fontSize: "13px"
+    primaryColor: "#FFFFFF"
+    primaryTextColor: "#1F1A14"
+    primaryBorderColor: "#5A4D42"
+    lineColor: "#5A4D42"
+    actorBkg: "#FFFFFF"
+    actorBorder: "#5A4D42"
+    actorTextColor: "#1F1A14"
+    signalColor: "#1F1A14"
+    signalTextColor: "#1F1A14"
+    noteBkgColor: "#FCF6E3"
+    noteBorderColor: "#B98A2D"
+    noteTextColor: "#1F1A14"
+    labelBoxBkgColor: "#F4F4F4"
+    labelBoxBorderColor: "#8A8A8A"
+    labelTextColor: "#444444"
+    loopTextColor: "#444444"
+    activationBkgColor: "#FBF7F2"
+    sequenceNumberColor: "#FFFFFF"
+  sequence:
+    mirrorActors: false
+    boxMargin: 10
+    noteMargin: 10
+    messageMargin: 42
+    actorMargin: 44
+    width: 170
+    bottomMarginAdj: 8
+---
+sequenceDiagram
+  autonumber
+  participant GH as GitHub Actions
+  participant PP as Pipeline (Python)
+  participant FF as Fuente (HTTP)
+  participant SS as SQLite (checkpoint)
+  participant NIM as NVIDIA NIM
+  participant SB as Supabase (PostgreSQL)
+
+  GH->>PP: ejecuta scrape_events.py
+  PP->>SS: carga checkpoint (artefacto del workflow)
+  PP->>FF: solicitud HTTP condicional (ETag / Last-Modified)
+  FF-->>PP: 200 eventos / 304 reutiliza caché
+  note over PP: Saneamiento · filtro cultural<br/>deduplicación (pipeline)
+
+  alt evento nuevo o modificado
+    PP->>SS: ¿nuevo o modificado? (hash de entrada)
+    PP->>NIM: OCR / normalización / redacción (≤ 40 RPM)
+    NIM-->>PP: texto enriquecido
+    PP->>SS: guarda y reutiliza resultado por hash
+  else evento sin cambios
+    PP->>SS: hash idéntico → reutiliza resultado y omite IA
+  end
+
+  PP->>SB: upsert idempotente (lotes SUPABASE_BATCH_SIZE)
+  PP->>SB: registra ejecución en scrape_runs
+  PP-->>GH: resumen de ejecución (total de eventos y tiempo)
+  note over PP,SB: Solo se publican eventos vigentes. La conciliación retira antiguos<br/>solo si la extracción fue completa.

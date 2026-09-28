@@ -1,0 +1,96 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{estilo_capstone}
+
+\titulo{Product Vision — Evento Cultural}
+\subtitulo{Visión de producto (artefacto 1 del marco ágil, anexo metodológico)}
+\autor{Roberto Riffo · José Miguel Moncada · David Herrera}
+\fecha{25 de septiembre de 2026}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\begin{document}
+\maketitlecapstone
+
+\section{Problema}
+
+Los eventos culturales, comerciales y municipales de Chile se publican de forma
+dispersa: redes sociales (principalmente Instagram), páginas municipales y medios
+locales. No existe un catálogo único, normalizado y siempre vigente donde una
+persona pueda descubrir qué hacer; la información llega tarde, incompleta o
+desaparece con el evento. Este problema está documentado en el design brief del
+proyecto y respaldado por las historias de usuario HU-01 a HU-15
+(\code{Historias\_de\_Usuario\_Plataforma\_Cultural.xlsx}), derivadas de problemas
+reales expresados por personas en fuentes públicas.
+
+\section{Usuarios}
+
+\begin{table}[h!]
+\centering\small
+\begin{tabular}{@{}L{4.2cm}L{10.6cm}@{}}
+\toprule
+\textbf{Usuario} & \textbf{Necesidad principal (evidencia)} \\
+\midrule
+Visitante & Consultar una cartelera web sin depender de redes sociales (HU-01),
+conocer eventos antes de que terminen (HU-02), planificar por fecha (HU-03),
+conocer precio y gratuidad (HU-04) y ubicación (HU-05). \\
+Usuario registrado & Recibir recomendaciones según sus intereses (HU-15) y
+reportar errores del catálogo (HU-13). \\
+Organizador & Publicar su evento en el catálogo (flujo de organización presente
+en el frontend: página \code{/publicar}). \\
+\bottomrule
+\end{tabular}
+\caption{Usuarios y necesidades respaldadas por el backlog de historias de usuario.}
+\end{table}
+
+\section{Propuesta de valor}
+
+Evento Cultural es una plataforma que compila y difunde eventos de todo el país
+en un catálogo único, normalizado y siempre vigente:
+
+\begin{itemize}
+  \item \textbf{Recolección automática:} un scraper en Python integra agendas
+        públicas desde 21 fuentes, con normalización, filtro cultural,
+        deduplicación y checkpoints reanudables; la ejecución se automatiza con
+        GitHub Actions.
+  \item \textbf{Catálogo canónico:} Supabase (PostgreSQL) centraliza los eventos
+        con bitácora de ejecuciones y políticas de Row Level Security.
+  \item \textbf{Descubrimiento:} frontend Angular 22 + Ionic 9 (web y móvil) con
+        búsqueda, filtros, mapa, calendario y recomendaciones por señales de
+        interés.
+  \item \textbf{Origen visible:} cada evento declara su fuente y su última
+        comprobación, para que la persona confirme antes de asistir (HU-12).
+\end{itemize}
+
+\section{Qué hace diferente a la solución}
+
+\begin{itemize}
+  \item \textbf{Sin colecciones permanentes:} no existen favoritos ni guardados;
+        los eventos rotan, vencen y desaparecen. Las acciones del usuario se
+        expresan como señales de interés temporales que alimentan las
+        recomendaciones.
+  \item \textbf{Foco cultural y local:} filtro cultural en el pipeline y
+        cobertura de actividades municipales y de región, que hoy no tienen
+        difusión centralizada (HU-14).
+  \item \textbf{Trazabilidad del dato:} origen y vigencia declarados en cada
+        registro, a diferencia de las carteleras informales en redes sociales.
+\end{itemize}
+
+\section{Alcance de la versión actual}
+
+El estado real del sistema a la fecha: scraper operativo con ejecución manual y
+automatizada en GitHub Actions (evidencia: captura de ejecución del workflow),
+base de datos en Supabase con esquema y RLS documentados, y frontend con
+catálogo mock en memoria (la conexión real a Supabase es un pendiente
+declarado). El sistema no usa Docker: se aloja y automatiza con GitHub Actions
+(scraper, desplegado y en testeo del despliegue), Vercel (hosting de la página,
+en preparación) y Capacitor 8 + Android Studio (la web se convertirá en
+aplicación Android).
+
+\begin{pendienteenv}
+métricas de éxito del producto (adquisición, retención, eventos publicados por
+organizadores): deben definirlas y medirlas el equipo.
+\end{pendienteenv}
+
+\end{document}

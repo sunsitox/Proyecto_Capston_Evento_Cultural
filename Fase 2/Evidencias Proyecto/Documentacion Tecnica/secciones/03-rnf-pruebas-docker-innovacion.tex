@@ -1,0 +1,319 @@
+% =====================================================================
+% PARTE 3 — RNF, pruebas, Docker e innovación
+% =====================================================================
+
+\section{Requisitos no funcionales}
+\label{sec:rnf}
+
+\subsection{Requisitos definidos en Fase 1 (MoSCoW)}
+
+\begin{table}[ht]
+\centering\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{l l p{6.8cm} l}
+\toprule
+\textbf{ID} & \textbf{Categoría} & \textbf{Requerimiento} & \textbf{Prioridad} \\
+\midrule
+RNF-01 & Usabilidad & Interfaz clara para ciudadanos y organizadores & Must \\
+RNF-02 & Compatibilidad & Diseño responsive / multiplataforma & Must \\
+RNF-03 & Rendimiento & Tiempos de carga aceptables con alto volumen & Should \\
+RNF-04 & Seguridad & Protección de datos en tránsito y reposo & Must \\
+RNF-05 & Seguridad & Control de acceso por rol & Must \\
+RNF-06 & Disponibilidad & Disponibilidad estable según hosting definido & Should \\
+RNF-07 & Escalabilidad & Crecimiento sostenido de datos & Should \\
+RNF-08 & Calidad de datos & Normalización y consistencia entre fuentes & Must \\
+RNF-09 & Mantenibilidad & Código mantenible y documentado & Should \\
+RNF-10 & Localización & Contenido en español y contexto chileno & Must \\
+RNF-11 & Portabilidad & Despliegue reproducible (GitHub Actions) & Could \\
+RNF-12 & Accesibilidad & Buenas prácticas de accesibilidad web & Could \\
+\bottomrule
+\end{tabular}
+\caption{Requisitos no funcionales priorizados (matriz MoSCoW de Fase 1).}
+\label{tab:rnf}
+\end{table}
+
+\subsection{Estado real por requisito}
+
+\begin{longtable}{l l p{9.3cm}}
+\toprule
+\textbf{ID} & \textbf{Estado} & \textbf{Evidencia verificable} \\
+\midrule
+\endhead
+RNF-01 & Parcial & Navegación adaptativa implementada; sin evaluación de usabilidad registrada. \textcolor{rojo}{\textbf{Pendiente.}} \\
+RNF-02 & Cumplido & Ionic/Angular responsive; navegación dual móvil/escritorio (\texttt{MainLayoutComponent}), grid con breakpoints. \\
+RNF-03 & Parcial & Caché condicional, bulkhead por dominio y checkpoints optimizan la extracción; falta medición de tiempos del frontend con datos reales. \textcolor{rojo}{\textbf{Pendiente.}} \\
+RNF-04 & Parcial & RLS en todas las tablas y secretos solo en entorno/GitHub Secrets; las pantallas de login y registro aún son simuladas. \\
+RNF-05 & Parcial & El modelo prevé roles (\texttt{profiles.role}) y reglas RLS; el control de acceso funcional en la aplicación está pendiente. \\
+RNF-06 & Parcial & GitHub Actions con ejecución manual y cron diario activo desde el 24-09-2026 (verificado: corridas \#9--\#11 del 25 al 27-09). \textcolor{rojo}{\textbf{Pendiente:} ejecución automática completa en verde tras corregir la prueba dependiente del tiempo (Plan de pruebas §5.1).} \\
+RNF-07 & Cumplido (diseño) & Paginación por página en conectores, upsert idempotente y SQLite como buffer. \\
+RNF-08 & Cumplido (pipeline) & Sanitización, filtro cultural, normalización de ubicación, deduplicación y UUID deterministas. \\
+RNF-09 & Cumplido & Documentación interna (\texttt{docs/}), patrones documentados y 14 módulos de pruebas. \\
+RNF-10 & Cumplido & Contenido en español; división administrativa chilena (regiones/comunas). \\
+RNF-11 & Parcial & Portabilidad adoptada por el equipo: GitHub Actions (scraper), Vercel (web) y Capacitor 8 + Android Studio (Android); sin Docker por decisión del equipo (ver Sección~\ref{sec:docker}). \\
+RNF-12 & Parcial & Accesibilidad como criterio de filtro en el frontend; auditoría formal pendiente. \textcolor{rojo}{\textbf{Pendiente.}} \\
+\bottomrule
+\caption{Estado real de cada requisito no funcional.}
+\label{tab:rnfestado}
+\end{longtable}
+
+\subsection{Requisitos declarados y no implementados}
+
+Para evitar inconsistencias en la evaluación se declara explícitamente: no existe
+autenticación real en el frontend (pantallas simuladas); las notificaciones (RF-13), el
+panel de administración (RF-14) y la moderación (RF-11/RF-12 del catálogo funcional) no
+tienen implementación en el código entregado; las estadísticas (RF-17) quedaron
+\emph{Won't have} en Fase 1; Docker no está implementado y el equipo decidió no utilizarlo
+(Sección~\ref{sec:docker}).
+
+\subsection{Limitaciones técnicas del desarrollo}
+
+El desarrollo se realiza en un contexto académico sin presupuesto, lo que impone dos
+limitaciones operativas visibles en el diseño del sistema:
+
+\begin{itemize}[leftmargin=1.4em]
+    \item \textbf{Cuota de la capa gratuita de IA (principalmente tiempo):} el
+    enriquecimiento con IA se apoya en \textbf{NVIDIA Build}, plataforma de prototipado
+    con modelos en la nube de uso gratuito pero sujeto a una cuota global de
+    \textbf{40 peticiones por minuto (RPM)}. Esta restricción de tiempo condiciona el
+    volumen de eventos que pueden procesarse por corrida y explica dos decisiones de
+    diseño ya documentadas: la IA se aplica \emph{selectivamente} (solo a eventos
+    nuevos o modificados, con control de costo y latencia) y el pipeline es
+    \emph{reanudable} (checkpoints SQLite por fuente y ficha, que evitan repetir
+    trabajo tras un corte o una interrupción por cuota).
+    \item \textbf{Sin infraestructura propia de cómputo (hardware):} el equipo no
+    dispone de un servidor donde alojar un modelo de IA especializado (OCR de afiches y
+    análisis de texto); por eso se utiliza NVIDIA Build como alternativa gratuita de
+    prototipado en la nube en lugar de un despliegue local o dedicado.
+\end{itemize}
+
+Otras limitaciones visibles del estado actual ---frontend conectado a datos de ejemplo
+(\texttt{mock}), autenticación simulada y despliegue web aún no efectuado--- no son
+restricciones de infraestructura sino trabajo pendiente ya declarado, trazado en las
+secciones de estado real y de pruebas. La ejecución programada del scraper está activa
+(cron diario desde el 24-09-2026); su robustez depende de corregir la prueba dependiente
+del tiempo documentada en el plan de pruebas.
+
+\pendiente{decisión futura sobre migrar el enriquecimiento con IA a infraestructura
+propia o a una cuota pagada; en tal caso, las restricciones de esta subsección y las
+decisiones de diseño asociadas se reevaluarán.}
+
+\section{Pruebas}
+\label{sec:pruebas}
+
+\subsection{Pruebas existentes del scraper}
+
+Comando oficial (README del scraper): \texttt{python -m unittest discover -s tests -v}.
+La carpeta \texttt{tests/} contiene 14 módulos (aproximadamente 1.900 líneas) con carácter
+unitario y de módulo: usan dobles de prueba del cliente HTTP, del repositorio de fuentes y
+del exportador, según la inyección de dependencias documentada.
+
+\begin{table}[ht]
+\centering\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{l p{9.6cm}}
+\toprule
+\textbf{Módulo} & \textbf{Qué valida} \\
+\midrule
+\texttt{test\_core.py} & Configuración, mapeo WordPress, deduplicación/filtro y exportación \\
+\texttt{test\_event\_sources.py} & Conectores (Fisa, EventOn, Generic, Ticketplus, HtmlCards) y catálogo mínimo de 10 fuentes activas \\
+\texttt{test\_supabase.py} & Transformación idempotente al esquema de Supabase \\
+\texttt{test\_resumable\_pipeline.py} & Checkpoints, reanudación y pausas NVIDIA \\
+\texttt{test\_performance.py} & Caché condicional, lecturas Maipú, archivos operativos y pipeline paralelo \\
+\texttt{test\_locations.py} & Normalización de ubicación (reglas y NVIDIA) \\
+\texttt{test\_content\_enrichment.py} & Enriquecimiento editorial \\
+\texttt{test\_nvidia.py} & Respuestas y límites NVIDIA \\
+\texttt{test\_sanitization.py} & Limpieza HTML y vigencia \\
+\texttt{test\_cultural\_filter.py} & Filtro de pertinencia cultural \\
+\texttt{test\_jsonld.py} & Extracción JSON-LD \\
+\texttt{test\_availability.py} & Disponibilidad de eventos \\
+\texttt{test\_analytics.py} & Métricas operativas \\
+\texttt{test\_source\_validation.py} & Reglas del validador de fuentes \\
+\bottomrule
+\end{tabular}
+\caption{Pruebas unitarias y de módulo existentes en el scraper.}
+\label{tab:tests}
+\end{table}
+
+\subsection{Pruebas existentes del frontend}
+
+El frontend configura Vitest con jsdom (comando \texttt{ng test}) e incluye pruebas de
+humo de creación de componentes y servicios. No cubre todavía la lógica de filtros ni de
+servicios.
+
+\subsection{Pruebas pendientes}
+
+\begin{table}[ht]
+\centering\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c p{5.6cm} p{4.2cm} l}
+\toprule
+\textbf{\#} & \textbf{Prueba} & \textbf{Alcance} & \textbf{Tipo} \\
+\midrule
+1 & Unitarias de \texttt{EventosService} (filtros y orden) & Frontend & Unitaria \\
+2 & Unitarias de recomendaciones y preferencias & Frontend & Unitaria \\
+3 & Integración frontend--Supabase (vista pública) & Frontend + BD & Integración \\
+4 & Integración scraper--Supabase (upsert idempotente) & Scraper + BD & Integración \\
+5 & Rendimiento: carga del listado con volumen real & Frontend & Rendimiento \\
+6 & Rendimiento: pipeline completo (usar \texttt{run\_summary.json}) & Scraper & Rendimiento \\
+7 & Seguridad: verificación de políticas RLS por rol & BD & Seguridad \\
+8 & Seguridad: saneamiento de entradas de usuario & Scraper/Frontend & Seguridad \\
+9 & Accesibilidad: auditoría Lighthouse/axe & Frontend & No funcional \\
+10 & Registro de resultados y trazabilidad & Proceso & Proceso \\
+\bottomrule
+\end{tabular}
+\caption{Plan de pruebas pendiente. Responsables, fechas y criterios de aceptación:
+\textcolor{rojo}{\textbf{pendiente de completar por el equipo}}.}
+\label{tab:planpruebas}
+\end{table}
+
+\subsection{Registro de resultados}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Fecha} & \textbf{Suite ejecutada} & \textbf{Resultado} & \textbf{Responsable} \\
+\midrule
+--- & --- & \textcolor{rojo}{\textbf{Pendiente de completar por el equipo}} & --- \\
+\bottomrule
+\end{tabular}
+\caption{Registro de ejecución de pruebas (sin resultados inventados).}
+\label{tab:resultados}
+\end{table}
+
+\section{Docker: estado actual y plan}
+\label{sec:docker}
+
+\subsection{Estado real verificado}
+
+\begin{table}[ht]
+\centering\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{l c c c}
+\toprule
+\textbf{Componente} & \textbf{Dockerfile} & \textbf{docker-compose} & \textbf{Contenedores en ejecución} \\
+\midrule
+Scraper (Python) & No & No & No \\
+Frontend (Angular/Ionic) & No & No & No \\
+Base de datos & --- (servicio administrado Supabase) & No & No \\
+\bottomrule
+\end{tabular}
+\caption{Estado de Docker verificado por inspección de ambos entregables: no implementado.}
+\label{tab:docker}
+\end{table}
+
+\textbf{Conclusión: Docker no está implementado en ninguna parte del sistema} (se declara
+explícitamente porque el anexo metodológico exige documentar su estado). La estrategia de
+despliegue adoptada por el equipo (decisión comunicada el 24-09-2026) no contempla
+contenedores:
+
+\begin{itemize}[leftmargin=1.4em]
+    \item \textbf{Scraper:} ejecución local en Windows (\texttt{instalar.bat},
+    \texttt{ejecutar.bat}) y automatización en \textbf{GitHub Actions}; el workflow instala
+    por sí mismo Python, Playwright y Chromium.
+    \item \textbf{Web:} despliegue en \textbf{Vercel} (hosting previsto en el design brief de
+    Fase 1 y confirmado por el equipo); build de producción con \texttt{ng build}. A la fecha
+    no existe evidencia de un despliegue ejecutado.
+    \item \textbf{Android:} compilación de la aplicación con \textbf{Capacitor 8} y
+    \textbf{Android Studio} (dependencias de Capacitor presentes en \texttt{package.json}).
+    \item \textbf{Base de datos:} servicio administrado de Supabase, sin contenedores.
+\end{itemize}
+
+\subsection{Plan de implementación (alternativa documentada, no adoptada)}
+
+El equipo decidió no utilizar Docker en la estructura de despliegue actual. El siguiente plan
+se conserva documentado como alternativa futura y como respuesta al punto 5 del anexo
+metodológico; su eventual implementación queda
+\textcolor{rojo}{\textbf{pendiente de completar por el equipo}} solo si la estrategia de
+despliegue cambiara.
+
+\begin{enumerate}[leftmargin=1.6em]
+    \item \textbf{Contenedor del scraper:} imagen base \texttt{python:3.12-slim};
+    instalación de \texttt{requirements.txt} y Chromium de Playwright dentro de la imagen;
+    volúmenes para \texttt{state/} (checkpoints) y \texttt{data/} (respaldos);
+    configuración por variables de entorno según \texttt{.env.example}, sin credenciales
+    embebidas; ejecución por fases (\texttt{-{}-phase extract} / \texttt{-{}-phase process}).
+    \item \textbf{Contenedor del frontend:} build multi-etapa (etapa Node con \texttt{ng build};
+    etapa de servicio estático con nginx), con variables de entorno de runtime para el
+    endpoint del backend futuro.
+    \item \textbf{Composición opcional:} \texttt{docker-compose.yml} de desarrollo para el
+    frontend servido y el scraper como job;la base de datos permanece como
+    servicio administrado de Supabase.
+\end{enumerate}
+
+Criterios de aceptación propuestos: (1) \texttt{docker build} de ambas imágenes sin
+credenciales; (2) una ejecución completa del scraper en contenedor produce
+\texttt{data/events.json} y registra la corrida en \texttt{scrape\_runs}; (3) el frontend en
+contenedor responde en el puerto definido; (4) README actualizado con las instrucciones
+\texttt{docker compose up}.
+
+\section{Innovación}
+\label{sec:innovacion}
+
+\subsection{¿Qué problema resuelve?}
+
+En Chile la oferta de eventos culturales está fragmentada en decenas de publicadores
+independientes (municipalidades, centros culturales, ticketeras, universidades y portales
+regionales), cada uno con formatos, fechas y estructuras distintos: agendas WordPress, APIs,
+carteleras HTML e imágenes de afiches. El ciudadano debe revisar sitio por sitio y muchos
+eventos ---especialmente municipales y gratuitos--- no llegan a las plataformas comerciales.
+La magnitud del problema quedó documentada en el propio proyecto: el inventario de fuentes
+levantó 390 candidatas, de las cuales se integraron 20 permanentes más 1 estacional mediante
+conectores específicos.
+
+\subsection{¿Qué hace diferente a la solución?}
+
+\begin{itemize}[leftmargin=1.4em]
+    \item \textbf{Cobertura municipal y regional:} prioriza agendas culturales públicas
+    (municipios, centros culturales, universidades), no solo ticketeras comerciales
+    (tabla de 21 fuentes del README del scraper).
+    \item \textbf{Enriquecimiento con IA selectivo:} OCR de afiches, normalización de
+    ubicaciones y redacción editorial con NVIDIA NIM, aplicado solo a eventos nuevos o
+    modificados, con control de costo y latencia (40 RPM globales).
+    \item \textbf{Calidad de datos como regla, no como tarea:} sanitización, filtro de
+    pertinencia cultural, normalización geográfica y deduplicación obligatorias para toda
+    fuente; un conector nuevo no puede saltárselos.
+    \item \textbf{Pipeline reanudable y auditable:} checkpoints SQLite por fuente y ficha;
+    reanudación tras cortes y bitácora en \texttt{scrape\_runs}.
+    \item \textbf{Publicación siempre vigente:} reutiliza eventos sin cambios y retira
+    registros antiguos solo cuando la extracción fue completa y segura.
+    \item \textbf{Recomendación con señales de interés:} vista ``para ti'' en lugar de un
+    listado estático, y experiencia multiplataforma desde el mismo código.
+\end{itemize}
+
+\subsection{¿Qué valor agrega?}
+
+Para el ciudadano, un solo lugar para descubrir eventos con búsqueda, filtros (región,
+comuna, fecha, gratuito, modalidad, accesibilidad), mapa y calendario. Para los
+organizadores públicos, visibilidad sin costo para agendas municipales y de centros
+culturales. Para el ecosistema de datos, un catálogo normalizado con procedencia
+verificable (\texttt{event\_provenance} conserva texto original y OCR). Para lo académico,
+la aplicación real de IA generativa en un pipeline de datos con control de costos y de
+patrones de arquitectura documentados y probados.
+
+\textcolor{rojo}{\textbf{Declaración de honestidad:}} los resultados de operación reales
+(número de eventos publicados, tiempos, usuarios) no se afirman en este documento y deben
+registrarse con datos de ejecución cuando el equipo los genere.
+
+\subsection{Modelo de negocio (propuesto, no implementado)}
+
+El equipo definió dos líneas de sostenibilidad, que a la fecha son \textcolor{rojo}{\textbf{propuestas
+de diseño}} y no funcionalidades implementadas ni comprometidas contractualmente:
+
+\begin{enumerate}[leftmargin=1.6em]
+    \item \textbf{Publicación no invasiva con redireccionamiento de información (línea
+    principal):} el catálogo se alimenta exclusivamente de fuentes públicas y se
+    redirige al usuario hacia la fuente original de cada evento (municipalidad, centro
+    cultural o ticketera) para consultarlo o reservarlo. La plataforma no intermedia
+    pagos ni cobra por la publicación: el valor para el ciudadano es el descubrimiento
+    unificado y el valor para el organizador público es la visibilidad sin costo, lo
+    que se alinea con la procedencia verificable de \texttt{event\_provenance}.
+    \item \textbf{Contacto directo con organizadores por visibilidad mejorada (línea a
+    evaluar):} como opción futura menos probable, los organizadores podrían pagar por
+    destacar sus eventos en la plataforma (mayor visibilidad en búsquedas y portada).
+    Esta línea queda \textcolor{rojo}{\textbf{por decidir por el equipo}}: exige validar
+    aspectos legales, de precio y de imparcialidad del catálogo antes de adoptarse.
+\end{enumerate}
+
+Ninguna de las dos líneas compromete el carácter público y gratuito del descubrimiento de
+eventos, que es el objetivo central del proyecto.

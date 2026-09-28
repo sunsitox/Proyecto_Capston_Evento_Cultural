@@ -1,0 +1,160 @@
+% =====================================================================
+% Documentación técnica formal — Proyecto Capstone "Evento Cultural"
+% Compilación: pdflatex -interaction=nonstopmode main.tex  (dos pasadas)
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{caption}
+
+\definecolor{terracota}{HTML}{C9622D}
+\definecolor{verdes}{HTML}{1F5C57}
+\definecolor{rojo}{HTML}{B03A3A}
+\definecolor{azulurl}{HTML}{1F4E79}
+\usepackage[colorlinks=true,linkcolor=azulurl,urlcolor=azulurl]{hyperref}
+
+\graphicspath{{Diagramas/}}
+\captionsetup{font=small,labelfont=bf}
+\renewcommand{\tablename}{Tabla}
+
+\newcommand{\pendiente}{\textcolor{rojo}{\textbf{Pendiente de completar por el equipo.}}}
+\newcommand{\seccionpendiente}[1]{\textcolor{rojo}{\textbf{Pendiente de completar por el equipo:} #1}}
+
+\title{}
+\author{}
+\date{}
+
+\begin{document}
+
+% ---------------------------------------------------------- PORTADA
+\begin{titlepage}
+\centering
+{\color{terracota}\rule{\textwidth}{2pt}}\\[0.6cm]
+{\Large \textsc{Duoc UC -- Sede Maipú}}\\[0.2cm]
+{\large Capstone 2026 -- Asignatura APT122}\\[1.4cm]
+{\color{terracota}\Huge \textbf{Evento Cultural}}\\[0.5cm]
+{\LARGE Documentación Técnica del Proyecto}\\[0.4cm]
+{\large Plataforma chilena de eventos culturales}\\[1.2cm]
+{\color{terracota}\rule{\textwidth}{1pt}}\\[1.2cm]
+
+\begin{minipage}{0.82\textwidth}
+\renewcommand{\arraystretch}{1.35}
+\begin{center}
+\begin{tabular}{>{\bfseries}l l}
+Integrante & Rol principal \\ \midrule
+Roberto Riffo & Líder de proyecto / Frontend / UX \\
+José Miguel Moncada & Base de datos / QA \\
+David Herrera & Backend e integraciones \\
+\end{tabular}
+\end{center}
+\vspace{0.2cm}
+{\small Roles según el design brief aprobado en Fase 1 (\textit{design\_brief\_capstone.docx}).}
+\end{minipage}
+
+\vspace{1.2cm}
+\begin{minipage}{0.82\textwidth}
+\small
+\textbf{Stack del sistema:} Python (scraper con conectores, NVIDIA NIM y checkpoints SQLite),
+Supabase/PostgreSQL con Row Level Security, Angular 22 + Ionic 9 (web y móvil),
+GitHub Actions para automatización.
+\end{minipage}
+
+\vfill
+{\large Versión 1.0}\\[0.2cm]
+{\large 24 de septiembre de 2026}\\[0.4cm]
+{\small Documento elaborado exclusivamente con evidencia verificable del repositorio.\\
+Las omisiones se declaran como \textcolor{rojo}{\textbf{pendientes del equipo}} y están
+trazadas en el \textit{Registro de Cambios de Documentación}.}\\[0.3cm]
+{\color{terracota}\rule{\textwidth}{2pt}}
+\end{titlepage}
+
+% ---------------------------------------------------------- ÍNDICE
+\tableofcontents
+\newpage
+
+% ---------------------------------------------------------- INTRODUCCIÓN
+\section{Introducción y alcance}
+\label{sec:intro}
+
+Este documento consolida la documentación técnica formal del proyecto \textbf{Evento
+Cultural}, una plataforma chilena para compilar y difundir eventos culturales, comerciales
+y municipales. Fue elaborado a partir de la evidencia disponible en el propio repositorio:
+el código y la documentación interna del scraper (\texttt{Scraper de eventos culturales.rar}),
+el código y la documentación del frontend (\texttt{evento-cultural.rar}), el modelo de base
+de datos (DBML, migraciones documentadas y diccionario de tablas), los requerimientos
+priorizados en Fase 1 (matriz MoSCoW) y el diagrama de arquitectura de Fase 2.
+
+\textbf{Convención de honestidad documental:} este documento distingue explícitamente entre
+lo \emph{implementado} (respaldado por código), lo \emph{parcial} (respaldado solo en parte)
+y lo \emph{pendiente} (información humana o trabajo futuro). Nada se afirma como terminado
+sin respaldo; los puntos abiertos se marcan con \pendiente
+
+\subsection{Estructura del sistema}
+
+El sistema se compone de tres bloques independientes que se comunican a través de la base
+de datos: el \textbf{scraper} (recolección y enriquecimiento de datos), la \textbf{base de
+datos} (catálogo canónico en Supabase/PostgreSQL) y el \textbf{frontend} (aplicación web y
+móvil), con \textbf{GitHub Actions} como automatización de la ejecución del scraper
+(ver Figura~\ref{fig:arq} en la Sección~\ref{sec:arq}).
+
+\input{secciones/01-arquitectura}
+\input{secciones/02-datos-uml}
+\input{secciones/03-rnf-pruebas-docker-innovacion}
+
+% ---------------------------------------------------------- CIERRE
+\section{Trazabilidad documental}
+\label{sec:traza}
+
+Cada afirmación de este documento proviene de las siguientes fuentes verificables:
+
+\begin{table}[h]
+\centering\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{p{5.2cm} p{8.6cm}}
+\toprule
+\textbf{Sección} & \textbf{Evidencia utilizada} \\
+\midrule
+Arquitectura general, scraper y frontend &
+README y \texttt{docs/ARCHITECTURE.md}, \texttt{docs/RESUMABLE\_PIPELINE.md},
+\texttt{docs/SUPABASE.md} del scraper; \texttt{package.json}, \texttt{app.routes.ts},
+README y documentación LaTeX del frontend; diagramas de Fase 2. \\
+Modelo de datos &
+\texttt{docs/DATABASE.md}, \texttt{docs/SUPABASE.md},
+\texttt{docs/evento\_cultural\_modelo.dbml}, diccionario de base de datos (DOCX) y
+\texttt{DB\_evento\_cultural.pdf} (Fase 1). \\
+Diagramas UML &
+Rutas y servicios reales del frontend; clases y patrones documentados del scraper;
+matriz MoSCoW de Fase 1. Los seis diagramas (01--06) comparten estándar visual y
+fueron pulidos y reexportados el 27-09-2026 (§16 del registro de cambios). \\
+Requisitos no funcionales &
+Matriz \texttt{Requerimientos\_Funcionales\_NoFuncionales\_MoSCoW.xlsx} (Fase 1) y
+evidencia de código por requisito. \\
+Pruebas &
+Carpeta \texttt{tests/} del scraper (14 módulos, aproximadamente 1.900 líneas),
+sección ``Pruebas'' de su README y configuración Vitest del frontend. \\
+Docker &
+Inspección completa de ambos entregables (sin Dockerfile ni compose) y
+\texttt{CONTENIDO\_DEL\_REPOSITORIO.md}. \\
+Innovación &
+Design brief de Fase 1, matriz MoSCoW, tabla de fuentes del README del scraper y
+funcionalidad ``para ti'' del frontend. \\
+\bottomrule
+\end{tabular}
+\caption{Trazabilidad entre secciones del documento y evidencia del repositorio.}
+\label{tab:traza}
+\end{table}
+
+El detalle de altas, cambios y pendientes de toda la documentación se registra en
+\texttt{REGISTRO\_CAMBIOS\_DOCUMENTACION.md} en la raíz de \texttt{CAPSTONE\_}.
+
+\end{document}

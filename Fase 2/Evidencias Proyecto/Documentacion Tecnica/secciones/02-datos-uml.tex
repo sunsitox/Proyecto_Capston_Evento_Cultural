@@ -1,0 +1,136 @@
+% =====================================================================
+% PARTE 2 — Modelo de datos y diagramas UML
+% =====================================================================
+
+\section{Modelo de datos (Supabase / PostgreSQL)}
+\label{sec:datos}
+
+\subsection{Fuente del modelo}
+
+El modelo se documenta a partir de \texttt{docs/DATABASE.md}, \texttt{docs/SUPABASE.md},
+el DBML editable (\texttt{docs/evento\_cultural\_modelo.dbml}), el diccionario de tablas
+(DOCX, versión documentada al 21-09-2026) y el diagrama ER de Fase 1
+(\texttt{DB\_evento\_cultural.pdf}). \seccionpendiente{la carpeta \texttt{supabase/migrations/}
+con los archivos SQL no está incluida en la copia entregada; confirmar su presencia en el
+repositorio oficial.}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.95\textwidth]{06_modelo_er.pdf}
+\caption{Modelo entidad--relación (fuente editable: \texttt{Diagramas/06\_modelo\_er.mmd}, Mermaid).}
+\label{fig:er}
+\end{figure}
+
+\subsection{Tablas y finalidad}
+
+\begin{table}[ht]
+\centering\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{l p{4.1cm} p{6.6cm}}
+\toprule
+\textbf{Grupo} & \textbf{Tabla} & \textbf{Finalidad} \\
+\midrule
+Ingesta y catálogo & \texttt{sources} & Agenda, municipalidad, ticketera o sitio de origen \\
+ & \texttt{organizers} & Institución responsable del evento \\
+ & \texttt{communes} & Ubicación administrativa normalizada \\
+ & \texttt{categories} & Etiquetas temáticas, de formato o audiencia \\
+ & \texttt{events} & Registro canónico del evento consolidado (37 columnas) \\
+ & \texttt{event\_categories} & Relación N:M entre eventos y categorías \\
+ & \texttt{media\_assets} & Imágenes y futuros multimedia \\
+ & \texttt{scrape\_runs} & Bitácora de ejecuciones locales y de GitHub Actions \\
+ & \texttt{event\_provenance} & Evidencia privada: texto original, OCR y URL canónica \\
+Aplicación futura & \texttt{profiles}, \texttt{favorites}, \texttt{reports} & Base prevista de la aplicación; no intervienen en el scraper \\
+\bottomrule
+\end{tabular}
+\caption{Tablas del modelo de datos según el diccionario y el DBML del proyecto.}
+\label{tab:tablas}
+\end{table}
+
+Los identificadores de eventos, organizadores, comunas y categorías son \textbf{UUID v5
+deterministas} derivados de claves externas: ejecutar dos veces el mismo scraping actualiza
+las filas (upsert) sin crear duplicados. El campo \texttt{categories} se normaliza en
+\texttt{categories} y \texttt{event\_categories}, conservando la relación muchos-a-muchos.
+
+\subsection{Seguridad (Row Level Security) y ciclo de carga}
+
+La migración de RLS habilita Row Level Security en todas las tablas; \texttt{scrape\_runs}
+no tiene lectura pública; el usuario no puede cambiar su propio rol ni el estado de sus
+reportes desde el frontend; la vista \texttt{public\_event\_catalog} hereda las reglas RLS y
+no expone eventos suprimidos ni organizadores bloqueados.
+
+En el ciclo de carga, la sincronización identifica coincidencias por URL o clave compuesta,
+carga por lotes (\texttt{SUPABASE\_BATCH\_SIZE}) y registra cada ejecución en
+\texttt{scrape\_runs} como \texttt{running}, \texttt{succeeded} o \texttt{failed}. La
+repetición idempotente es el mecanismo de recuperación ante cargas parciales.
+
+\subsection{Limitaciones declaradas}
+
+Sin marca explícita de eventos de día completo; \texttt{price\_text} no permite comparación
+numérica; categorías sin jerarquía almacenada; registros de Chile Cultura que pueden ser
+directorios y no eventos fechados; etiqueta inválida conocida (\texttt{Calendar\_Month
+Inscribirse}); borrado físico de vencidos solo con
+\texttt{SUPABASE\_DELETE\_EXPIRED=true}.
+
+\section{Diagramas UML}
+\label{sec:uml}
+
+Los cuatro diagramas UML exigidos por el anexo metodológico se escriben como código fuente
+Mermaid (\texttt{.mmd}) y se renderizan a PDF con \texttt{mermaid-cli}, en la carpeta
+\texttt{Diagramas/} de esta misma sección. Los casos de uso se derivan de la matriz MoSCoW de
+Fase 1 y de las páginas realmente implementadas en el frontend. Todos los diagramas (01--06)
+comparten un estándar visual único (paleta institucional, tipografía Arial, flechas
+reforzadas), declarado dentro de cada archivo \texttt{.mmd}, y fueron regenerados el
+27-09-2026 al migrar de Draw.io a Mermaid para automatizar el trazado de líneas y facilitar
+el mantenimiento (detalle en el \texttt{REGISTRO\_CAMBIOS\_DOCUMENTACION.md}, §16.3).
+
+\subsection{Casos de uso}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{03_casos_de_uso.pdf}
+\caption{Casos de uso de la plataforma (fuente editable: \texttt{Diagramas/03\_casos\_de\_uso.mmd}, Mermaid).}
+\label{fig:uc}
+\end{figure}
+
+El visitante busca, filtra, ve el detalle, consulta el mapa y el calendario; el usuario
+registrado inicia sesión y recibe recomendaciones; el organizador publica eventos
+(simulado); GitHub Actions activa la recolección automática, que usa NVIDIA NIM como
+servicio externo de OCR y redacción.
+
+\subsection{Secuencia de la funcionalidad principal}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{04_secuencia.pdf}
+\caption{Secuencia: extracción, enriquecimiento y publicación (editable: \texttt{Diagramas/04\_secuencia.mmd}, Mermaid).}
+\label{fig:seq}
+\end{figure}
+
+El flujo principal del sistema es la obtención y publicación de eventos: GitHub Actions
+ejecuta el pipeline; este restaura el checkpoint, consulta las fuentes con caché
+condicional, sanea y deduplica, decide mediante hash qué eventos pasan por IA (con límite
+de 40 RPM), reutiliza resultados previos y sincroniza Supabase con upserts idempotentes,
+registrando la corrida en \texttt{scrape\_runs}.
+
+\subsection{Componentes y clases}
+
+El diagrama de componentes (Figura~\ref{fig:comp}) muestra los módulos del frontend y del
+scraper y su comunicación con la base de datos. El diagrama de clases (conceptual) refleja
+los roles reales del núcleo del scraper documentados en \texttt{docs/ARCHITECTURE.md}:
+\texttt{EventPipeline}, \texttt{ConnectorFactory}, \texttt{Connector} (Strategy),
+\texttt{Event}, \texttt{EventSanitizer}, \texttt{LocationNormalizer},
+\texttt{NvidiaService}, \texttt{SupabaseExporter}, \texttt{DatasetExporter} y
+\texttt{PipelineState}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.95\textwidth]{05_clases.pdf}
+\caption{Diagrama de clases conceptual del núcleo del scraper (editable: \texttt{Diagramas/05\_clases.mmd}, Mermaid).}
+\label{fig:cls}
+\end{figure}
+
+\subsection{Pendientes de UML}
+
+\seccionpendiente{si el docente exige una versión gráfica adicional con notación UML estricta,
+regenerarla a partir de los archivos editables entregados y sustituir las figuras
+correspondientes.}
