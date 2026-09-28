@@ -46,6 +46,3 @@ Desktop.ini
 # (si algún día se clona el repo junto a esta carpeta)
 CAPSTONE -20260924T184555Z-1-001/
 
-# --- Copias comprimidas de carpetas (regenerables; la carpeta fuente ya está en el repo) ---
-# Descomenta si decides no versionar los zips:
-# "Fase 2/Evidencias Proyecto/Documentacion Tecnica.zip"
