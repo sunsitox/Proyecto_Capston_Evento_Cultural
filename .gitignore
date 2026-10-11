@@ -33,9 +33,57 @@ galeria_qa.html
 tmp_*
 *.tmp
 *.bak
+*.orig
+*.rej
+*.swp
+*.swo
 ~$*
 *.crdownload
 *.part
+*.lnk
+
+# --- Markdown auxiliar ---
+# Los entregables formales se conservan en PDF, LaTeX, Word o Excel.
+# Se mantiene únicamente el índice principal de Evidencias Proyecto.
+*.md
+!/Fase 2/Evidencias Proyecto/README.md
+
+# --- Variables privadas y configuración local ---
+.env
+.env.*
+!.env.example
+!.env.template
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+venv/
+.venv/
+env/
+
+# --- Node, Angular, Ionic y Vercel ---
+node_modules/
+dist/
+www/
+.angular/
+.cache/
+coverage/
+.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Editores e IDE ---
+.vscode/
+.idea/
+*.code-workspace
 
 # --- Paquetes de sistema que pertenecen a la carpeta del sistema, no al repo ---
 Thumbs.db
