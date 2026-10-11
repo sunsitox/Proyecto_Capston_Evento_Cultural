@@ -39,12 +39,12 @@ RNF-12 & Accesibilidad & Buenas prácticas de accesibilidad web & Could \\
 \textbf{ID} & \textbf{Estado} & \textbf{Evidencia verificable} \\
 \midrule
 \endhead
-RNF-01 & Parcial & Navegación adaptativa implementada; sin evaluación de usabilidad registrada. \textcolor{rojo}{\textbf{Pendiente.}} \\
-RNF-02 & Cumplido & Ionic/Angular responsive; navegación dual móvil/escritorio (\texttt{MainLayoutComponent}), grid con breakpoints. \\
-RNF-03 & Parcial & Caché condicional, bulkhead por dominio y checkpoints optimizan la extracción; falta medición de tiempos del frontend con datos reales. \textcolor{rojo}{\textbf{Pendiente.}} \\
+RNF-01 & Parcial & Ciclo exploratorio registrado el 11-10-2026 con 13 escenarios en producción. El flujo principal es comprensible, pero persisten hallazgos de navegación, scroll, rotulación y consistencia del perfil. \\
+RNF-02 & Parcial & Ionic/Angular responsive con navegación dual móvil/escritorio. La vista móvil fue probada a 390\,$\times$\,844; el mapa incompleto y la barra inferior superpuesta impiden declarar cumplimiento total. \\
+RNF-03 & Parcial & Cinco solicitudes del HTML inicial respondieron HTTP 200 con promedio de 0,409 s (0,239--0,575 s). Faltan Core Web Vitals, carga progresiva del calendario y pruebas de volumen/concurrencia. \\
 RNF-04 & Parcial & RLS en todas las tablas y secretos solo en entorno/GitHub Secrets/Edge Function; autenticación real implementada en la web (Supabase Auth vía supabase-js: login/registro por contraseña, OAuth preparado, eliminación de cuenta por Edge Function). Falta activar los proveedores OAuth y recuperar-contraseña. \\
 RNF-05 & Parcial & El modelo prevé roles (\texttt{profiles.role}) y reglas RLS; el inicio de sesión real ya distingue al usuario autenticado en la interfaz (perfil, cierre y eliminación de cuenta), pero faltan la política RLS INSERT que habilite la publicación por rol y el panel de administración. \\
-RNF-06 & Parcial & GitHub Actions con ejecución manual y programada diaria a las 23:37 (America/Santiago) desde el 29-09-2026 (cron activo desde el 24-09; corridas \#9--\#13 del 25 al 29-09; \#13 en verde tras corregir la prueba dependiente del tiempo). El despliegue web (Vercel) y la app móvil (Capacitor) quedaron diferidos por decisión del equipo, ver Sección~\ref{sec:frontend}. \textcolor{rojo}{\textbf{Pendiente:} primera corrida programada completa en verde (Plan de pruebas, sección 5.1).} \\
+RNF-06 & Parcial & GitHub Actions dispone de ejecución manual y programada diaria a las 23:37 (America/Santiago). El run programado \#25 terminó correctamente con dos artefactos, pero comenzó a las 06:16 de Chile; por ello la disponibilidad funcional está demostrada y la puntualidad del scheduler permanece abierta. El frontend está desplegado en Vercel y fue verificado el 11-10-2026; la app móvil nativa con Capacitor permanece diferida. \\
 RNF-07 & Cumplido (diseño) & Paginación por página en conectores, upsert idempotente y SQLite como buffer. \\
 RNF-08 & Cumplido (pipeline) & Sanitización, filtro cultural, normalización de ubicación, deduplicación y UUID deterministas. \\
 RNF-09 & Cumplido & Documentación interna del entregable de Fase 2, patrones documentados y 14 módulos de pruebas. \\
@@ -89,12 +89,12 @@ limitaciones operativas visibles en el diseño del sistema:
 Otras limitaciones visibles del estado actual ---sesiones y señales de interés sin
 persistencia en base de datos (\texttt{user\_event\_interactions}), publicación
 bloqueada por RLS hasta definir su política, proveedores OAuth aún no activados y
-despliegue web aún no efectuado--- no son restricciones de infraestructura sino trabajo
-pendiente ya declarado, trazado en las secciones de estado real y de pruebas. La ejecución programada del scraper está activa
-(cron diario a las 23:37 America/Santiago desde el 29-09-2026, activo desde el 24-09);
-la corrección de la prueba dependiente del tiempo (29-09) dejó la corrida manual \#13
-en verde y resta confirmar la primera corrida programada completa, documentada en el
-plan de pruebas.
+despliegue móvil nativo aún no efectuado--- no son restricciones de infraestructura sino trabajo
+pendiente ya declarado, trazado en las secciones de estado real y de pruebas. La ejecución
+programada del scraper está activa (cron diario a las 23:37 America/Santiago): los runs
+\#18 a \#25 finalizaron en verde. El run \#25 completó pruebas, extracción,
+enriquecimiento y sincronización, aunque su inicio real a las 06:16 de Chile quedó fuera
+de la ventana nocturna esperada y se registró como \texttt{DEF-CI-001}.
 
 \pendiente{decisión futura sobre migrar el enriquecimiento con IA a infraestructura
 propia o a una cuota pagada; en tal caso, las restricciones de esta subsección y las
@@ -137,18 +137,34 @@ del exportador, según la inyección de dependencias documentada.
 \label{tab:tests}
 \end{table}
 
+\subsection{Evidencia de integración continua del scraper}
+
+El 11-10-2026 se verificó en el repositorio público el run programado \#25 del workflow
+\emph{Extraer eventos y sincronizar Supabase}, rama \texttt{main}, commit
+\texttt{bd7a052}. Finalizó en 13 min 58 s y publicó dos artefactos: estado posterior a
+la extracción y estado final. El job completó, en orden, las pruebas automatizadas, la
+restauración de checkpoints/caché, la extracción y el enriquecimiento con sincronización.
+
+También se verificó el run manual \#1 del workflow \emph{Validar inventario de fuentes
+culturales}, commit \texttt{0498e63}: terminó en 1 min 14 s y publicó el artefacto de
+auditoría. Las capturas sanitizadas y el detalle de cinco ejecuciones se conservan en la
+matriz metodológica y en \texttt{Evidencias\_CI\_Scraper\_2026-10-11/}.
+
 \subsection{Pruebas existentes del frontend}
 
 El frontend configura Vitest con jsdom (comando \texttt{ng test}) e incluye pruebas de
-humo de creación de componentes y servicios. No cubre todavía la lógica de filtros ni de
-servicios.
+humo de creación de componentes y servicios. Además, el 11-10-2026 se ejecutó un ciclo
+manual sobre el despliegue de Vercel con 13 escenarios de descubrimiento, búsqueda,
+filtros, detalle, mapa, calendario, recomendación de invitado y perfil. El registro
+detallado se conserva en la matriz metodológica y en la carpeta de evidencias QA.
 
 \subsection{Pruebas pendientes}
 
-\begin{table}[ht]
-\centering\small
+{\small
 \renewcommand{\arraystretch}{1.25}
-\begin{tabular}{c p{5.6cm} p{4.2cm} l}
+\begin{longtable}{@{}c p{5.4cm} p{3.8cm} p{2.5cm}@{}}
+\caption{Pruebas pendientes después del ciclo parcial del 11-10-2026.}
+\label{tab:planpruebas}\\
 \toprule
 \textbf{\#} & \textbf{Prueba} & \textbf{Alcance} & \textbf{Tipo} \\
 \midrule
@@ -161,28 +177,29 @@ servicios.
 7 & Seguridad: verificación de políticas RLS por rol & BD & Seguridad \\
 8 & Seguridad: saneamiento de entradas de usuario & Scraper/Frontend & Seguridad \\
 9 & Accesibilidad: auditoría Lighthouse/axe & Frontend & No funcional \\
-10 & Registro de resultados y trazabilidad & Proceso & Proceso \\
+10 & Regresión de los defectos abiertos del ciclo 11-10-2026 & Frontend & Regresión \\
 \bottomrule
-\end{tabular}
-\caption{Plan de pruebas pendiente. Responsables, fechas y criterios de aceptación:
-\textcolor{rojo}{\textbf{pendiente de completar por el equipo}}.}
-\label{tab:planpruebas}
-\end{table}
+\end{longtable}
+}
+
+Los responsables, fechas y criterios de aceptación específicos de las pruebas restantes
+deben asignarse en la matriz operativa antes de comenzar el siguiente ciclo.
 
 \subsection{Registro de resultados}
 
-\begin{table}[ht]
-\centering
-\begin{tabular}{l l l l}
+{\small
+\renewcommand{\arraystretch}{1.2}
+\begin{longtable}{@{}p{1.8cm} p{4.1cm} p{5.8cm} p{2.3cm}@{}}
+\caption{Resumen de ejecuciones verificables; el detalle permanece en la matriz de casos.}
+\label{tab:resultados}\\
 \toprule
 \textbf{Fecha} & \textbf{Suite ejecutada} & \textbf{Resultado} & \textbf{Responsable} \\
 \midrule
---- & --- & \textcolor{rojo}{\textbf{Pendiente de completar por el equipo}} & --- \\
+11-10-2026 & QA funcional y exploratoria del frontend en Vercel & 13 escenarios: 6 aprobados, 6 aprobados con observaciones y 1 fallido; 13 defectos abiertos & José Miguel Moncada (QA) \\
+11-10-2026 & GitHub Actions del scraper & 5 ejecuciones trazadas: 4 aprobadas y 1 fallida por inicio fuera de ventana; run \#25 funcional con 2 artefactos & GitHub Actions / QA \\
 \bottomrule
-\end{tabular}
-\caption{Registro de ejecución de pruebas (sin resultados inventados).}
-\label{tab:resultados}
-\end{table}
+\end{longtable}
+}
 
 \section{Docker: estado actual y plan}
 \label{sec:docker}
@@ -214,9 +231,9 @@ contenedores:
     \item \textbf{Scraper:} ejecución local en Windows (\texttt{instalar.bat},
     \texttt{ejecutar.bat}) y automatización en \textbf{GitHub Actions}; el workflow instala
     por sí mismo Python, Playwright y Chromium.
-    \item \textbf{Web:} despliegue en \textbf{Vercel} (hosting previsto en el design brief de
-    Fase 1 y confirmado por el equipo); build de producción con \texttt{ng build}. A la fecha
-    no existe evidencia de un despliegue ejecutado.
+    \item \textbf{Web:} despliegue de producción en \textbf{Vercel}, construido con
+    \texttt{ng build} y verificado mediante el ciclo QA del 11-10-2026 en
+    \url{https://eventocultural.vercel.app}.
     \item \textbf{Android:} compilación de la aplicación con \textbf{Capacitor 8} y
     \textbf{Android Studio} (dependencias de Capacitor presentes en \texttt{package.json}).
     \item \textbf{Base de datos:} servicio administrado de Supabase, sin contenedores.

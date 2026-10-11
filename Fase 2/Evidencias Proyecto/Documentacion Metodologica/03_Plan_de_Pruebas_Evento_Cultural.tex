@@ -17,10 +17,11 @@
 
 Este documento define la estrategia de pruebas del proyecto \textbf{Evento Cultural}.
 Su finalidad es establecer qué componentes deben verificarse, con qué enfoque, en qué
-entornos y bajo qué criterios generales. No registra ejecuciones, resultados ni
-incidencias; esa información se conserva en la matriz
+entornos y bajo qué criterios generales. El historial operativo de ejecuciones,
+resultados e incidencias se conserva en la matriz
 \code{Matriz\_Casos\_de\_Prueba\_Evento\_Cultural.xlsx} y en las evidencias de cada
-ciclo de prueba.
+ciclo de prueba. Este documento incorpora únicamente resúmenes de ciclos cerrados para
+mantener la trazabilidad metodológica sin duplicar el registro detallado.
 
 El plan cubre la plataforma web y móvil, el pipeline de extracción de eventos, la
 persistencia en Supabase, la automatización mediante GitHub Actions y las integraciones
@@ -155,7 +156,9 @@ de claves privadas en el cliente o en los artefactos.
 Los recorridos críticos son descubrir, buscar, filtrar, abrir detalle, reconocer fecha y
 ubicación, consultar organizador y abrir la fuente oficial. Se prueban estados de carga,
 error, vacío y datos parciales. Los casos de Maps se diseñan desde ahora, pero su ejecución
-requiere proveedor, clave restringida y coordenadas de prueba.
+requiere un proveedor cartográfico configurado y coordenadas de prueba. La implementación
+actual utiliza Leaflet con mosaicos de OpenStreetMap, por lo que no depende de una clave
+privada del cliente.
 
 \subsection{Recomendaciones e interacciones}
 
@@ -221,6 +224,58 @@ cierre.
 La evidencia puede consistir en salida de pruebas automatizadas, URL de GitHub Actions,
 captura, log sanitizado, consulta SQL, reporte de accesibilidad o acta de prueba con
 usuarios. Las claves, tokens y datos personales deben ocultarse antes de adjuntar evidencia.
+
+\section{Ejecución parcial de Fase 2}
+
+\subsection{Frontend desplegado}
+
+El 11 de octubre de 2026 se ejecutó un ciclo exploratorio y funcional sobre el despliegue
+de producción en \url{https://eventocultural.vercel.app}. La muestra cubrió el flujo de
+descubrimiento en escritorio (1440\,$\times$\,900) y móvil (390\,$\times$\,844): inicio,
+búsqueda, estado vacío, filtro regional, detalle, mapa, calendario, navegación inferior,
+recomendaciones de invitado y perfil sin sesión. La versión evaluada se vinculó con la
+rama \code{deploy/vercel-preview} y el commit \code{4da3963}; la asociación de esta rama
+con producción fue informada por el equipo y el historial público del repositorio quedó
+capturado como evidencia.
+
+\begin{longtable}{@{}L{5.1cm}L{9.7cm}@{}}
+\toprule
+\textbf{Indicador} & \textbf{Resultado registrado} \\
+\midrule
+\endhead
+Escenarios ejecutados & 13; corresponden a 12 casos canónicos de la matriz porque la búsqueda por título se verificó en escritorio y móvil. \\
+Resultado & 6 aprobados, 6 aprobados con observaciones y 1 fallido. En la matriz, los aprobados con observaciones se registran como \emph{Aprobado} y conservan el defecto asociado en observaciones. \\
+Defectos & 13 hallazgos abiertos: 2 de severidad alta, 8 media y 3 baja. \\
+Bloqueadores principales & El mapa móvil no renderiza todos sus mosaicos y la barra inferior fija cubre contenido en distintas vistas. \\
+Rendimiento observado & Cinco solicitudes del documento HTML de inicio respondieron HTTP 200; promedio 0,409 s, mínimo 0,239 s y máximo 0,575 s. Esta medición no sustituye Core Web Vitals. \\
+Evidencia & Matriz \code{Matriz\_Casos\_de\_Prueba\_Evento\_Cultural.xlsx} y carpeta \code{Evidencias\_QA\_Frontend\_2026-10-11/}. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Automatización del scraper}
+
+También se revisaron ejecuciones reales del repositorio del scraper en GitHub Actions.
+La matriz conserva cinco ejecuciones asociadas a casos canónicos de integración continua.
+
+\begin{longtable}{@{}L{5.1cm}L{9.7cm}@{}}
+\toprule
+\textbf{Indicador} & \textbf{Resultado registrado} \\
+\midrule
+\endhead
+Run programado principal & Run \#25, rama \code{main}, commit \code{bd7a052}: estado \emph{Success}, duración 13 min 58 s y dos artefactos, correspondientes a los estados \code{extract} y \code{final}. \\
+Secuencia del pipeline & Validación de secretos, pruebas, restauración de estado, extracción, enriquecimiento y sincronización terminaron correctamente. Las pruebas se ejecutaron antes de publicar. \\
+Validación de fuentes & Workflow manual \emph{Validar inventario de fuentes culturales}, run \#1, commit \code{0498e63}: estado \emph{Success}, duración 1 min 14 s y un artefacto de auditoría. \\
+Continuidad observada & Los runs programados \#18 a \#25 aparecen exitosos; el run \#12 conserva el antecedente de una falla de pruebas que bloqueó las fases posteriores. \\
+Puntualidad del cron & El run \#25 comenzó a las 06:16 de Chile, fuera de la ventana nocturna esperada para el cron de las 23:37. El pipeline se considera funcional, pero \code{CP-CI-002} queda fallido y se registra \code{DEF-CI-001}. \\
+Evidencia & Carpeta \code{Evidencias\_CI\_Scraper\_2026-10-11/} y matriz operativa. \\
+\bottomrule
+\end{longtable}
+
+El flujo principal es demostrable, pero el mapa móvil no se considera aprobado mientras
+permanezcan abiertos los dos defectos de severidad alta. Autenticación, persistencia de
+preferencias, seguridad/RLS, accesibilidad exhaustiva, compatibilidad entre navegadores,
+Core Web Vitals y regresión posterior a las correcciones permanecen planificados para la
+Fase 3; no se declaran ejecutados en este ciclo.
 
 \section{Roles y responsabilidades}
 

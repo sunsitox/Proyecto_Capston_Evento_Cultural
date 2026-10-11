@@ -21,7 +21,7 @@ O en Overleaf (pdfLaTeX) subiendo esta carpeta completa.
 | 1 | Product Vision | `01_Product_Vision_Evento_Cultural.tex` / `.pdf` | ✅ Redactado desde design brief, HU y estado real; métricas de éxito pendientes del equipo |
 | 4 | Definition of Done | `02_Definition_of_Done_Evento_Cultural.tex` / `.pdf` | ✅ Redactado desde los criterios de aceptación de HU y matriz MoSCoW; pendiente ratificación del equipo |
 | — | Matriz MoSCoW Fase 2 | `../Requerimientos_Funcionales_NoFuncionales_MoSCoW_ADAPTADO_Fase2.xlsx` | ✅ Revisada al 10-10-2026: estados de integración y automatización coherentes con el código y el repo oficial en GitHub |
-| 7 | Plan de pruebas + evidencias | `03_Plan_de_Pruebas_Evento_Cultural.tex` / `.pdf` | ✅ Estado real por RNF: ejecutadas / parciales / pendientes, con plan para cubrir las faltantes |
+| 7 | Plan de pruebas + evidencias | `03_Plan_de_Pruebas_Evento_Cultural.tex` / `.pdf` | ✅ Incluye el ciclo parcial del 11-10-2026; detalle en `Matriz_Casos_de_Prueba_Evento_Cultural.xlsx`, `Evidencias_QA_Frontend_2026-10-11/` y `Evidencias_CI_Scraper_2026-10-11/` |
 | 8 | Manual técnico/despliegue | `04_Manual_Tecnico_Despliegue_Evento_Cultural.tex` / `.pdf` | ✅ Ejecución local verificada. GitHub Actions desplegado y en testeo (job programado); arquitectura migrada a TypeScript directo con Supabase; **Vercel como plataforma objetivo para despliegue web** y app Android (Capacitor 8) diferida por decisión del equipo; sin Docker |
 | 6 | Evidencia de retrospectivas | `05_Plantilla_Acta_Retrospectiva_Semanal.docx` | Plantilla lista; el equipo la completa en cada reunión semanal y archiva el acta con fecha |
 
@@ -37,11 +37,11 @@ O en Overleaf (pdfLaTeX) subiendo esta carpeta completa.
 
 | Elemento | Estado |
 |---|---|
-| GitHub Actions (workflow "Extraer eventos y sincronizar Supabase") | Configurada en el repositorio; cron `37 23 * * *` (hora Santiago), desencadenante `workflow_dispatch` probada el 29-09 04:05 UTC → **éxito** (run #13). |
-| Corridas programadas completas | Pendiente: la primera ejecución programada en verde hasta confirmarla. |
+| GitHub Actions (workflow "Extraer eventos y sincronizar Supabase") | Configurada en el repositorio; cron `37 23 * * *` con zona `America/Santiago`. El run programado #25 (`main@bd7a052`) terminó **exitosamente** en 13 min 58 s y generó dos artefactos. |
+| Corridas programadas completas | Runs #18–#25 en verde. La puntualidad queda abierta: los runs recientes se iniciaron cerca de las 05:32–06:35 de Chile, fuera de la ventana nocturna esperada (`DEF-CI-001`). |
 | Repositorio oficial del scraper | `github.com/sunsitox/sunsitox-Scraper_de_eventos_culturales`: incluye la carpeta `supabase/` con las migraciones SQL y el workflow `scrape-events.yml` activo. |
-| Corridas de pruebas | #9/#10/#11/#12 fallaron; #13 OK. |
-| Integración frontend ↔ base de datos | **Implementada**: la web consume el catálogo real de Supabase directamente en TypeScript (`@supabase/supabase-js`) con autenticación real (password + OAuth preparado) y Edge Function `admin-account`; publicación sujeta a política RLS INSERT y señales de interés aún sin persistir. |
+| Corridas de pruebas | El run #25 ejecutó pruebas antes de extraer y sincronizar. El antecedente #12 demuestra que una falla de pruebas bloquea las fases posteriores. |
+| Integración frontend ↔ base de datos | **Implementada y observada en producción**: la web consume el catálogo real de Supabase directamente en TypeScript (`@supabase/supabase-js`). El ciclo QA del 11-10-2026 verificó catálogo, búsqueda, filtros, detalle, mapa, calendario y vistas de invitado; autenticación y persistencia de señales quedan pendientes de ejecución para Fase 3. |
 
 ## Verificación
 
