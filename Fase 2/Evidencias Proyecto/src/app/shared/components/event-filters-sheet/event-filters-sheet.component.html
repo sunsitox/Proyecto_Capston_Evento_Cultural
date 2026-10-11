@@ -1,0 +1,199 @@
+<app-bottom-sheet
+  [abierto]="abierto()"
+  titulo="Filtros"
+  (cerrar)="cerrar()"
+>
+  <!-- Categorías (múltiple) -->
+  <section class="ec-fs-section">
+    <h3 class="ec-fs-titulo">Categorías</h3>
+    <div class="ec-fs-chips" role="group" aria-label="Categorías">
+      @for (cat of categorias(); track cat.valor) {
+        <button
+          type="button"
+          class="ec-fs-chip"
+          [class.ec-fs-chip--activo]="borrador().categorias.includes(cat.valor)"
+          [attr.aria-pressed]="borrador().categorias.includes(cat.valor)"
+          [attr.aria-label]="cat.valor + ': ' + cat.total + ' eventos'"
+          (click)="toggleCategoria(cat.valor)"
+        >
+          {{ cat.valor }}
+          <span class="ec-fs-chip__num">{{ cat.total }}</span>
+        </button>
+      } @empty {
+        <p class="ec-fs-nota">El catálogo no tiene categorías disponibles.</p>
+      }
+    </div>
+  </section>
+
+  <!-- Territorio -->
+  <section class="ec-fs-section">
+    <h3 class="ec-fs-titulo">Región y comuna</h3>
+    <label class="ec-fs-campo">
+      <span>Región</span>
+      <select
+        [value]="borrador().region ?? ''"
+        (change)="setRegion($any($event.target).value)"
+        aria-label="Filtrar por región"
+      >
+        <option value="">Todas las regiones ({{ facetas().total }})</option>
+        @for (r of regiones(); track r.valor) {
+          <option [value]="r.valor">{{ r.valor }} ({{ r.total }})</option>
+        }
+      </select>
+    </label>
+    <label class="ec-fs-campo">
+      <span>Comuna</span>
+      <select
+        [value]="borrador().comuna ?? ''"
+        (change)="setComuna($any($event.target).value)"
+        aria-label="Filtrar por comuna"
+        [disabled]="!borrador().region"
+      >
+        <option value="">Todas las comunas ({{ comunas().length }})</option>
+        @for (c of comunas(); track c.valor) {
+          <option [value]="c.valor">{{ c.valor }} ({{ c.total }})</option>
+        }
+      </select>
+      @if (!borrador().region) {
+        <small class="ec-fs-nota">
+          Elige una región para filtrar por sus comunas.
+        </small>
+      }
+    </label>
+  </section>
+
+  <!-- Fechas -->
+  <section class="ec-fs-section">
+    <h3 class="ec-fs-titulo">Fechas</h3>
+    <div class="ec-fs-fechas">
+      <label class="ec-fs-campo">
+        <span>Desde</span>
+        <input
+          type="date"
+          [value]="borrador().fechaDesde ?? ''"
+          (change)="setFecha('fechaDesde', $any($event.target).value)"
+          aria-label="Desde"
+        />
+      </label>
+      <label class="ec-fs-campo">
+        <span>Hasta</span>
+        <input
+          type="date"
+          [value]="borrador().fechaHasta ?? ''"
+          (change)="setFecha('fechaHasta', $any($event.target).value)"
+          aria-label="Hasta"
+        />
+      </label>
+    </div>
+  </section>
+
+  <!-- Modalidad -->
+  <section class="ec-fs-section">
+    <h3 class="ec-fs-titulo">Modalidad</h3>
+    <div class="ec-fs-chips" role="group" aria-label="Modalidad">
+      <button
+        type="button"
+        class="ec-fs-chip"
+        [attr.aria-pressed]="!borrador().modalidad"
+        [class.ec-fs-chip--activo]="!borrador().modalidad"
+        (click)="setModalidad('')"
+      >
+        Todas
+      </button>
+      @for (m of modalidades(); track m.valor) {
+        <button
+          type="button"
+          class="ec-fs-chip"
+          [attr.aria-pressed]="borrador().modalidad === m.valor"
+          [class.ec-fs-chip--activo]="borrador().modalidad === m.valor"
+          [attr.aria-label]="m.valor + ': ' + m.total + ' eventos'"
+          (click)="setModalidad(m.valor)"
+        >
+          {{ m.valor }}
+          <span class="ec-fs-chip__num">{{ m.total }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- Público -->
+  <section class="ec-fs-section">
+    <h3 class="ec-fs-titulo">Público</h3>
+    <label class="ec-fs-campo">
+      <span>Público objetivo</span>
+      <select
+        [value]="borrador().publico ?? ''"
+        (change)="setPublico($any($event.target).value)"
+        aria-label="Filtrar por público objetivo"
+      >
+        <option value="">Cualquier público</option>
+        @for (p of publicos(); track p.valor) {
+          <option [value]="p.valor">{{ p.valor }} ({{ p.total }})</option>
+        }
+      </select>
+    </label>
+  </section>
+
+  <!-- Precio -->
+  <section class="ec-fs-section">
+    <h3 class="ec-fs-titulo">Precio</h3>
+    <div class="ec-fs-chips" role="group" aria-label="Precio">
+      <button
+        type="button"
+        class="ec-fs-chip"
+        [attr.aria-pressed]="precioActual() === 'todos'"
+        [class.ec-fs-chip--activo]="precioActual() === 'todos'"
+        (click)="setPrecio('todos')"
+      >
+        Todos
+      </button>
+      <button
+        type="button"
+        class="ec-fs-chip"
+        [attr.aria-pressed]="precioActual() === 'gratis'"
+        [class.ec-fs-chip--activo]="precioActual() === 'gratis'"
+        (click)="setPrecio('gratis')"
+      >
+        Solo gratuitos
+        <span class="ec-fs-chip__num">{{ facetas().gratuitos }}</span>
+      </button>
+      <button
+        type="button"
+        class="ec-fs-chip"
+        [attr.aria-pressed]="precioActual() === 'costo'"
+        [class.ec-fs-chip--activo]="precioActual() === 'costo'"
+        (click)="setPrecio('costo')"
+      >
+        Con costo
+        <span class="ec-fs-chip__num">{{ facetas().conCosto }}</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Accesibilidad -->
+  <section class="ec-fs-section">
+    <button
+      type="button"
+      class="ec-fs-chip ec-fs-chip--wide"
+      [class.ec-fs-chip--activo]="borrador().accesible"
+      [attr.aria-pressed]="borrador().accesible"
+      (click)="toggleAccesible()"
+    >
+      <ion-icon name="accessibility-outline" aria-hidden="true"></ion-icon>
+      Con accesibilidad informada
+      <span class="ec-fs-chip__num">{{ facetas().accesibles }}</span>
+    </button>
+  </section>
+
+  <!-- Pie de acciones -->
+  <div sheetFooter class="ec-fs-pie">
+    <button type="button" class="ec-btn ec-btn-outline" (click)="limpiar()">
+      <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+      Limpiar filtros
+    </button>
+    <button type="button" class="ec-btn" (click)="aplicar()">
+      <ion-icon name="checkmark-outline" aria-hidden="true"></ion-icon>
+      Aplicar ({{ coincidencias() }})
+    </button>
+  </div>
+</app-bottom-sheet>

@@ -1,0 +1,66 @@
+<div class="ec-editorial">
+  <!-- HERO - Editorial destacado -->
+  <section class="ec-editorial__hero" aria-label="Evento destacado">
+    <div class="ec-editorial__hero-image"
+         [style.background-image]="'url(https://picsum.photos/seed/hero-editorial/1600/700)'">
+    </div>
+    <div class="ec-editorial__hero-overlay">
+      <ion-chip class="ec-editorial__hero-chip" color="light">
+        <ion-label>Edición destacada</ion-label>
+      </ion-chip>
+      @if (eventoDestacado(); as ev) {
+        <h1 class="ec-editorial__hero-title">{{ ev.titulo }}</h1>
+        <p class="ec-editorial__hero-meta">
+          {{ ev.categoria }} · {{ ev.comuna }} · {{ ev.fecha | date:'longDate' }}
+        </p>
+        <p class="ec-editorial__hero-excerpt">
+          Una experiencia cultural imperdible que reúne a la comunidad
+          en torno al arte y la tradición chilena.
+        </p>
+        <ion-button
+          [routerLink]="['/evento', ev.id]"
+          fill="solid"
+          color="light"
+          size="default"
+          class="ec-editorial__hero-cta"
+        >
+          Leer más
+          <ion-icon slot="end" name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+        </ion-button>
+      }
+    </div>
+  </section>
+
+  <!-- GRID: sidebar + main -->
+  <div class="ec-editorial__grid">
+    <aside class="ec-editorial__sidebar">
+      <h3 class="ec-editorial__section-title">Explorar</h3>
+      <app-event-filters variant="sidebar"></app-event-filters>
+    </aside>
+
+    <main class="ec-editorial__main">
+      <div class="ec-editorial__toolbar">
+        <h2 class="ec-editorial__section-title">Eventos destacados</h2>
+        <div class="ec-editorial__sort">
+          <span class="ec-editorial__sort-label">Ordenar por:</span>
+          @for (orden of ordenes; track orden.value) {
+            <button
+              type="button"
+              class="ec-editorial__sort-btn"
+              [class.ec-editorial__sort-btn--active]="ordenPor() === orden.value"
+              (click)="onOrdenChange(orden.value)"
+            >
+              {{ orden.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <app-event-list
+        [layout]="'grid'"
+        [skeletonCount]="30"
+        [showClearInEmpty]="true"
+      ></app-event-list>
+    </main>
+  </div>
+</div>

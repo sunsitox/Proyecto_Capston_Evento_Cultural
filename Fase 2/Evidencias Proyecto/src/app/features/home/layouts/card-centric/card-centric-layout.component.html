@@ -1,0 +1,76 @@
+<div class="ec-cc">
+  <!-- HEADER CARD: Search hero -->
+  <ion-card class="ec-cc__header-card" mode="md">
+    <ion-card-content>
+      <div class="ec-cc__header-content">
+        <ion-chip class="ec-cc__header-chip" color="light">
+          <ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon>
+          <ion-label>Descubre</ion-label>
+        </ion-chip>
+        <h1 class="ec-cc__title">Eventos cerca de ti</h1>
+        <p class="ec-cc__subtitle">
+          Encuentra actividades culturales, ferias y eventos en tu comuna
+        </p>
+      </div>
+      <div class="ec-cc__search">
+        <ion-icon name="search-outline" aria-hidden="true" class="ec-cc__search-icon"></ion-icon>
+        <input
+          type="text"
+          placeholder="Buscar eventos, comunas, categorías..."
+          class="ec-cc__search-input"
+          [value]="filtros().texto"
+          (input)="onBusqueda($any($event.target).value)"
+          aria-label="Buscar eventos"
+        />
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- CATEGORIES CARD -->
+  <ion-card class="ec-cc__categories-card" mode="md">
+    <ion-card-content>
+      <h2 class="ec-cc__section-title">Categorías</h2>
+      <div class="ec-cc__categories-grid">
+        @for (cat of categorias; track cat.valor) {
+          <button
+            type="button"
+            class="ec-cc__category"
+            [class.ec-cc__category--active]="getCategoriaActual() === cat.valor"
+            (click)="seleccionarCategoria(cat.valor)"
+          >
+            <ion-icon [name]="cat.icono" aria-hidden="true"></ion-icon>
+            <span>{{ cat.nombre }}</span>
+          </button>
+        }
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- EVENTS CARD -->
+  <ion-card class="ec-cc__events-card" mode="md">
+    <ion-card-content>
+      <div class="ec-cc__events-header">
+        <h2 class="ec-cc__section-title">{{ tituloCategoria }}</h2>
+        <div class="ec-cc__sort">
+          <span class="ec-cc__sort-label">Ordenar:</span>
+          @for (orden of ordenes; track orden.value) {
+            <button
+              type="button"
+              class="ec-cc__sort-btn"
+              [class.ec-cc__sort-btn--active]="ordenPor() === orden.value"
+              (click)="onOrdenChange(orden.value)"
+            >
+              {{ orden.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <app-event-list
+        [layout]="'grid'"
+        [skeletonCount]="30"
+        [showClearInEmpty]="true"
+      ></app-event-list>
+    </ion-card-content>
+  </ion-card>
+</div>

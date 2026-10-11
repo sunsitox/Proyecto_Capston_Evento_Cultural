@@ -1,0 +1,96 @@
+<div class="ec-discover">
+  <!-- ================= HERO ================= -->
+  <section class="ec-hero" aria-labelledby="ec-hero-title">
+    <div class="ec-container ec-hero__inner">
+      <p class="ec-eyebrow">Chile · Eventos culturales, comerciales y municipales</p>
+      <h1 id="ec-hero-title">¿Qué haremos&nbsp;hoy?</h1>
+      <p class="ec-subtitle">
+        Somos el punto de referencia único para descubrir eventos culturales,
+        comerciales y municipales en Chile: vendimias, ferias, festivales y
+        expos de Arica a Punta Arenas, con información compilada y validada de
+        municipalidades, organizadores y productores independientes.
+      </p>
+
+      <ion-searchbar
+        class="ec-hero__search"
+        placeholder="Buscar por evento, comuna u organizador…"
+        [debounce]="300"
+        [showClearButton]="true"
+        aria-label="Buscar eventos"
+        (ionInput)="onBusqueda($event.detail.value)"
+        (ionClear)="onBusqueda('')"
+      ></ion-searchbar>
+
+      <div class="ec-hero__chips" role="group" aria-label="Filtrar por categoría">
+        <button
+          type="button"
+          class="ec-chip"
+          [class.ec-chip--active]="filtros().categorias.length === 0"
+          (click)="limpiarCategorias()"
+        >
+          Todas
+        </button>
+        @for (cat of categorias; track cat) {
+          <button
+            type="button"
+            [class]="'ec-chip ' + catClassOf(cat)"
+            [class.ec-chip--active]="filtros().categorias.includes(cat)"
+            [attr.aria-pressed]="filtros().categorias.includes(cat)"
+            (click)="toggleCategoria(cat)"
+          >
+            {{ cat }}
+          </button>
+        }
+      </div>
+
+      <dl class="ec-hero__stats">
+        <div class="ec-hero__stat">
+          <dd>{{ totalEventos() }}</dd>
+          <dt>eventos publicados</dt>
+        </div>
+        <div class="ec-hero__stat">
+          <dd>{{ totalGratuitos() }}</dd>
+          <dt>entrada gratuita</dt>
+        </div>
+        <div class="ec-hero__stat">
+          <dd>{{ totalComunas() }}</dd>
+          <dt>comunas</dt>
+        </div>
+        <div class="ec-hero__stat">
+          <dd>{{ totalRegiones() }}</dd>
+          <dt>regiones</dt>
+        </div>
+      </dl>
+
+      <p class="ec-hero__fuente">
+        <ion-icon name="document-text-outline" aria-hidden="true"></ion-icon>
+        Datos compilados de sitios y redes oficiales de municipalidades,
+        organizadores y productores · Última comprobación del compilado:
+        {{ dataActualizacion | date: 'd MMMM y' }} · La información proviene de
+        terceros: confírmala antes de asistir.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= CUERPO ================= -->
+  <div class="ec-container ec-discover-body">
+    <aside class="ec-discover-side" aria-label="Filtros de eventos">
+      <app-event-filters variant="sidebar"></app-event-filters>
+    </aside>
+
+    <section class="ec-discover-main" aria-label="Resultados de eventos">
+      <app-event-toolbar
+        [ordenPor]="ordenPor()"
+        [vista]="vista()"
+        (ordenPorChange)="setOrden($event)"
+        (vistaChange)="setVista($event)"
+      ></app-event-toolbar>
+
+      <app-event-list
+        [layout]="vista()"
+        [skeletonCount]="30"
+        [showClearInEmpty]="true"
+      ></app-event-list>
+    </section>
+  </div>
+</div>

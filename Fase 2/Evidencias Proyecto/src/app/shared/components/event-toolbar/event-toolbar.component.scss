@@ -1,0 +1,116 @@
+/* Custom element: sin esto queda inline y el toolbar salta de línea */
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.ec-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ec-space-sm);
+  flex-wrap: wrap;
+  padding: var(--ec-space-sm) 0;
+  border-bottom: 1px solid var(--ec-border-light);
+  margin-bottom: var(--ec-space-sm);
+}
+
+/* ---------- Orden: UN select (una decisión) ---------- */
+
+.ec-sort-field {
+  display: flex;
+  align-items: center;
+  gap: var(--ec-space-xs);
+  min-width: 0;
+}
+
+.ec-sort-label {
+  font-size: 0.75rem;
+  color: var(--ec-text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+
+  @media (min-width: 768px) {
+    font-size: 0.8rem;
+  }
+}
+
+.ec-sort-select {
+  --background: var(--ec-surface);
+  --color: var(--ec-text-dark);
+  --placeholder-color: var(--ec-text-muted);
+  --padding-start: var(--ec-space-sm);
+  --padding-end: var(--ec-space-sm);
+  --padding-top: var(--ec-space-xs);
+  --padding-bottom: var(--ec-space-xs);
+  --border-radius: var(--ec-radius-md);
+  --min-height: var(--ec-touch-target);
+  border: var(--ec-border-width) solid var(--ec-border);
+  border-radius: var(--ec-radius-md);
+  font-size: 0.8rem;
+  font-weight: 600;
+  width: auto;
+  max-width: 100%;
+
+  &:focus-within {
+    border-color: var(--ec-primary);
+  }
+}
+
+/* ---------- Toggle de vista ---------- */
+
+.ec-view-toggle {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ec-view-btn {
+  --padding-start: 10px;
+  --padding-end: 10px;
+  min-width: var(--ec-touch-target);
+  min-height: var(--ec-touch-target);
+  margin: 0;
+}
+
+.ec-view-toggle ion-chip {
+  --background: var(--ec-surface);
+  --color: var(--ec-text-muted);
+  border: var(--ec-border-width) solid var(--ec-border);
+  font-weight: 500;
+  font-size: 0.75rem;
+  cursor: pointer;
+  margin: 0;
+
+  ion-icon {
+    font-size: 0.9rem;
+    margin-right: 0;
+  }
+
+  @media (min-width: 768px) {
+    font-size: 0.8rem;
+  }
+
+  &:hover {
+    --background: var(--ec-surface-hover);
+  }
+
+  /* Estado activo: color + relieve del icono; el estado se anuncia
+     además con aria-pressed (no depende solo del color). */
+  &.active {
+    --background: var(--ec-primary);
+    --color: var(--ec-btn-fg);
+    border-color: var(--ec-primary);
+    font-weight: 700;
+
+    ion-icon {
+      filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.4));
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .ec-toolbar {
+    justify-content: flex-start;
+  }
+}

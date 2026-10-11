@@ -1,0 +1,531 @@
+// ========================================
+// DETALLE DE EVENTO
+// ========================================
+
+// Enlace externo no disponible en el piloto
+.ec-aviso-sin-enlace,
+.ec-btn-accent-link--mudo,
+.ec-maps-link--mudo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ec-text-light);
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+:host {
+  display: block;
+}
+
+.ec-detail-hero {
+  position: relative;
+  height: clamp(260px, 40vh, 420px);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-start;
+}
+
+.ec-detail-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(33, 28, 22, 0.35) 0%, rgba(33, 28, 22, 0) 45%);
+  pointer-events: none;
+}
+
+.ec-detail-hero__cat {
+  position: absolute;
+  left: var(--ec-space-md);
+  bottom: var(--ec-space-md);
+  box-shadow: var(--ec-shadow-md);
+}
+
+.ec-back-btn {
+  position: relative;
+  z-index: 2;
+  margin: var(--ec-space-sm);
+
+  ion-button {
+    --background: var(--ec-glass);
+    --border-radius: var(--ec-radius-circle);
+    --color: var(--ec-text-dark);
+    /* Touch target WCAG 2.5.5 */
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.ec-detail-body {
+  padding-block: var(--ec-space-lg) var(--ec-space-xl);
+}
+
+// ---------- Cabecera ----------
+
+.ec-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--ec-space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--ec-space-lg);
+
+  h1 {
+    margin: var(--ec-space-xs) 0 var(--ec-space-xs);
+    max-width: 24ch;
+  }
+}
+
+.ec-detail-fecha {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ec-primary-dark);
+
+  ion-icon {
+    font-size: 1rem;
+  }
+}
+
+.ec-detail-lugar {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  color: var(--ec-text-muted);
+
+  ion-icon {
+    color: var(--ec-text-light);
+  }
+}
+
+.ec-fav-btn {
+  --border-radius: var(--ec-radius-full);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  flex-shrink: 0;
+  height: 44px;
+}
+
+// ---------- Cuerpo ----------
+
+.ec-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--ec-space-xl);
+
+  @media (min-width: 992px) {
+    grid-template-columns: 2fr 1fr;
+    align-items: start;
+  }
+}
+
+.ec-detail-main h2 {
+  margin: 0 0 var(--ec-space-sm);
+}
+
+.ec-detail-descripcion {
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: var(--ec-text);
+  max-width: 68ch;
+  margin: 0;
+}
+
+.ec-detail-organizador {
+  margin-top: var(--ec-space-lg);
+  padding: var(--ec-space-md) var(--ec-space-lg);
+  background: var(--ec-surface);
+  border: var(--ec-border-width) solid var(--ec-border-light);
+  border-radius: var(--ec-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: fit-content;
+  max-width: 100%;
+
+  &__label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ec-text-light);
+  }
+
+  &__nombre {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--ec-text-dark);
+
+    ion-icon {
+      color: var(--ec-primary);
+    }
+  }
+}
+
+// ---------- Ficha lateral ----------
+
+.ec-info-card {
+  background: var(--ec-surface);
+  border: var(--ec-border-width) solid var(--ec-border-light);
+  border-radius: var(--ec-radius-lg);
+  box-shadow: var(--ec-shadow-sm);
+  padding: var(--ec-space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ec-space-md);
+  position: sticky;
+  top: calc(var(--ec-header-h) + var(--ec-space-md));
+
+  &__title {
+    font-family: var(--ec-font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ec-text-light);
+    margin: 0;
+  }
+}
+
+.ec-info-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+
+  ion-icon {
+    /* Centrado contra la primera línea de texto (la etiqueta):
+       sin margen superior y con tamaño acorde no queda ni alto ni
+       hundido respecto del bloque etiqueta + valor. */
+    font-size: 1.05rem;
+    color: var(--ec-primary);
+    flex-shrink: 0;
+  }
+
+  div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+}
+
+.ec-info-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ec-text-light);
+  font-weight: 700;
+}
+
+.ec-info-value {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--ec-text);
+
+  &--muted {
+    color: var(--ec-text-muted);
+    font-weight: 400;
+  }
+}
+
+.ec-info-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ec-space-sm);
+  margin-top: var(--ec-space-xs);
+}
+
+/* Enlace principal de inscripción/compra */
+.ec-btn-accent-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: var(--ec-radius-full);
+  background: var(--ec-accent);
+  color: var(--ion-color-accent-contrast);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--ec-duration-fast) var(--ec-ease);
+
+  &:hover {
+    background: var(--ec-primary-dark);
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--ec-focus);
+    outline-offset: 2px;
+  }
+}
+
+/* ---------- Aviso de procedencia (terceros) ---------- */
+
+.ec-aviso-fuente {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 var(--ec-space-lg);
+  padding: 14px 16px;
+  background: var(--ec-surface);
+  border: 1.5px dashed var(--ec-border);
+  border-radius: var(--ec-radius-md);
+  font-size: 0.84rem;
+  color: var(--ec-text-muted);
+  line-height: 1.55;
+
+  ion-icon {
+    color: var(--ec-primary-dark);
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  p {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    color: var(--ec-text-muted);
+
+    strong {
+      color: var(--ec-text-dark);
+    }
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    color: var(--ec-primary-dark);
+    font-weight: 600;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--ec-primary);
+      text-decoration: underline;
+    }
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+
+    a {
+      margin-left: 26px;
+    }
+  }
+}
+
+/* ---------- Chips de estado y modalidad ---------- */
+
+.ec-detail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+
+.ec-detail-estado,
+.ec-detail-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  /* Borde transparente por defecto: las variantes con borde (p. ej.
+     "suspendido" punteado) miden lo mismo que las que no lo llevan. */
+  border: 1px solid transparent;
+  border-radius: var(--ec-radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ec-detail-chip {
+  background: var(--ec-surface-2);
+  color: var(--ec-text-muted);
+  border: 1px solid var(--ec-border);
+
+  &--gratis {
+    background: var(--ec-green-bg);
+    border-color: transparent;
+    color: var(--ec-green);
+  }
+}
+
+.ec-detail-estado {
+  &--proximo {
+    background: var(--ec-surface-2);
+    color: var(--ec-text-muted);
+  }
+
+  &--hoy {
+    background: var(--ec-primary-bg);
+    color: var(--ec-primary-dark);
+  }
+
+  &--en_curso {
+    background: var(--ec-green-bg);
+    color: var(--ec-green);
+  }
+
+  &--suspendido {
+    background: var(--ec-surface-2);
+    color: var(--ec-text-light);
+    border: 1px dashed var(--ec-border);
+  }
+
+  &--cancelado {
+    background: var(--ec-danger-bg);
+    color: var(--ec-danger);
+  }
+}
+
+/* ---------- Ficha (dl de datos) ---------- */
+
+.ec-ficha {
+  margin: var(--ec-space-lg) 0 0;
+  padding: 0;
+  border-top: 1px solid var(--ec-border-light);
+}
+
+.ec-ficha__fila {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ec-border-light);
+
+  dt {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ec-text-light);
+    padding-top: 2px;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--ec-text);
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+.ec-ficha__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ec-ficha__sininfo {
+  color: var(--ec-text-light);
+  font-style: italic;
+}
+
+/* ---------- Mapa embebido ---------- */
+
+.ec-map {
+  margin-top: var(--ec-space-lg);
+  border: 1px solid var(--ec-border-light);
+  border-radius: var(--ec-radius-md);
+  overflow: hidden;
+  height: 280px;
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+}
+
+.ec-share-btn {
+  --border-radius: var(--ec-radius-full);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  /* Igualar el ancho de los enlaces .ec-btn-accent-link y .ec-maps-link:
+     ion-button añade su propio padding interno que lo dejaba 4px más
+     estrecho dentro de la tarjeta lateral. */
+  --padding-start: 4px;
+  --padding-end: 4px;
+  width: 100%;
+  margin-inline: 0;
+}
+
+.ec-maps-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: var(--ec-radius-full);
+  border: var(--ec-border-width) solid var(--ec-border);
+  color: var(--ec-primary-dark);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--ec-duration-fast) var(--ec-ease);
+
+  &:hover {
+    background: var(--ec-primary-bg);
+    text-decoration: none;
+  }
+}
+
+// ---------- Similares ----------
+
+.ec-detail-similares {
+  margin-top: var(--ec-space-2xl);
+  padding-top: var(--ec-space-lg);
+  border-top: 1px solid var(--ec-border-light);
+
+  h2 {
+    margin: 0 0 var(--ec-space-md);
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--ec-space-lg);
+
+    @media (min-width: 640px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+}
+
+// ---------- No encontrado ----------
+
+.ec-not-found {
+  text-align: center;
+  padding-top: var(--ec-space-2xl);
+  padding-bottom: var(--ec-space-2xl);
+
+  ion-button {
+    --border-radius: var(--ec-radius-full);
+  }
+}

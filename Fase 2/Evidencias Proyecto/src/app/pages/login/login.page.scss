@@ -1,0 +1,443 @@
+// ========================================
+// LOGIN — Split panel (escritorio) / tarjeta (móvil)
+// ========================================
+
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.ec-auth {
+  /* dvh: evita saltos con la barra del navegador en móvil */
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 1fr;
+  background: var(--ec-bg);
+
+  @supports not (height: 100dvh) {
+    min-height: 100vh;
+  }
+
+  @media (min-width: 992px) {
+    grid-template-columns: 1.1fr 1fr;
+  }
+}
+
+// ---------- Panel izquierdo ----------
+
+.ec-auth-panel {
+  display: none;
+  background: var(--ec-panel-bg);
+  color: #fff;
+
+  @media (min-width: 992px) {
+    display: flex;
+    align-items: center;
+    padding: var(--ec-space-2xl);
+  }
+}
+
+.ec-auth-panel__content {
+  max-width: 460px;
+}
+
+.ec-auth-panel h2 {
+  margin: var(--ec-space-lg) 0 var(--ec-space-xl);
+  font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem);
+  color: #fff;
+}
+
+.ec-auth-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ec-space-lg);
+
+  li {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+
+    ion-icon {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: var(--ec-accent-light);
+    }
+
+    span {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.88);
+
+      strong {
+        color: #fff;
+      }
+    }
+  }
+}
+
+.ec-auth-panel__note {
+  margin: var(--ec-space-xl) 0 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.04em;
+}
+
+// ---------- Marca ----------
+
+.ec-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--ec-radius-md);
+  background: linear-gradient(135deg, var(--ec-primary), var(--ec-accent));
+  color: #fff;
+  font-family: var(--ec-font-serif);
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: var(--ec-shadow-md);
+
+  &--light {
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow: none;
+  }
+}
+
+.ec-auth-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--ec-space-lg);
+
+  @media (min-width: 992px) {
+    display: none; // el panel ya muestra la marca
+  }
+}
+
+// ---------- Tarjeta ----------
+
+.ec-auth-card-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ec-space-lg) var(--ec-space-md);
+}
+
+.ec-auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--ec-surface);
+  border-radius: var(--ec-radius-xl);
+  box-shadow: var(--ec-shadow-md);
+  border: var(--ec-border-width) solid var(--ec-border-light);
+  padding: var(--ec-space-xl) var(--ec-space-lg);
+  text-align: center;
+  transition: border-color 0.3s ease;
+
+  &--register {
+    border-color: var(--ec-accent, #c9622d);
+  }
+}
+
+.ec-auth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--ec-radius-full);
+  background: var(--ec-surface-2);
+  color: var(--ec-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--ec-space-sm);
+
+  &--register {
+    background: rgba(201, 98, 45, 0.12);
+    color: var(--ec-accent, #c9622d);
+  }
+}
+
+.ec-auth-title {
+  font-size: 1.45rem;
+  margin-bottom: var(--ec-space-xs);
+  color: var(--ec-text-dark);
+}
+
+.ec-auth-subtitle {
+  font-size: 0.9rem;
+  color: var(--ec-text-muted);
+  margin: 0 auto var(--ec-space-lg);
+  line-height: 1.5;
+  max-width: none;
+}
+
+.ec-auth-segment {
+  --background: var(--ec-surface-2);
+  border-radius: var(--ec-radius-full);
+  padding: 4px;
+  margin-bottom: var(--ec-space-lg);
+
+  ion-segment-button {
+    --indicator-box-shadow: var(--ec-shadow-xs);
+    font-weight: 600;
+    font-size: 0.88rem;
+
+    ion-icon {
+      margin-inline-end: 6px;
+    }
+  }
+}
+
+.ec-auth-register-box {
+  background: var(--ec-surface-2);
+  border: 1px dashed var(--ec-border);
+  border-radius: var(--ec-radius-md);
+  padding: 6px 10px;
+
+  .ec-auth-checkbox-desc {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--ec-text-muted);
+    margin-top: 2px;
+  }
+}
+
+.ec-field-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 0 2px;
+  font-size: 0.78rem;
+  color: var(--ec-text-muted);
+
+  ion-icon {
+    font-size: 0.9rem;
+  }
+}
+
+// Requisitos de la contraseña en vivo (solo registro)
+.ec-pass-requisitos {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 8px 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  background: var(--ec-surface-2);
+  border-radius: var(--ec-radius-md);
+  font-size: 0.76rem;
+  color: var(--ec-text-muted);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: color var(--ec-duration-fast) var(--ec-ease);
+
+    ion-icon {
+      font-size: 0.95rem;
+      flex-shrink: 0;
+      color: var(--ec-border);
+      transition: color var(--ec-duration-fast) var(--ec-ease);
+    }
+  }
+
+  li.ec-req-ok {
+    color: var(--ec-success, #2e7d32);
+
+    ion-icon {
+      color: var(--ec-success, #2e7d32);
+    }
+  }
+}
+
+.ec-auth-switch-mode {
+  margin-top: var(--ec-space-md);
+  font-size: 0.85rem;
+  color: var(--ec-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  .ec-auth-switch-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--ec-primary);
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+
+    &:hover {
+      color: var(--ec-primary-dark);
+    }
+  }
+}
+
+// ---------- Formulario ----------
+
+.ec-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ec-space-md);
+  text-align: left;
+}
+
+.ec-auth-input {
+  --background: var(--ec-surface-2);
+  --border-radius: var(--ec-radius-md);
+  --padding-start: var(--ec-space-md);
+  --highlight-background: var(--ec-primary);
+  border: var(--ec-border-width) solid transparent;
+  border-radius: var(--ec-radius-md);
+  margin: 0;
+  transition: border-color var(--ec-duration-fast) var(--ec-ease);
+
+  &:focus-within {
+    border-color: var(--ec-primary);
+  }
+
+  ion-icon {
+    color: var(--ec-text-muted);
+    font-size: 1.1rem;
+  }
+
+  ion-input {
+    --color: var(--ec-text);
+    --placeholder-color: var(--ec-text-light);
+  }
+}
+
+.ec-auth-checkbox {
+  --background: transparent;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  font-size: 0.85rem;
+  color: var(--ec-text-muted);
+
+  ion-checkbox {
+    --border-radius: 6px;
+    --background: var(--ec-surface-2);
+    --border-color: var(--ec-border);
+    --border-color-checked: var(--ec-primary);
+    --checkmark-color: #fff;
+    --background-checked: var(--ec-primary);
+  }
+
+  ion-label {
+    font-size: 0.85rem;
+    color: var(--ec-text-muted);
+    margin-inline-start: var(--ec-space-sm);
+  }
+}
+
+// ---------- Validación (WCAG 3.3.1) ----------
+
+.ec-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ec-auth-input--invalid {
+  --border-color: var(--ec-danger);
+  --highlight-background: var(--ec-danger);
+  --background: var(--ec-danger-bg);
+  border-color: var(--ec-danger);
+
+  ion-icon {
+    color: var(--ec-danger);
+  }
+}
+
+.ec-field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 4px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ec-danger);
+
+  ion-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+}
+
+// ---------- Submit / pie ----------
+
+.ec-auth-submit {
+  --border-radius: var(--ec-radius-full);
+  margin-top: var(--ec-space-sm);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  --background: var(--ec-primary);
+  --box-shadow: var(--ec-shadow-md);
+  height: 48px;
+
+  &--register {
+    --background: var(--ec-accent, #c9622d);
+  }
+}
+
+.ec-auth-footer {
+  margin: var(--ec-space-lg) 0 0;
+  font-size: 0.85rem;
+
+  a {
+    color: var(--ec-primary);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+/* OAuth (proveedor externo) */
+.ec-auth-oauth {
+  margin-top: var(--ec-space-md);
+
+  &__divider {
+    display: flex;
+    align-items: center;
+    gap: var(--ec-space-sm);
+    margin: var(--ec-space-md) 0;
+    color: var(--ec-text-muted);
+    font-size: 0.8rem;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--ec-border, #d8d2c7);
+    }
+  }
+
+  &__btn {
+    --border-color: var(--ec-primary);
+    --color: var(--ec-primary);
+    height: 48px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  &__note {
+    margin: var(--ec-space-sm) 0 0;
+    font-size: 0.75rem;
+    color: var(--ec-text-muted);
+    text-align: center;
+  }
+}

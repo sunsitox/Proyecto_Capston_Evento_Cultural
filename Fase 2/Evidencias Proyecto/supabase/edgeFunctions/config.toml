@@ -1,0 +1,12 @@
+# Supabase Edge Functions — Evento Cultural
+#
+# Despliegue (desde la raíz de este workspace):
+#   supabase functions deploy admin-account --project-ref ngwkehuewmjykiiujqic
+#
+# Con la función desplegada, la app llama a:
+#   {supabaseUrl}/functions/v1/admin-account
+#
+# Secretos requeridos (Dashboard → Edge Functions → admin-account → Secrets):
+#   SUPABASE_SERVICE_ROLE_KEY  (la clave service role del proyecto)
+#   ALLOW_ADMIN_SIGNUP         ("true" solo en desarrollo; habilita
+#                               registrar_confirmado y deshabilitado en producción)

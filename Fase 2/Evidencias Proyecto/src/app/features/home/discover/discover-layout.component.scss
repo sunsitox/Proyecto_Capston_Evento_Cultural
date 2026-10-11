@@ -1,0 +1,195 @@
+// ========================================
+// DISCOVER — Página de descubrimiento (web)
+// Hero editorial + sidebar + grilla
+// ========================================
+
+:host {
+  display: block;
+}
+
+.ec-discover {
+  display: flex;
+  flex-direction: column;
+}
+
+// ========================================
+// HERO
+// ========================================
+
+.ec-hero {
+  padding: var(--ec-space-2xl) 0 var(--ec-space-xl);
+  background: var(--ec-hero-bg);
+  border-bottom: var(--ec-border-width) solid var(--ec-border-light);
+}
+
+.ec-hero__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.ec-hero h1 {
+  margin: var(--ec-space-sm) 0 var(--ec-space-xs);
+  font-size: clamp(2.1rem, 1.4rem + 3vw, 3.4rem);
+  font-weight: 700;
+}
+
+.ec-hero .ec-subtitle {
+  margin-bottom: var(--ec-space-lg);
+}
+
+.ec-hero__search {
+  width: 100%;
+  max-width: 640px;
+  padding: 0;
+  --background: var(--ec-surface);
+  --border-radius: var(--ec-radius-full);
+  --box-shadow: var(--ec-shadow-sm);
+  --placeholder-color: var(--ec-text-light);
+  border: var(--ec-border-width) solid var(--ec-border);
+  border-radius: var(--ec-radius-full);
+  transition: box-shadow var(--ec-duration-fast) var(--ec-ease);
+
+  &:focus-within {
+    box-shadow: var(--ec-shadow-md);
+  }
+}
+
+.ec-hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ec-space-sm);
+  margin-top: var(--ec-space-lg);
+}
+
+.ec-hero__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ec-space-xl);
+  margin: var(--ec-space-xl) 0 0;
+  padding: var(--ec-space-md) 0 0;
+  border-top: 1px solid var(--ec-border-light);
+  width: 100%;
+}
+
+/* Procedencia de datos y última actualización */
+.ec-hero__fuente {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: var(--ec-space-md) 0 0;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--ec-text-light);
+  max-width: 74ch;
+
+  ion-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--ec-primary-dark);
+  }
+}
+
+.ec-hero__stat {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+
+  dd {
+    margin: 0;
+    font-family: var(--ec-font-serif);
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--ec-text-dark);
+    line-height: 1;
+  }
+
+  dt {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ec-text-light);
+  }
+}
+
+// ========================================
+// CUERPO: sidebar + resultados
+// ========================================
+
+.ec-discover-body {
+  display: grid;
+  /* Columna de filtros 'auto': si el panel se contrae, la columna colapsa
+     a lo que ocupe el botón "Filtros" y la grilla de eventos aprovecha
+     todo el ancho (antes era 260px fijos, reservados aunque se plegara). */
+  grid-template-columns: auto 1fr;
+  gap: var(--ec-space-xl);
+  align-items: start;
+  padding-block: var(--ec-space-xl) 0;
+
+  /* El aside normalmente ocupa ~260px del layout */
+  > aside.ec-discover-side:not(:has(.ec-filters--plegado)) {
+    width: 260px;
+  }
+
+  > aside.ec-discover-side:has(.ec-filters--plegado) {
+    width: auto;
+    max-width: 100%;
+    top: calc(var(--ec-header-h) + var(--ec-space-md));
+  }
+
+  /* Contraído: el botón queda alineado verticalmente con la toolbar
+     "Ordenar por / toggle de vista" (misma línea, al lado izquierdo). */
+  .ec-discover-side:has(.ec-filters--plegado) .ec-filters__plegar {
+    margin-top: calc(var(--ec-space-sm) + 1px); // compensa padding-top del toolbar
+  }
+
+  @media (max-width: 1200px) {
+    gap: var(--ec-space-lg);
+    > aside.ec-discover-side:not(:has(.ec-filters--plegado)) {
+      width: 230px;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    grid-template-columns: 1fr;
+
+    /* En móvil la sidebar se apila arriba: siempre full-width */
+    > aside.ec-discover-side {
+      width: 100%;
+    }
+  }
+}
+
+/* El panel de filtros acompaña el scroll y NUNCA supera la altura de la
+   ventana: si hay muchas opciones (regiones, comunas, categorías del
+   catálogo real) se desplaza por dentro, así todas quedan alcanzables sin
+   tener que bajar por toda la lista de eventos. */
+.ec-discover-side {
+  position: sticky;
+  top: calc(var(--ec-header-h) + var(--ec-space-md));
+  max-height: calc(100vh - var(--ec-header-h) - var(--ec-space-md) * 2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ec-border) transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--ec-border);
+    border-radius: var(--ec-radius-full);
+  }
+
+  @media (max-width: 1023px) {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+.ec-discover-main {
+  min-width: 0;
+}

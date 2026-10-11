@@ -1,0 +1,170 @@
+<div class="ec-dashboard">
+  <!-- STATS BAR -->
+  <div class="ec-dashboard__stats">
+    <div class="ec-dashboard__stat">
+      <div class="ec-dashboard__stat-icon ec-dashboard__stat-icon--primary">
+        <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+      </div>
+      <div class="ec-dashboard__stat-content">
+        <span class="ec-dashboard__stat-value">{{ stats().total }}</span>
+        <span class="ec-dashboard__stat-label">Eventos totales</span>
+      </div>
+    </div>
+
+    <div class="ec-dashboard__stat">
+      <div class="ec-dashboard__stat-icon ec-dashboard__stat-icon--success">
+        <ion-icon name="gift-outline" aria-hidden="true"></ion-icon>
+      </div>
+      <div class="ec-dashboard__stat-content">
+        <span class="ec-dashboard__stat-value">{{ stats().gratuitos }}</span>
+        <span class="ec-dashboard__stat-label">Gratuitos</span>
+      </div>
+    </div>
+
+    <div class="ec-dashboard__stat">
+      <div class="ec-dashboard__stat-icon ec-dashboard__stat-icon--warning">
+        <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
+      </div>
+      <div class="ec-dashboard__stat-content">
+        <span class="ec-dashboard__stat-value">{{ stats().categorias }}</span>
+        <span class="ec-dashboard__stat-label">Categorías</span>
+      </div>
+    </div>
+
+    <div class="ec-dashboard__stat">
+      <div class="ec-dashboard__stat-icon ec-dashboard__stat-icon--accent">
+        <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+      </div>
+      <div class="ec-dashboard__stat-content">
+        <span class="ec-dashboard__stat-value">{{ stats().comunas }}</span>
+        <span class="ec-dashboard__stat-label">Comunas</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 COLUMN GRID -->
+  <div class="ec-dashboard__grid">
+    <!-- LEFT: Filters + Categories -->
+    <aside class="ec-dashboard__left">
+      <ion-card class="ec-dashboard__panel" mode="md">
+        <ion-card-header>
+          <ion-card-title class="ec-dashboard__panel-title">
+            <ion-icon name="options-outline" aria-hidden="true"></ion-icon>
+            Filtros
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <app-event-filters variant="sidebar"></app-event-filters>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="ec-dashboard__panel" mode="md">
+        <ion-card-header>
+          <ion-card-title class="ec-dashboard__panel-title">
+            <ion-icon name="pie-chart-outline" aria-hidden="true"></ion-icon>
+            Por categoría
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ul class="ec-dashboard__list">
+            @for (item of eventosPorCategoria(); track item.categoria) {
+              <li class="ec-dashboard__list-item">
+                <span class="ec-dashboard__list-label">{{ item.categoria }}</span>
+                <span class="ec-dashboard__list-value">{{ item.count }}</span>
+              </li>
+            }
+          </ul>
+        </ion-card-content>
+      </ion-card>
+    </aside>
+
+    <!-- CENTER: Main list -->
+    <main class="ec-dashboard__center">
+      <ion-card class="ec-dashboard__panel ec-dashboard__panel--main" mode="md">
+        <ion-card-header>
+          <div class="ec-dashboard__panel-header">
+            <ion-card-title class="ec-dashboard__panel-title">
+              <ion-icon name="grid-outline" aria-hidden="true"></ion-icon>
+              Todos los eventos
+            </ion-card-title>
+            <div class="ec-dashboard__sort">
+              @for (orden of ordenes; track orden.value) {
+                <button
+                  type="button"
+                  class="ec-dashboard__sort-btn"
+                  [class.ec-dashboard__sort-btn--active]="ordenPor() === orden.value"
+                  (click)="onOrdenChange(orden.value)"
+                >
+                  {{ orden.label }}
+                </button>
+              }
+            </div>
+          </div>
+        </ion-card-header>
+        <ion-card-content>
+          <app-event-list
+            [layout]="'lista'"
+            [skeletonCount]="30"
+            [showClearInEmpty]="true"
+          ></app-event-list>
+        </ion-card-content>
+      </ion-card>
+    </main>
+
+    <!-- RIGHT: Widgets -->
+    <aside class="ec-dashboard__right">
+      <ion-card class="ec-dashboard__panel" mode="md">
+        <ion-card-header>
+          <ion-card-title class="ec-dashboard__panel-title">
+            <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+            Próximos eventos
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ul class="ec-dashboard__upcoming">
+            @for (evento of proximosEventos(); track evento.id) {
+              <li class="ec-dashboard__upcoming-item">
+                <a [routerLink]="['/evento', evento.id]" class="ec-dashboard__upcoming-link">
+                  <div class="ec-dashboard__upcoming-date">
+                    <span class="ec-dashboard__upcoming-day">{{ evento.fecha | date:'dd' }}</span>
+                    <span class="ec-dashboard__upcoming-month">{{ evento.fecha | date:'MMM' }}</span>
+                  </div>
+                  <div class="ec-dashboard__upcoming-info">
+                    <strong class="ec-dashboard__upcoming-title">{{ evento.titulo }}</strong>
+                    <span class="ec-dashboard__upcoming-meta">
+                      {{ evento.comuna }} · {{ evento.hora }}
+                    </span>
+                  </div>
+                </a>
+              </li>
+            }
+          </ul>
+        </ion-card-content>
+      </ion-card>
+
+      @if (api.estaAutenticado()) {
+        <ion-card class="ec-dashboard__panel ec-dashboard__panel--cta" mode="md">
+          <ion-card-header>
+            <ion-card-title class="ec-dashboard__panel-title">
+              <ion-icon name="add-circle-outline" aria-hidden="true"></ion-icon>
+              ¿Organizas un evento?
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p class="ec-dashboard__panel-text">
+              Publica tu evento y llega a miles de personas.
+            </p>
+            <ion-button
+              routerLink="/publicar"
+              expand="block"
+              color="primary"
+              class="ec-dashboard__cta"
+            >
+              Publicar evento
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      }
+    </aside>
+  </div>
+</div>

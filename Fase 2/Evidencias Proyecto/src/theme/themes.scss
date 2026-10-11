@@ -1,0 +1,96 @@
+/* ========================================
+   THEME — Papel (identidad única del proyecto principal)
+   Los valores viven en _tokens.scss (primitivos --pr-*); aquí solo se
+   mapean a los semánticos y a las variables de Ionic, para que la
+   paleta tenga UNA sola fuente de verdad.
+   El experimento Plaza vive ahora en el proyecto aparte
+   /plaza-experimento (ver README en esa carpeta).
+   ======================================== */
+
+:root,
+body.theme-earthy {
+  /* Background Colors */
+  --ec-bg: var(--pr-paper);
+  --ec-surface: var(--pr-card);
+  --ec-surface-2: var(--pr-tint);
+  --ec-surface-hover: var(--pr-tint-hover);
+
+  /* Primary Colors */
+  --ec-primary: var(--pr-primary);
+  --ec-primary-dark: var(--pr-primary-deep);
+  --ec-primary-light: var(--pr-primary-soft);
+  --ec-primary-bg: var(--pr-primary-wash);
+
+  /* Secondary & Accent */
+  --ec-secondary: var(--pr-ochre);
+  --ec-secondary-light: var(--pr-ochre-soft);
+  --ec-accent: var(--pr-copper);
+  --ec-accent-light: var(--pr-copper-soft);
+
+  /* Semantic Colors */
+  --ec-green: var(--pr-olive);
+  --ec-green-light: var(--pr-olive-soft);
+  --ec-green-bg: var(--pr-olive-wash);
+  --ec-danger: var(--pr-brick);
+  --ec-danger-bg: var(--pr-brick-wash);
+
+  /* Text Colors */
+  --ec-text: var(--pr-ink-soft);
+  --ec-text-muted: var(--pr-ink-muted);
+  --ec-text-light: var(--pr-ink-quiet);
+  --ec-text-dark: var(--pr-ink);
+
+  /* Borders */
+  --ec-border: var(--pr-border-soft);
+  --ec-border-light: var(--pr-hairline);
+
+  /* Shadows */
+  --ec-shadow-xs: 0 1px 2px rgba(60, 47, 33, 0.05);
+  --ec-shadow-sm: 0 2px 8px rgba(60, 47, 33, 0.07);
+  --ec-shadow-md: 0 6px 20px rgba(60, 47, 33, 0.09);
+  --ec-shadow-lg: 0 14px 40px rgba(60, 47, 33, 0.12);
+
+  /* Ionic Variables */
+  --ion-color-primary: var(--pr-primary);
+  --ion-color-primary-rgb: 122, 79, 46;
+  --ion-color-primary-contrast: var(--pr-pure-white);
+  --ion-color-primary-shade: #6b4528;
+  --ion-color-primary-tint: #876138;
+
+  --ion-color-secondary: var(--pr-ochre);
+  --ion-color-secondary-rgb: 138, 101, 55;
+  --ion-color-secondary-contrast: var(--pr-pure-white);
+
+  --ion-color-success: var(--pr-olive);
+  --ion-color-success-rgb: 61, 81, 53;
+  --ion-color-success-contrast: var(--pr-pure-white);
+
+  --ion-color-warning: #b88847;
+  --ion-color-warning-rgb: 184, 136, 71;
+  --ion-color-warning-contrast: var(--pr-pure-white);
+
+  --ion-color-danger: var(--pr-brick);
+  --ion-color-danger-rgb: 154, 59, 46;
+  --ion-color-danger-contrast: var(--pr-pure-white);
+
+  --ion-color-medium: var(--pr-ink-muted);
+  --ion-color-medium-rgb: 102, 94, 82;
+  --ion-color-medium-contrast: var(--pr-pure-white);
+
+  --ion-color-light: var(--pr-tint);
+  --ion-color-light-rgb: 240, 233, 223;
+  --ion-color-light-contrast: var(--pr-ink);
+
+  --ion-color-dark: var(--pr-ink);
+  --ion-color-dark-rgb: 33, 28, 22;
+  --ion-color-dark-contrast: var(--pr-pure-white);
+
+  --ion-color-accent: var(--pr-copper);
+  --ion-color-accent-rgb: 163, 74, 38;
+  --ion-color-accent-contrast: var(--pr-pure-white);
+
+  --ion-background-color: var(--ec-bg);
+  --ion-text-color: var(--ec-text);
+  --ion-toolbar-background: var(--ec-surface);
+  --ion-item-background: var(--ec-surface);
+}
