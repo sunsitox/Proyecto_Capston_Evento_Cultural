@@ -42,12 +42,12 @@ RNF-12 & Accesibilidad & Buenas prácticas de accesibilidad web & Could \\
 RNF-01 & Parcial & Navegación adaptativa implementada; sin evaluación de usabilidad registrada. \textcolor{rojo}{\textbf{Pendiente.}} \\
 RNF-02 & Cumplido & Ionic/Angular responsive; navegación dual móvil/escritorio (\texttt{MainLayoutComponent}), grid con breakpoints. \\
 RNF-03 & Parcial & Caché condicional, bulkhead por dominio y checkpoints optimizan la extracción; falta medición de tiempos del frontend con datos reales. \textcolor{rojo}{\textbf{Pendiente.}} \\
-RNF-04 & Parcial & RLS en todas las tablas y secretos solo en entorno/GitHub Secrets; las pantallas de login y registro aún son simuladas. \\
-RNF-05 & Parcial & El modelo prevé roles (\texttt{profiles.role}) y reglas RLS; el control de acceso funcional en la aplicación está pendiente. \\
-RNF-06 & Parcial & GitHub Actions con ejecución manual y cron diario activo desde el 24-09-2026 (verificado: corridas \#9--\#11 del 25 al 27-09). \textcolor{rojo}{\textbf{Pendiente:} ejecución automática completa en verde tras corregir la prueba dependiente del tiempo (Plan de pruebas §5.1).} \\
+RNF-04 & Parcial & RLS en todas las tablas y secretos solo en entorno/GitHub Secrets/Edge Function; autenticación real implementada en la web (Supabase Auth vía supabase-js: login/registro por contraseña, OAuth preparado, eliminación de cuenta por Edge Function). Falta activar los proveedores OAuth y recuperar-contraseña. \\
+RNF-05 & Parcial & El modelo prevé roles (\texttt{profiles.role}) y reglas RLS; el inicio de sesión real ya distingue al usuario autenticado en la interfaz (perfil, cierre y eliminación de cuenta), pero faltan la política RLS INSERT que habilite la publicación por rol y el panel de administración. \\
+RNF-06 & Parcial & GitHub Actions con ejecución manual y programada diaria a las 23:37 (America/Santiago) desde el 29-09-2026 (cron activo desde el 24-09; corridas \#9--\#13 del 25 al 29-09; \#13 en verde tras corregir la prueba dependiente del tiempo). El despliegue web (Vercel) y la app móvil (Capacitor) quedaron diferidos por decisión del equipo, ver Sección~\ref{sec:frontend}. \textcolor{rojo}{\textbf{Pendiente:} primera corrida programada completa en verde (Plan de pruebas, sección 5.1).} \\
 RNF-07 & Cumplido (diseño) & Paginación por página en conectores, upsert idempotente y SQLite como buffer. \\
 RNF-08 & Cumplido (pipeline) & Sanitización, filtro cultural, normalización de ubicación, deduplicación y UUID deterministas. \\
-RNF-09 & Cumplido & Documentación interna (\texttt{docs/}), patrones documentados y 14 módulos de pruebas. \\
+RNF-09 & Cumplido & Documentación interna del entregable de Fase 2, patrones documentados y 14 módulos de pruebas. \\
 RNF-10 & Cumplido & Contenido en español; división administrativa chilena (regiones/comunas). \\
 RNF-11 & Parcial & Portabilidad adoptada por el equipo: GitHub Actions (scraper), Vercel (web) y Capacitor 8 + Android Studio (Android); sin Docker por decisión del equipo (ver Sección~\ref{sec:docker}). \\
 RNF-12 & Parcial & Accesibilidad como criterio de filtro en el frontend; auditoría formal pendiente. \textcolor{rojo}{\textbf{Pendiente.}} \\
@@ -58,9 +58,9 @@ RNF-12 & Parcial & Accesibilidad como criterio de filtro en el frontend; auditor
 
 \subsection{Requisitos declarados y no implementados}
 
-Para evitar inconsistencias en la evaluación se declara explícitamente: no existe
-autenticación real en el frontend (pantallas simuladas); las notificaciones (RF-13), el
-panel de administración (RF-14) y la moderación (RF-11/RF-12 del catálogo funcional) no
+Para evitar inconsistencias en la evaluación se declara explícitamente: la autenticación
+real ya está implementada en la web (ver Sección~\ref{sec:arq}); las notificaciones
+(RF-13), el panel de administración (RF-14) y la moderación (RF-11/RF-12 del catálogo funcional) no
 tienen implementación en el código entregado; las estadísticas (RF-17) quedaron
 \emph{Won't have} en Fase 1; Docker no está implementado y el equipo decidió no utilizarlo
 (Sección~\ref{sec:docker}).
@@ -86,12 +86,15 @@ limitaciones operativas visibles en el diseño del sistema:
     prototipado en la nube en lugar de un despliegue local o dedicado.
 \end{itemize}
 
-Otras limitaciones visibles del estado actual ---frontend conectado a datos de ejemplo
-(\texttt{mock}), autenticación simulada y despliegue web aún no efectuado--- no son
-restricciones de infraestructura sino trabajo pendiente ya declarado, trazado en las
-secciones de estado real y de pruebas. La ejecución programada del scraper está activa
-(cron diario desde el 24-09-2026); su robustez depende de corregir la prueba dependiente
-del tiempo documentada en el plan de pruebas.
+Otras limitaciones visibles del estado actual ---sesiones y señales de interés sin
+persistencia en base de datos (\texttt{user\_event\_interactions}), publicación
+bloqueada por RLS hasta definir su política, proveedores OAuth aún no activados y
+despliegue web aún no efectuado--- no son restricciones de infraestructura sino trabajo
+pendiente ya declarado, trazado en las secciones de estado real y de pruebas. La ejecución programada del scraper está activa
+(cron diario a las 23:37 America/Santiago desde el 29-09-2026, activo desde el 24-09);
+la corrección de la prueba dependiente del tiempo (29-09) dejó la corrida manual \#13
+en verde y resta confirmar la primera corrida programada completa, documentada en el
+plan de pruebas.
 
 \pendiente{decisión futura sobre migrar el enriquecimiento con IA a infraestructura
 propia o a una cuota pagada; en tal caso, las restricciones de esta subsección y las
@@ -258,7 +261,7 @@ regionales), cada uno con formatos, fechas y estructuras distintos: agendas Word
 carteleras HTML e imágenes de afiches. El ciudadano debe revisar sitio por sitio y muchos
 eventos ---especialmente municipales y gratuitos--- no llegan a las plataformas comerciales.
 La magnitud del problema quedó documentada en el propio proyecto: el inventario de fuentes
-levantó 390 candidatas, de las cuales se integraron 20 permanentes más 1 estacional mediante
+levantó 390 candidatas, de las cuales se integraron 21 permanentes más 1 estacional mediante
 conectores específicos.
 
 \subsection{¿Qué hace diferente a la solución?}
@@ -266,7 +269,7 @@ conectores específicos.
 \begin{itemize}[leftmargin=1.4em]
     \item \textbf{Cobertura municipal y regional:} prioriza agendas culturales públicas
     (municipios, centros culturales, universidades), no solo ticketeras comerciales
-    (tabla de 21 fuentes del README del scraper).
+    (tabla de 22 fuentes configuradas en el entregable del scraper de Fase 2).
     \item \textbf{Enriquecimiento con IA selectivo:} OCR de afiches, normalización de
     ubicaciones y redacción editorial con NVIDIA NIM, aplicado solo a eventos nuevos o
     modificados, con control de costo y latencia (40 RPM globales).
@@ -283,8 +286,10 @@ conectores específicos.
 
 \subsection{¿Qué valor agrega?}
 
-Para el ciudadano, un solo lugar para descubrir eventos con búsqueda, filtros (región,
-comuna, fecha, gratuito, modalidad, accesibilidad), mapa y calendario. Para los
+Para el ciudadano, un solo lugar para descubrir eventos reales (catálogo en
+Supabase, sincronizado por el pipeline) con búsqueda, filtros (región, comuna, fecha,
+gratuito, modalidad, accesibilidad), mapa interactivo (Leaflet sobre OpenStreetMap,
+con geolocalización) y calendario. Para los
 organizadores públicos, visibilidad sin costo para agendas municipales y de centros
 culturales. Para el ecosistema de datos, un catálogo normalizado con procedencia
 verificable (\texttt{event\_provenance} conserva texto original y OCR). Para lo académico,
@@ -295,25 +300,53 @@ patrones de arquitectura documentados y probados.
 (número de eventos publicados, tiempos, usuarios) no se afirman en este documento y deben
 registrarse con datos de ejecución cuando el equipo los genere.
 
-\subsection{Modelo de negocio (propuesto, no implementado)}
+\subsection{Modelo de sostenibilidad y proyección de negocio (propuesta futura; no implementada en el MVP)}
 
-El equipo definió dos líneas de sostenibilidad, que a la fecha son \textcolor{rojo}{\textbf{propuestas
-de diseño}} y no funcionalidades implementadas ni comprometidas contractualmente:
+\textbf{Estado actual del MVP.} El proyecto no implementa monetización, pagos, planes
+comerciales, venta de entradas, cuentas de organizadores, publicidad, patrocinios,
+enlaces de afiliación ni contratos con entidades. El MVP funciona como un \textbf{catálogo
+cultural gratuito}: obtiene información desde fuentes de acceso público, conserva la
+procedencia y trazabilidad de los datos (\texttt{event\_provenance}) y redirige al usuario
+hacia la fuente original de cada evento para consultar detalles, reservar o comprar
+entradas cuando corresponda. La propuesta de valor actual consiste en centralizar el
+descubrimiento de eventos culturales, facilitar búsquedas y filtros, preservar la
+trazabilidad de las fuentes y aumentar la visibilidad de actividades culturales sin
+cobrar a usuarios ni organizadores por la información recopilada.
 
-\begin{enumerate}[leftmargin=1.6em]
-    \item \textbf{Publicación no invasiva con redireccionamiento de información (línea
-    principal):} el catálogo se alimenta exclusivamente de fuentes públicas y se
-    redirige al usuario hacia la fuente original de cada evento (municipalidad, centro
-    cultural o ticketera) para consultarlo o reservarlo. La plataforma no intermedia
-    pagos ni cobra por la publicación: el valor para el ciudadano es el descubrimiento
-    unificado y el valor para el organizador público es la visibilidad sin costo, lo
-    que se alinea con la procedencia verificable de \texttt{event\_provenance}.
-    \item \textbf{Contacto directo con organizadores por visibilidad mejorada (línea a
-    evaluar):} como opción futura menos probable, los organizadores podrían pagar por
-    destacar sus eventos en la plataforma (mayor visibilidad en búsquedas y portada).
-    Esta línea queda \textcolor{rojo}{\textbf{por decidir por el equipo}}: exige validar
-    aspectos legales, de precio y de imparcialidad del catálogo antes de adoptarse.
-\end{enumerate}
+\textbf{Proyección futura de sostenibilidad.} Como posibilidad futura, condicionada y no
+prioritaria, podría evaluarse una opción de visibilidad mejorada para organizadores
+verificados (eventos destacados o espacios promocionales). Esta alternativa solo podría
+examinarse cuando existan, de manera simultánea: audiencia suficiente, métricas
+confiables, perfiles de organizadores verificados, mecanismos de contacto comercial,
+capacidad de moderación y validación legal, económica y ética. Si alguna vez se
+implementara contenido destacado o patrocinado, debería (i) identificarse explícitamente
+como destacado, promocionado o patrocinado; (ii) mantenerse separado de las
+recomendaciones orgánicas basadas en intereses del usuario; (iii) no impedir el acceso
+gratuito al descubrimiento de eventos; (iv) respetar la procedencia de la información y
+las condiciones de uso de las fuentes; y (v) no alterar silenciosamente los resultados
+ni favorecer contenido pagado sin transparencia.
 
-Ninguna de las dos líneas compromete el carácter público y gratuito del descubrimiento de
-eventos, que es el objetivo central del proyecto.
+\textbf{Alternativas descartadas para la primera etapa.} No se implementarán
+inicialmente: la comisión por venta de entradas, la intermediación de pagos, los planes
+de suscripción para organizadores, la venta o explotación comercial de datos personales
+y la publicidad invasiva (enlaces de afiliación o promoción que modifique silenciosamente
+las recomendaciones). La venta intermediada de entradas exigiría integración con medios
+de pago, acuerdos comerciales, gestión de reembolsos, soporte, obligaciones tributarias,
+seguridad, protección de datos y responsabilidades legales que exceden el alcance técnico
+y académico del MVP. Los planes para organizadores requerirían un portal de gestión,
+perfiles verificados, publicación controlada, estadísticas reales, atención a usuarios y
+una base de audiencia suficiente que hoy no existe.
+
+\textbf{Limitaciones actuales de Vercel.} El frontend del MVP se proyecta para
+desplegarse en Vercel bajo el plan \textbf{Hobby}, orientado a uso personal y no
+comercial. Por ese motivo, durante la etapa actual no se implementarán anuncios,
+promociones pagadas, patrocinios comerciales, enlaces de afiliación, cobro a
+organizadores ni procesamiento de pagos. El scraper no se despliega en Vercel: se ejecuta
+periódicamente mediante GitHub Actions (diario a las 23:37, America/Santiago), y Supabase
+se utiliza como servicio administrado para la persistencia de datos. Una monetización
+futura exigiría evaluar previamente una migración a un plan comercial de Vercel o a una
+infraestructura alternativa compatible con uso comercial, además de las validaciones
+funcionales, legales, económicas y éticas necesarias.
+
+Ninguna de las líneas anteriores compromete el carácter público y gratuito del
+descubrimiento de eventos, que es el objetivo central del proyecto.

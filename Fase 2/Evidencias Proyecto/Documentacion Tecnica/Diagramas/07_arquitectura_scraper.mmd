@@ -61,14 +61,14 @@ flowchart TB
     ES --> SB
   end
 
-  GHA["GitHub Actions<br/>(ejecución manual o periódica)"]
+  GHA["GitHub Actions<br/>(workflow scrape-events.yml: manual y<br/>programado diario 23:37 America/Santiago)"]
   ST[("Checkpoint SQLite<br/>detalles · hashes · cola de IA")]
 
   A1 --> H
   A2 --> H
   A3 --> H
   A4 --> PW
-  GHA -->|"inicia fase extract"| J
+  GHA -->|"inicia workflow: secretos y pruebas,<br/>luego fase extract"| J
   GHA -.->|"guarda avances<br/>por fuente y ficha"| ST
   ST -.->|"restauración y respaldo<br/>en futuras ejecuciones"| GHA
   C --> CMP

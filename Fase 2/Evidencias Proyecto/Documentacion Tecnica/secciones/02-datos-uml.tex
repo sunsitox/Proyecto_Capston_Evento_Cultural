@@ -7,14 +7,14 @@
 
 \subsection{Fuente del modelo}
 
-El modelo se documenta a partir de \texttt{docs/DATABASE.md}, \texttt{docs/SUPABASE.md},
-el DBML editable (\texttt{docs/evento\_cultural\_modelo.dbml}), el diccionario de tablas
-(DOCX, versión documentada al 21-09-2026) y el diagrama ER de Fase 1
-(\texttt{DB\_evento\_cultural.pdf}). \seccionpendiente{la carpeta \texttt{supabase/migrations/}
-con los archivos SQL no está incluida en la copia entregada; confirmar su presencia en el
-repositorio oficial.}
+El modelo se documenta a partir de la documentación de base de datos incluida en el
+entregable del scraper de Fase 2, el DBML editable, el diccionario de tablas
+(DOCX, versión documentada al 03-10-2026) y el diagrama ER de Fase 1
+(\texttt{DB\_evento\_cultural.pdf}). Las migraciones SQL no se incluyeron en la copia local
+entregada, pero están disponibles en el repositorio oficial del proyecto
+(\url{https://github.com/sunsitox/sunsitox-Scraper_de_eventos_culturales}).
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{06_modelo_er.pdf}
 \caption{Modelo entidad--relación (fuente editable: \texttt{Diagramas/06\_modelo\_er.mmd}, Mermaid).}
@@ -38,8 +38,9 @@ Ingesta y catálogo & \texttt{sources} & Agenda, municipalidad, ticketera o siti
  & \texttt{event\_categories} & Relación N:M entre eventos y categorías \\
  & \texttt{media\_assets} & Imágenes y futuros multimedia \\
  & \texttt{scrape\_runs} & Bitácora de ejecuciones locales y de GitHub Actions \\
- & \texttt{event\_provenance} & Evidencia privada: texto original, OCR y URL canónica \\
-Aplicación futura & \texttt{profiles}, \texttt{favorites}, \texttt{reports} & Base prevista de la aplicación; no intervienen en el scraper \\
+ & \texttt{event\_provenance} & Evidencia privada: URL original, descripción de la fuente, texto OCR y marca de reescritura \\\
+Aplicación & \texttt{profiles}, \texttt{user\_event\_interactions}, \texttt{reports} & Base prevista de la aplicación; no intervienen en el scraper; \texttt{profiles} referencia a \texttt{auth\_users}, la tabla externa de Supabase Auth \\
+Staging & \texttt{catalog\_staging} & Área privada de carga por lotes (payload JSON) antes de publicar el catálogo \\
 \bottomrule
 \end{tabular}
 \caption{Tablas del modelo de datos según el diccionario y el DBML del proyecto.}
@@ -77,29 +78,37 @@ Inscribirse}); borrado físico de vencidos solo con
 Los cuatro diagramas UML exigidos por el anexo metodológico se escriben como código fuente
 Mermaid (\texttt{.mmd}) y se renderizan a PDF con \texttt{mermaid-cli}, en la carpeta
 \texttt{Diagramas/} de esta misma sección. Los casos de uso se derivan de la matriz MoSCoW de
-Fase 1 y de las páginas realmente implementadas en el frontend. Todos los diagramas (01--06)
+Fase 1 y de las páginas realmente implementadas en el frontend. Todos los diagramas (01--07)
 comparten un estándar visual único (paleta institucional, tipografía Arial, flechas
 reforzadas), declarado dentro de cada archivo \texttt{.mmd}, y fueron regenerados el
 27-09-2026 al migrar de Draw.io a Mermaid para automatizar el trazado de líneas y facilitar
-el mantenimiento (detalle en el \texttt{REGISTRO\_CAMBIOS\_DOCUMENTACION.md}, §16.3).
+el mantenimiento; el diagrama entidad--relación (06) fue corregido y reexportado el
+03-10-2026 para alinearlo con el diccionario de tablas y el DBML vigentes; los
+diagramas 01 (arquitectura general), 02 (componentes) y 04 (secuencia) fueron
+regenerados el 10-10-2026 para reflejar la integración del sistema: la API
+intermedia (\texttt{supabase\_backend.py}) entre el frontend y Supabase, la
+autenticación real con regreso OAuth en \texttt{/auth/callback} y el mapa
+interactivo (Leaflet sobre OpenStreetMap).
 
 \subsection{Casos de uso}
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.9\textwidth]{03_casos_de_uso.pdf}
 \caption{Casos de uso de la plataforma (fuente editable: \texttt{Diagramas/03\_casos\_de\_uso.mmd}, Mermaid).}
 \label{fig:uc}
 \end{figure}
 
-El visitante busca, filtra, ve el detalle, consulta el mapa y el calendario; el usuario
-registrado inicia sesión y recibe recomendaciones; el organizador publica eventos
-(simulado); GitHub Actions activa la recolección automática, que usa NVIDIA NIM como
-servicio externo de OCR y redacción.
+El visitante busca, filtra, ve el detalle, consulta el mapa interactivo real (Leaflet
+sobre OpenStreetMap) y el calendario; el usuario registrado inicia sesión con correo y
+contraseña (Supabase Auth vía \texttt{supabase-js}; OAuth Google preparado) y recibe
+recomendaciones; el organizador intenta publicar eventos, pero el INSERT queda sujeto a
+la política RLS INSERT (aún no definida); GitHub Actions activa la recolección
+automática, que usa NVIDIA NIM como servicio externo de OCR y redacción.
 
 \subsection{Secuencia de la funcionalidad principal}
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{04_secuencia.pdf}
 \caption{Secuencia: extracción, enriquecimiento y publicación (editable: \texttt{Diagramas/04\_secuencia.mmd}, Mermaid).}
@@ -115,14 +124,17 @@ registrando la corrida en \texttt{scrape\_runs}.
 \subsection{Componentes y clases}
 
 El diagrama de componentes (Figura~\ref{fig:comp}) muestra los módulos del frontend y del
-scraper y su comunicación con la base de datos. El diagrama de clases (conceptual) refleja
-los roles reales del núcleo del scraper documentados en \texttt{docs/ARCHITECTURE.md}:
+scraper y su comunicación con la base de datos. En el frontend destacan además el mapa
+interactivo real (Leaflet sobre tiles de OpenStreetMap, con pines ligados al catálogo,
+popups y geolocalización opcional del usuario) y la página de regreso OAuth
+(/auth/callback) integrada en el router. El diagrama de clases (conceptual) refleja
+los roles reales del núcleo del scraper verificados en el entregable de Fase 2:
 \texttt{EventPipeline}, \texttt{ConnectorFactory}, \texttt{Connector} (Strategy),
 \texttt{Event}, \texttt{EventSanitizer}, \texttt{LocationNormalizer},
 \texttt{NvidiaService}, \texttt{SupabaseExporter}, \texttt{DatasetExporter} y
 \texttt{PipelineState}.
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{05_clases.pdf}
 \caption{Diagrama de clases conceptual del núcleo del scraper (editable: \texttt{Diagramas/05\_clases.mmd}, Mermaid).}
@@ -131,6 +143,19 @@ los roles reales del núcleo del scraper documentados en \texttt{docs/ARCHITECTU
 
 \subsection{Pendientes de UML}
 
-\seccionpendiente{si el docente exige una versión gráfica adicional con notación UML estricta,
-regenerarla a partir de los archivos editables entregados y sustituir las figuras
-correspondientes.}
+\begin{itemize}[leftmargin=1.4em]
+    \item \textbf{Resuelto (10-10-2026):} los diagramas 01, 02 y 04 fueron regenerados
+    desde sus fuentes \texttt{.mmd} editables para mostrar la arquitectura vigente
+    (API intermedia, autenticación real, mapa interactivo), eliminando la
+    inconsistencia \emph{texto / figura} que existía.
+    \item Si el docente exige notación UML estricta: los diagramas de clases
+    (05) y casos de uso (03) son versiones conceptuales en Mermaid; una regeneración
+    formal añadiría atributos y multiplicidades por clase, y relaciones
+    \texttt{<<include>>}/\texttt{<<extend>>} con actores delimitados. La fuente editable
+    (\texttt{Diagramas/*.mmd}) es el punto de partida.
+    \item Diagrama de clases del frontend (opcional): complementar el (05) con los
+    servicios Angular (\texttt{EventosService}, \texttt{ApiService},
+    \texttt{RecomendacionService}, \texttt{ViewPreferencesService}).
+    \seccionpendiente{confirmar la exigencia del docente, definición de
+    responsable y fecha.}
+\end{itemize}

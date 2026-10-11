@@ -10,10 +10,10 @@ flowchart TB
   classDef gha fill:#F4F4F4,stroke:#8A8A8A,color:#444444
   classDef hostc fill:#FFFFFF,stroke:#9A9A9A,color:#444444
 
-  SRC["Fuentes públicas chilenas<br/>(21 agendas configuradas)"]
-  GHA["GitHub Actions<br/>workflow scrape-events.yml"]
+  SRC["Fuentes públicas chilenas<br/>(22 agendas: 21 permanentes + 1 estacional)"]
+  GHA["GitHub Actions<br/>workflow scrape-events.yml<br/>cron diario 23:37 (America/Santiago)"]
   NIM["NVIDIA NIM<br/>(40 RPM globales)"]
-  USR["Visitante / Organizador<br/>(web y móvil)"]
+  USR["Visitante / Usuario registrado / Organizador<br/>(web y móvil)"]
   HOST["Vercel<br/>(hosting previsto, sin evidencia de despliegue)"]
 
   subgraph G1["Scraper (Python)"]
@@ -29,14 +29,19 @@ flowchart TB
     B1["events · categories<br/>event_categories · media_assets"]
     B2["sources · organizers<br/>communes · scrape_runs"]
     B3["event_provenance<br/>(evidencia privada)"]
-    B4["profiles · favorites · reports<br/>(app futura · RLS)"]
+    B4["profiles · user_event_interactions · reports<br/>(app · RLS)"]
+  end
+
+  subgraph G4["API intermedia (Python, supabase_backend.py)"]
+    API["<b>HTTP · librería estándar</b><br/>GET /api/eventos (PostgREST)"]
+    AUTH["<b>Auth proxy</b><br/>POST /api/auth/login · registro<br/>OAuth /api/auth/oauth + callback<br/>DELETE /api/auth/cuenta (Admin API)"]
   end
 
   subgraph G3["Frontend — Angular 22 + Ionic 9"]
-    F1["Pages: home · mapa · calendario<br/>para-ti · detalle · publicar"]
-    F2["core/services (signals):<br/>Eventos · Recomendaciones"]
+    F1["Pages: home · mapa (Leaflet/OSM) · calendario<br/>para-ti · detalle · publicar · login · perfil"]
+    F2["core/services (signals):<br/>EventosService · ApiService · Recomendaciones"]
     F3["Navegación adaptativa<br/>(tab bar móvil / nav escritorio)"]
-    F4["data/mock-eventos.ts<br/>(datos de ejemplo)"]
+    F4["data/mock-eventos.ts<br/>(respaldo si la API no responde)"]
   end
 
   SRC -->|"HTTP · Playwright"| G1
@@ -48,15 +53,20 @@ flowchart TB
   PIPE -->|"solo nuevos/modificados"| NVD
   PIPE -->|checkpoint| ST
   G1 -->|"upsert idempotente"| G2
+  F2 -->|"HttpClient<br/>GET catálogo · login · OAuth"| G4
+  API -->|"PostgREST (clave pública)"| G2
+  AUTH -->|"GoTrue + Admin API"| G2
+  G4 -.->|"INSERT con clave pública<br/>bloqueado por RLS (501)"| G2
   F1 --> F2
-  F2 -.->|"consume hoy"| F4
-  G2 -.->|"integración pendiente<br/>(hoy mock)"| G3
+  F2 -.->|"respaldo demo"| F4
   USR -->|consulta| G3
+  USR -.->|"OAuth Google (consentimiento)<br/>regreso /auth/callback"| AUTH
   G3 -.->|"despliegue previsto"| HOST
 
   style G1 fill:#FAF3EC,stroke:#C9622D
   style G2 fill:#EEF6F5,stroke:#1F5C57
   style G3 fill:#F2ECF8,stroke:#6B4E9B
+  style G4 fill:#EAF7EE,stroke:#82B366
   class T tit
   class SRC sup
   class GHA gha
@@ -66,6 +76,7 @@ flowchart TB
   class PIPE,CONN,ST,EXP,SAN caja
   class NVD nv
   class B1,B2,B3,B4 caja
+  class API,AUTH caja
   class F1,F2,F3 caja
   class F4 mock
   linkStyle default stroke-width:1.5px

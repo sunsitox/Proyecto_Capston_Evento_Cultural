@@ -10,6 +10,7 @@
 \usepackage{lmodern}
 \usepackage[margin=2.4cm]{geometry}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{longtable}
@@ -65,16 +66,17 @@ David Herrera & Backend e integraciones \\
 \begin{minipage}{0.82\textwidth}
 \small
 \textbf{Stack del sistema:} Python (scraper con conectores, NVIDIA NIM y checkpoints SQLite),
-Supabase/PostgreSQL con Row Level Security, Angular 22 + Ionic 9 (web y móvil),
-GitHub Actions para automatización.
+Supabase/PostgreSQL con Row Level Security, Edge Functions (\texttt{admin-account}),
+Angular 22 + Ionic 9 (web y móvil, catálogo real y autenticación directa vía \texttt{@supabase/supabase-js}),
+Leaflet + OpenStreetMap (mapa interactivo con pines georreferenciados) y GitHub Actions para automatización.
 \end{minipage}
 
 \vfill
-{\large Versión 1.0}\\[0.2cm]
-{\large 24 de septiembre de 2026}\\[0.4cm]
-{\small Documento elaborado exclusivamente con evidencia verificable del repositorio.\\
-Las omisiones se declaran como \textcolor{rojo}{\textbf{pendientes del equipo}} y están
-trazadas en el \textit{Registro de Cambios de Documentación}.}\\[0.3cm]
+{\large Versión 1.1}\\[0.2cm]
+{\large 10 de octubre de 2026}\\[0.4cm]
+{\small Documento elaborado exclusivamente con evidencia verificable de las Fases 1 y 2.\\
+Las omisiones se declaran como \textcolor{rojo}{\textbf{pendientes del equipo}} dentro
+de este mismo documento.}\\[0.3cm]
 {\color{terracota}\rule{\textwidth}{2pt}}
 \end{titlepage}
 
@@ -125,17 +127,19 @@ Cada afirmación de este documento proviene de las siguientes fuentes verificabl
 \textbf{Sección} & \textbf{Evidencia utilizada} \\
 \midrule
 Arquitectura general, scraper y frontend &
-README y \texttt{docs/ARCHITECTURE.md}, \texttt{docs/RESUMABLE\_PIPELINE.md},
-\texttt{docs/SUPABASE.md} del scraper; \texttt{package.json}, \texttt{app.routes.ts},
-README y documentación LaTeX del frontend; diagramas de Fase 2. \\
+Entregables del scraper y frontend incluidos como evidencias de sistema en Fase 2;
+\texttt{package.json}, \texttt{app.routes.ts}, \texttt{supabase.service.ts},
+\texttt{api.service.ts}, Edge Functions y diagramas técnicos de Fase 2.
+Integración frontend--Supabase implementada y verificada en TypeScript
+(catálogo real directo, autenticación y OAuth preparado). \\
 Modelo de datos &
-\texttt{docs/DATABASE.md}, \texttt{docs/SUPABASE.md},
-\texttt{docs/evento\_cultural\_modelo.dbml}, diccionario de base de datos (DOCX) y
+Documentación de base de datos incluida en el entregable del scraper de Fase 2,
+modelo DBML, diccionario de tablas y
 \texttt{DB\_evento\_cultural.pdf} (Fase 1). \\
 Diagramas UML &
 Rutas y servicios reales del frontend; clases y patrones documentados del scraper;
-matriz MoSCoW de Fase 1. Los seis diagramas (01--06) comparten estándar visual y
-fueron pulidos y reexportados el 27-09-2026 (§16 del registro de cambios). \\
+matriz MoSCoW de Fase 1. Los siete diagramas (01--07) comparten estándar visual,
+fueron pulidos y reexportados el 27-09-2026 y el ER (06) fue actualizado el 03-10-2026. \\
 Requisitos no funcionales &
 Matriz \texttt{Requerimientos\_Funcionales\_NoFuncionales\_MoSCoW.xlsx} (Fase 1) y
 evidencia de código por requisito. \\
@@ -154,7 +158,6 @@ funcionalidad ``para ti'' del frontend. \\
 \label{tab:traza}
 \end{table}
 
-El detalle de altas, cambios y pendientes de toda la documentación se registra en
-\texttt{REGISTRO\_CAMBIOS\_DOCUMENTACION.md} en la raíz de \texttt{CAPSTONE\_}.
+Los cambios y pendientes vigentes se resumen en los índices de documentación de Fase 2.
 
 \end{document}
