@@ -1,0 +1,256 @@
+// ========================================
+// PUBLICAR EVENTO — formulario por secciones
+// ========================================
+
+:host {
+  display: block;
+}
+
+.ec-publish {
+  padding-top: var(--ec-space-lg);
+  padding-bottom: var(--ec-space-2xl);
+  max-width: 820px;
+}
+
+.ec-publish-header {
+  margin-bottom: var(--ec-space-xl);
+
+  h1 {
+    margin: var(--ec-space-xs) 0;
+  }
+}
+
+// ---------- Acceso restringido (Auth Gate) ----------
+
+.ec-auth-gate {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: var(--ec-space-xl) 0;
+
+  &__card {
+    background: var(--ec-surface);
+    border: var(--ec-border-width) solid var(--ec-border-light);
+    border-radius: var(--ec-radius-xl);
+    padding: var(--ec-space-2xl) var(--ec-space-xl);
+    text-align: center;
+    max-width: 520px;
+    box-shadow: var(--ec-shadow-md);
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 68px;
+    height: 68px;
+    border-radius: var(--ec-radius-full);
+    background: var(--ec-primary-bg);
+    color: var(--ec-primary);
+    font-size: 2.2rem;
+    margin-bottom: var(--ec-space-lg);
+  }
+
+  h2 {
+    font-family: var(--ec-font-serif);
+    font-size: 1.45rem;
+    color: var(--ec-text-dark);
+    margin: 0 0 var(--ec-space-sm);
+  }
+
+  p {
+    color: var(--ec-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0 0 var(--ec-space-xl);
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ec-space-sm);
+  }
+
+  &__btn-login {
+    --background: var(--ec-primary);
+    --border-radius: var(--ec-radius-full);
+    height: 48px;
+    font-weight: 600;
+  }
+
+  &__btn-home {
+    --color: var(--ec-text-muted);
+    font-size: 0.9rem;
+  }
+}
+
+// ---------- Fieldsets como tarjetas ----------
+
+.ec-fieldset {
+  margin: 0 0 var(--ec-space-lg);
+  padding: 0;
+  border: var(--ec-border-width) solid var(--ec-border-light);
+  border-radius: var(--ec-radius-lg);
+  background: var(--ec-surface);
+  box-shadow: var(--ec-shadow-xs);
+  /* fieldset trae min-width:min-content nativo: sin esto los labels largos
+     de Ionic empujan el campo más allá del viewport en móvil */
+  min-width: 0;
+}
+
+.ec-fieldset__legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--ec-space-md) var(--ec-space-lg) 0;
+  font-family: var(--ec-font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ec-text-dark);
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: var(--ec-primary-bg);
+    color: var(--ec-primary-dark);
+    font-family: var(--ec-font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+}
+
+.ec-fieldset__body {
+  padding: var(--ec-space-md) var(--ec-space-lg) var(--ec-space-lg);
+  min-width: 0;
+}
+
+.ec-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--ec-space-md);
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+// ---------- Campos ----------
+
+.ec-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+
+  /* El ion-item interior puede necesitar partir palabras largas sin desbordar */
+  ion-item {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+.ec-input {
+  --background: var(--ec-surface-2);
+  --border-radius: var(--ec-radius-md);
+  --padding-start: 14px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  border: var(--ec-border-width) solid transparent;
+  border-radius: var(--ec-radius-md);
+  transition: border-color var(--ec-duration-fast) var(--ec-ease);
+
+  &:focus-within {
+    border-color: var(--ec-primary);
+  }
+}
+
+.ec-input--check {
+  --background: transparent;
+}
+
+.ec-input--invalid {
+  --border-color: var(--ec-danger);
+  --highlight-background: var(--ec-danger);
+  --background: var(--ec-danger-bg);
+  border-color: var(--ec-danger);
+}
+
+.ec-field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 4px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ec-danger);
+
+  ion-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+}
+
+// ---------- Submit / nota / éxito ----------
+
+.ec-publish-submit {
+  margin-top: var(--ec-space-md);
+  --border-radius: var(--ec-radius-full);
+  --padding-start: 24px;
+  --padding-end: 24px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  height: 48px;
+}
+
+.ec-publish-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: var(--ec-space-md) 0 0;
+  font-size: 0.82rem;
+  color: var(--ec-text-light);
+  max-width: 60ch;
+}
+
+.ec-success-card {
+  background: var(--ec-surface);
+  border: var(--ec-border-width) solid var(--ec-border-light);
+  border-radius: var(--ec-radius-lg);
+  box-shadow: var(--ec-shadow-sm);
+  padding: var(--ec-space-2xl);
+  text-align: center;
+
+  &__icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--ec-space-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--ec-radius-circle);
+    background: var(--ec-green-bg);
+    color: var(--ec-green);
+
+    ion-icon {
+      font-size: 1.8rem;
+    }
+  }
+
+  h2 {
+    margin: 0 0 var(--ec-space-xs);
+  }
+
+  p {
+    margin: 0;
+  }
+}

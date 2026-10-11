@@ -1,0 +1,336 @@
+<aside
+  class="ec-filters ec-filters--sidebar"
+  [class.ec-filters--plegado]="!expandido()"
+  aria-label="Filtros de eventos"
+>
+  <div class="ec-filters__cabecera">
+    <button
+      type="button"
+      class="ec-filters__plegar"
+      [attr.aria-expanded]="expandido()"
+      [attr.aria-label]="expandido() ? 'Contraer panel de filtros' : 'Expandir panel de filtros'"
+      [attr.aria-controls]="'ec-filters-contenido'"
+      (click)="alternarExpandido()"
+    >
+      <!-- Icono embudo (filtros), SVG inline -->
+      <svg
+        class="ec-filters__icono"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+      </svg>
+      <!-- Chevron: apunta a la acción (izq. para contraer, der. para expandir) -->
+      <svg
+        class="ec-filters__chevron"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+        focusable="false"
+        [class.ec-filters__chevron--izq]="expandido()"
+      >
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
+    </button>
+  </div>
+
+  <div id="ec-filters-contenido" class="ec-filters__cuerpo" [hidden]="!expandido()">
+
+  <!-- CATEGORÍAS (múltiples) -->
+  <section class="ec-filter-group">
+    <div class="ec-filter-header ec-filter-header--static">
+      <span class="ec-filter-title">Categorías</span>
+      @if (filtros().categorias.length > 0) {
+        <span class="ec-filter-summary">{{ filtros().categorias.length }} activas</span>
+      }
+    </div>
+
+    @if (categorias().length > 8) {
+      <input
+        type="search"
+        class="ec-filter-buscar"
+        placeholder="Buscar categoría…"
+        [value]="busquedaCategoria()"
+        (input)="onBusquedaCategoria($any($event.target).value)"
+        aria-label="Buscar categoría"
+      />
+    }
+
+    <div
+      class="ec-filter-options ec-filter-scroll"
+      role="group"
+      aria-label="Filtrar por categorías"
+    >
+      @for (op of categoriasVisibles(); track op.valor) {
+        <button
+          type="button"
+          class="ec-filter-option"
+          [class.active]="filtros().categorias.includes(op.valor)"
+          [attr.aria-pressed]="filtros().categorias.includes(op.valor)"
+          [attr.aria-label]="op.valor + ': ' + op.total + ' eventos'"
+          (click)="toggleCategoria(op.valor)"
+        >
+          <span class="ec-filter-label">{{ op.valor }}</span>
+          <span class="ec-filter-count">{{ op.total }}</span>
+        </button>
+      } @empty {
+        <p class="ec-filter-vacio">
+          No hay categorías que coincidan con «{{ busquedaCategoria() }}».
+        </p>
+      }
+    </div>
+  </section>
+
+  <!-- REGIÓN -->
+  <section class="ec-filter-group">
+    <div class="ec-filter-header ec-filter-header--static">
+      <span class="ec-filter-title">Región</span>
+      <span class="ec-filter-summary">{{ regiones().length }}</span>
+    </div>
+    <div
+      class="ec-filter-options ec-filter-scroll ec-filter-scroll--bajo"
+      role="group"
+      aria-label="Filtrar por región"
+    >
+      <button
+        type="button"
+        class="ec-filter-option"
+        [class.active]="!filtros().region"
+        [attr.aria-pressed]="!filtros().region"
+        (click)="setRegion(null)"
+      >
+        <span class="ec-filter-label">Todas las regiones</span>
+        <span class="ec-filter-count">{{ facetas().total }}</span>
+      </button>
+      @for (op of regiones(); track op.valor) {
+        <button
+          type="button"
+          class="ec-filter-option"
+          [class.active]="filtros().region === op.valor"
+          [attr.aria-pressed]="filtros().region === op.valor"
+          [attr.aria-label]="op.valor + ': ' + op.total + ' eventos'"
+          (click)="setRegion(op.valor)"
+        >
+          <span class="ec-filter-label">{{ op.valor }}</span>
+          <span class="ec-filter-count">{{ op.total }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- COMUNA (del catálogo real, filtrada por la región elegida) -->
+  <section class="ec-filter-group">
+    <div class="ec-filter-header ec-filter-header--static">
+      <span class="ec-filter-title">Comuna</span>
+      <span class="ec-filter-summary">{{ comunas().length }}</span>
+    </div>
+
+    @if (comunas().length > 8) {
+      <input
+        type="search"
+        class="ec-filter-buscar"
+        placeholder="Buscar comuna…"
+        [value]="busquedaComuna()"
+        (input)="onBusquedaComuna($any($event.target).value)"
+        aria-label="Buscar comuna"
+      />
+    }
+
+    <div
+      class="ec-filter-options ec-filter-scroll"
+      role="group"
+      aria-label="Filtrar por comuna"
+    >
+      <button
+        type="button"
+        class="ec-filter-option"
+        [class.active]="!filtros().comuna"
+        [attr.aria-pressed]="!filtros().comuna"
+        (click)="onComuna(null)"
+      >
+        <span class="ec-filter-label">Todas las comunas</span>
+      </button>
+      @for (op of comunasVisibles(); track op.valor) {
+        <button
+          type="button"
+          class="ec-filter-option"
+          [class.active]="filtros().comuna === op.valor"
+          [attr.aria-pressed]="filtros().comuna === op.valor"
+          [attr.aria-label]="op.valor + ': ' + op.total + ' eventos'"
+          (click)="onComuna(op.valor)"
+        >
+          <span class="ec-filter-label">{{ op.valor }}</span>
+          <span class="ec-filter-count">{{ op.total }}</span>
+        </button>
+      } @empty {
+        <p class="ec-filter-vacio">
+          No hay comunas que coincidan con «{{ busquedaComuna() }}».
+        </p>
+      }
+    </div>
+  </section>
+
+  <!-- FECHAS -->
+  <section class="ec-filter-group">
+    <div class="ec-filter-header ec-filter-header--static">
+      <span class="ec-filter-title">Fechas</span>
+    </div>
+    <div class="ec-filters-fechas">
+      <label class="ec-field-fecha">
+        <span>Desde</span>
+        <input
+          type="date"
+          [value]="filtros().fechaDesde ?? ''"
+          (change)="setFecha('fechaDesde', $any($event.target).value)"
+          aria-label="Desde"
+        />
+      </label>
+      <label class="ec-field-fecha">
+        <span>Hasta</span>
+        <input
+          type="date"
+          [value]="filtros().fechaHasta ?? ''"
+          (change)="setFecha('fechaHasta', $any($event.target).value)"
+          aria-label="Hasta"
+        />
+      </label>
+    </div>
+  </section>
+
+  <!-- MODALIDAD -->
+  <section class="ec-filter-group">
+    <div class="ec-filter-header ec-filter-header--static">
+      <span class="ec-filter-title">Modalidad</span>
+    </div>
+    <div class="ec-filter-options" role="group" aria-label="Filtrar por modalidad">
+      <button
+        type="button"
+        class="ec-filter-option"
+        [class.active]="!filtros().modalidad"
+        [attr.aria-pressed]="!filtros().modalidad"
+        (click)="setModalidad(null)"
+      >
+        <span class="ec-filter-label">Todas</span>
+      </button>
+      @for (op of modalidades(); track op.valor) {
+        <button
+          type="button"
+          class="ec-filter-option"
+          [class.active]="filtros().modalidad === op.valor"
+          [attr.aria-pressed]="filtros().modalidad === op.valor"
+          [attr.aria-label]="op.valor + ': ' + op.total + ' eventos'"
+          (click)="setModalidad(op.valor)"
+        >
+          <span class="ec-filter-label">{{ op.valor }}</span>
+          <span class="ec-filter-count">{{ op.total }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- PÚBLICO OBJETIVO -->
+  <section class="ec-filter-group">
+    <div class="ec-filter-header ec-filter-header--static">
+      <span class="ec-filter-title">Público objetivo</span>
+    </div>
+    <div
+      class="ec-filter-options ec-filter-scroll ec-filter-scroll--bajo"
+      role="group"
+      aria-label="Filtrar por público objetivo"
+    >
+      <button
+        type="button"
+        class="ec-filter-option"
+        [class.active]="!filtros().publico"
+        [attr.aria-pressed]="!filtros().publico"
+        (click)="setPublico(null)"
+      >
+        <span class="ec-filter-label">Cualquier público</span>
+      </button>
+      @for (op of publicos(); track op.valor) {
+        <button
+          type="button"
+          class="ec-filter-option"
+          [class.active]="filtros().publico === op.valor"
+          [attr.aria-pressed]="filtros().publico === op.valor"
+          [attr.aria-label]="op.valor + ': ' + op.total + ' eventos'"
+          (click)="setPublico(op.valor)"
+        >
+          <span class="ec-filter-label">{{ op.valor }}</span>
+          <span class="ec-filter-count">{{ op.total }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- ACCESIBILIDAD -->
+  <section class="ec-filter-group">
+    <button
+      type="button"
+      class="ec-filter-option ec-filter-accesible"
+      [class.active]="filtros().accesible"
+      [attr.aria-pressed]="filtros().accesible"
+      (click)="toggleAccesible()"
+    >
+      <ion-icon name="accessibility-outline" aria-hidden="true"></ion-icon>
+      <span class="ec-filter-label">Con accesibilidad informada</span>
+      <span class="ec-filter-count">{{ facetas().accesibles }}</span>
+    </button>
+  </section>
+
+  <!-- PRECIO -->
+  <section class="ec-filter-group">
+    <div class="ec-filter-header ec-filter-header--static">
+      <span class="ec-filter-title">Precio</span>
+    </div>
+    <div class="ec-filter-options" role="group" aria-label="Filtrar por precio">
+      <button
+        type="button"
+        class="ec-filter-option"
+        [class.active]="filtros().gratuito === null"
+        [attr.aria-pressed]="filtros().gratuito === null"
+        (click)="setGratuito(null)"
+      >
+        <span class="ec-filter-label">Todos</span>
+      </button>
+      <button
+        type="button"
+        class="ec-filter-option"
+        [class.active]="filtros().gratuito === true"
+        [attr.aria-pressed]="filtros().gratuito === true"
+        (click)="setGratuito(true)"
+      >
+        <span class="ec-filter-label">Solo gratuitos</span>
+        <span class="ec-filter-count">{{ facetas().gratuitos }}</span>
+      </button>
+      <button
+        type="button"
+        class="ec-filter-option"
+        [class.active]="filtros().gratuito === false"
+        [attr.aria-pressed]="filtros().gratuito === false"
+        (click)="setGratuito(false)"
+      >
+        <span class="ec-filter-label">Con costo</span>
+        <span class="ec-filter-count">{{ facetas().conCosto }}</span>
+      </button>
+    </div>
+  </section>
+
+    @if (tieneFiltrosActivos()) {
+      <button class="ec-btn ec-btn-outline" (click)="limpiar()" type="button">
+        <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+        Limpiar filtros
+      </button>
+    }
+  </div>
+</aside>

@@ -1,0 +1,389 @@
+/* ========================================
+   FILTROS — Sidebar (web) / Acordeón (móvil)
+   ======================================== */
+
+:host {
+  display: block;
+  min-width: 0;
+
+  // Contraído: el aside libera su ancho para que el grid del contenedor
+  // reasigne el espacio a la grilla de eventos (sin esto, [hidden] esconde
+  // el cuerpo pero la columna del grid sigue reservada).
+  transition: max-width var(--ec-duration-fast, 160ms) var(--ec-ease, ease);
+}
+
+:host(.plegado-compacto) {
+  max-width: 100%;
+  width: 100%;
+}
+
+.ec-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ec-space-md);
+}
+
+// ---------- Cabecera con toggle plegar ----------
+.ec-filters__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ec-space-sm);
+}
+
+.ec-filters__plegar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: fit-content;
+  min-height: var(--ec-touch-target, 44px);
+  padding: 8px 14px;
+  border: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+  border-radius: var(--ec-radius-full, 999px);
+  background: var(--ec-surface, #fffdf9);
+  box-shadow: var(--ec-shadow-sm, 0 1px 2px rgba(94, 59, 33, 0.06));
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--ec-text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--ec-duration-fast, 160ms) var(--ec-ease, ease),
+    border-color var(--ec-duration-fast, 160ms) var(--ec-ease, ease),
+    box-shadow var(--ec-duration-fast, 160ms) var(--ec-ease, ease);
+
+  ion-icon {
+    font-size: 0.85rem;
+    color: var(--ec-primary);
+  }
+
+  &:hover {
+    background: var(--ec-surface-hover, #f6efe4);
+    border-color: var(--ec-border, #e3d5c2);
+    box-shadow: var(--ec-shadow-md, 0 2px 6px rgba(94, 59, 33, 0.1));
+
+    .ec-filters__icono {
+      transform: translateY(1px);
+    }
+
+    .ec-filters__chevron {
+      transform: translateX(2px);
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--ec-primary-dark, #5e3b21);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    box-shadow: none;
+    transform: scale(0.97);
+  }
+}
+
+// Contraído: el cuerpo desaparece, el aside queda compacto y EXPANDIDO en
+// horizontal para que el panel no reserve la columna completa del grid.
+// El botón queda centrado, solo con sus dos SVG (embudo + chevron).
+.ec-filters--plegado {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  .ec-filters__plegar {
+    // Misma silueta que el resto de chips de la toolbar ("Ordenar por…",
+    // toggle de vista): pill compacta con el mismo padding interior.
+    padding: 8px 12px;
+  }
+
+  .ec-filters__cabecera {
+    width: auto;
+  }
+}
+
+.ec-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ec-space-xs);
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.ec-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ec-space-sm);
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: default;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ec-text);
+
+  ion-icon {
+    display: none;
+  }
+
+  ion-select {
+    --background: var(--ec-surface-2);
+    --padding-start: var(--ec-space-sm);
+    --padding-end: var(--ec-space-sm);
+    --padding-top: var(--ec-space-xs);
+    --padding-bottom: var(--ec-space-xs);
+    --border-radius: var(--ec-radius-md);
+    font-size: 0.85rem;
+    text-align: left;
+    width: 100%;
+  }
+}
+
+.ec-filter-title {
+  font-family: var(--ec-font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ec-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.ec-filter-summary {
+  font-size: 0.78rem;
+  color: var(--ec-primary-dark);
+  font-weight: 600;
+}
+
+.ec-filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ec-filter-option {
+  /* min-height táctil: alinea las opciones simples (categorías,
+     modalidad, precio) con la opción "Con accesibilidad informada",
+     que lleva icono y quedaba más alta. */
+  width: 100%;
+  min-height: var(--ec-touch-target);
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--ec-radius-md);
+  font-size: 0.88rem;
+  color: var(--ec-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--ec-duration-fast) var(--ec-ease),
+    color var(--ec-duration-fast) var(--ec-ease);
+
+  &:hover {
+    background: var(--ec-surface-hover);
+    color: var(--ec-text-dark);
+  }
+
+  &.active {
+    background: var(--ec-primary-bg);
+    color: var(--ec-primary-dark);
+    font-weight: 600;
+  }
+}
+
+/* Botón limpiar (variant sidebar) */
+.ec-filters > .ec-btn {
+  margin-top: var(--ec-space-sm);
+}
+
+/* Selects de región/comuna/público */
+.ec-filters-select {
+  width: 100%;
+  --background: var(--ec-surface-2);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  --border-radius: var(--ec-radius-md);
+  border-radius: var(--ec-radius-md);
+  font-size: 0.86rem;
+  margin-bottom: var(--ec-space-sm);
+}
+
+/* Rango de fechas (inputs nativos) */
+.ec-filters-fechas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ec-field-fecha {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  span {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ec-text-light);
+  }
+
+  input[type='date'] {
+    min-height: var(--ec-touch-target);
+    padding: 6px 10px;
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-md);
+    background: var(--ec-surface-2);
+    color: var(--ec-text);
+    font-family: var(--ec-font-sans);
+    font-size: 0.84rem;
+  }
+}
+
+.ec-filter-accent,
+.ec-filter-accesible {
+  display: inline-flex;
+  width: 100%;
+}
+
+.ec-filters__icono {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--ec-primary);
+  transition: transform var(--ec-duration-fast, 160ms) var(--ec-ease, ease);
+}
+
+.ec-filters__chevron {
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--ec-text-muted);
+  transition: transform var(--ec-duration-fast, 160ms) var(--ec-ease, ease);
+}
+
+.ec-filters__chevron--izq {
+  transform: rotate(180deg);
+}
+
+.ec-filters--plegado .ec-filters__plegar:hover .ec-filters__chevron--izq {
+  transform: rotate(180deg) translateX(2px);
+}
+
+.ec-filter-buscar {
+  width: 100%;
+  min-height: var(--ec-touch-target);
+  padding: 6px 12px;
+  border: 1px solid var(--ec-border);
+  border-radius: var(--ec-radius-md);
+  background: var(--ec-surface-2);
+  color: var(--ec-text);
+  font-family: var(--ec-font-sans);
+  font-size: 0.82rem;
+}
+
+.ec-filter-vacio {
+  margin: 4px 0 0;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  color: var(--ec-text-light);
+}
+
+.ec-filter-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ec-filter-count {
+  flex-shrink: 0;
+  padding: 1px 8px;
+  border-radius: var(--ec-radius-full);
+  background: var(--ec-surface-2);
+  color: var(--ec-text-light);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ec-filter-option.active .ec-filter-count {
+  background: var(--ec-primary-light);
+  color: var(--ec-text-dark);
+}
+
+/* ========================================
+   GRUPOS CON SCROLL PROPIO
+   Los grupos largos (categorías, regiones, comunas, público) se
+   desplazan dentro de su propio recuadro: la sidebar nunca crece hasta
+   empujar la página más abajo de la pantalla.
+   ======================================== */
+
+.ec-filter-scroll {
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ec-border) transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--ec-border);
+    border-radius: var(--ec-radius-full);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+.ec-filter-scroll--bajo {
+  max-height: 168px;
+}
+
+.ec-filters > .ec-btn {
+  align-self: stretch;
+}
+
+/* ========================================
+   VARIANT SIDEBAR (web)
+   ======================================== */
+
+.ec-filters--sidebar {
+  width: 100%;
+  padding: var(--ec-space-lg);
+  background: var(--ec-surface);
+  border-radius: var(--ec-radius-lg);
+  border: var(--ec-border-width) solid var(--ec-border-light);
+  box-shadow: var(--ec-shadow-xs);
+
+  /* Contraído: la tarjeta del panel desaparece (padding, fondo y borde a
+     0) y solo queda la píldora del botón, integrada al fondo de la página
+     como el resto de la toolbar. */
+  &.ec-filters--plegado {
+    padding: 0;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+}
+
+/* Grupos separados por hairline en sidebar */
+.ec-filters--sidebar .ec-filter-group {
+  padding-bottom: var(--ec-space-md);
+  border-bottom: 1px solid var(--ec-border-light);
+  margin-bottom: var(--ec-space-md);
+
+  &:last-of-type {
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+}

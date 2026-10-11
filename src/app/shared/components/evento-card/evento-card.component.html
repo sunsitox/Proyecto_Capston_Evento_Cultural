@@ -1,0 +1,106 @@
+<article
+  class="ec-card"
+  [class.ec-card--list]="layout() === 'lista'"
+  [class.ec-card--inactiva]="esInactiva()"
+  [class.ec-card--saliendo]="saliendo()"
+  [attr.aria-label]="'Evento: ' + evento().titulo"
+>
+  <a
+    [routerLink]="['/evento', evento().id]"
+    class="ec-card-link"
+    [attr.aria-label]="'Ver ficha del evento: ' + evento().titulo"
+    (click)="onAbrirDetalle()"
+  >
+    <div class="ec-card-media">
+      <img
+        class="ec-card-img"
+        [src]="evento().imagen"
+        [alt]="'Imagen del evento: ' + evento().titulo"
+        loading="lazy"
+        decoding="async"
+        width="400"
+        height="300"
+      />
+      <span [class]="'ec-cat ec-cat--solid ' + catClass()">{{ evento().categoria }}</span>
+      @if (evento().gratuito) {
+        <span class="ec-card-gratis">Gratis</span>
+      } @else if (evento().precio) {
+        <span class="ec-card-precio">{{ evento().precio }}</span>
+      }
+    </div>
+
+    <div class="ec-card-body">
+      <p class="ec-card-fecha">
+        <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+        <span>
+          {{ evento().fecha | date: formatoInicio() }}@if (evento().fechaTermino) {
+            – {{ evento().fechaTermino | date: formatoTermino() }}
+          } · {{ evento().hora }} hrs
+        </span>
+        @if (evento().estado !== 'proximo') {
+          <span [class]="'ec-card-estado ec-card-estado--' + evento().estado">
+            {{ estadoEtiqueta() }}
+          </span>
+        }
+      </p>
+
+      <h3 class="ec-card-title">{{ evento().titulo }}</h3>
+
+      <p class="ec-card-modalidad">
+        <ion-icon [name]="iconoModalidad()" aria-hidden="true"></ion-icon>
+        {{ evento().modalidad }} · {{ evento().recinto }}
+      </p>
+
+      <p class="ec-card-lugar">
+        <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+        <span>{{ evento().comuna }}, {{ evento().region }}</span>
+      </p>
+
+      @if (motivo(); as m) {
+        <p class="ec-card-motivo">
+          <ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon>
+          {{ m.etiqueta }}
+        </p>
+      }
+
+      @if (mostrarAcciones()) {
+        <div class="ec-card-pie">
+          <app-event-interest-actions
+            class="ec-card-actions"
+            [modo]="'compacto'"
+            [titulo]="evento().titulo"
+            [eventoId]="evento().id"
+            [activo]="meInteresaActivo()"
+            (meInteresaCambiado)="onMeInteresa($event)"
+          ></app-event-interest-actions>
+
+          <!-- Menú contextual: acciones secundarias -->
+          <div class="ec-card-menu-wrap">
+            <button
+              type="button"
+              class="ec-card-menu-btn"
+              aria-label="Más opciones para {{ evento().titulo }}"
+              [attr.aria-expanded]="menuAbierto()"
+              (click)="toggleMenu($event)"
+            >
+              <ion-icon name="ellipsis-vertical" aria-hidden="true"></ion-icon>
+            </button>
+
+            @if (menuAbierto()) {
+              <div class="ec-card-menu" role="menu" [attr.aria-label]="'Opciones para ' + evento().titulo">
+                <button role="menuitem" type="button" class="ec-card-menu-item" (click)="similaresDesdeMenu($event)">
+                  <ion-icon name="grid-outline" aria-hidden="true"></ion-icon>
+                  {{ etiquetaSimilares() ?? 'Ver similares' }}
+                </button>
+                <button role="menuitem" type="button" class="ec-card-menu-item ec-card-menu-item--negativo" (click)="descartarDesdeMenu($event)">
+                  <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                  No me interesa
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </a>
+</article>

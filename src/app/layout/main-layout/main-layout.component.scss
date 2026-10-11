@@ -1,0 +1,391 @@
+// ========================================
+// MAIN LAYOUT — Shell "papel y tinta"
+// Header editorial sticky + footer institucional / tab bar móvil
+// ========================================
+
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.ec-web-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--ec-bg);
+}
+
+.ec-web-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ec-main {
+  display: block;
+  min-width: 0;
+  flex: 1;
+}
+
+// ========================================
+// HEADER
+// ========================================
+
+.ec-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--ec-z-header, 100);
+  background: transparent;
+
+  &::after {
+    display: none;
+  }
+}
+
+.ec-header__toolbar {
+  --background: var(--ec-glass);
+  --border-color: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+  --min-height: var(--ec-header-h);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: var(--ec-border-width) solid var(--ec-border);
+}
+
+.ec-header__inner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--ec-space-lg);
+  min-height: var(--ec-header-h);
+
+  /* Rango estrecho del shell web (992–1080px): el nav de texto es lo más
+     ancho, así que se compacta (sin iconos ni texto de logo) para que
+     logo + nav + acciones quepan sin apretarse ni desbordar. */
+  @media (min-width: 992px) and (max-width: 1080px) {
+    gap: var(--ec-space-md);
+  }
+}
+
+.ec-header__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity var(--ec-duration-fast) var(--ec-ease);
+
+  &:hover {
+    opacity: 0.85;
+    text-decoration: none;
+  }
+}
+
+.ec-header__logo-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--ec-primary), var(--ec-accent));
+  color: var(--ec-btn-fg);
+  font-family: var(--ec-font-serif);
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--ec-shadow-sm);
+}
+
+.ec-header__logo-text {
+  font-family: var(--ec-font-serif);
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+  color: var(--ec-text-dark);
+
+  @media (min-width: 992px) and (max-width: 1080px) {
+    display: none;
+  }
+}
+
+.ec-header__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.ec-header__nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: var(--ec-radius-full);
+  color: var(--ec-text-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background var(--ec-duration-fast) var(--ec-ease),
+    color var(--ec-duration-fast) var(--ec-ease);
+
+  ion-icon {
+    font-size: 1.05rem;
+  }
+
+  &:hover {
+    background: var(--ec-surface-hover);
+    color: var(--ec-text-dark);
+    text-decoration: none;
+  }
+
+  &--active {
+    background: var(--ec-primary-bg);
+    color: var(--ec-primary-dark);
+    font-weight: 600;
+  }
+
+  /* Compacto: sin iconos en el tramo 992–1080px */
+  @media (min-width: 992px) and (max-width: 1080px) {
+    gap: 0;
+    padding: 8px 11px;
+
+    ion-icon {
+      display: none;
+    }
+  }
+}
+
+.ec-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ec-space-sm);
+}
+
+.ec-header__login {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ec-primary-dark);
+  padding: 8px 10px;
+  border-radius: var(--ec-radius-full);
+
+  &:hover {
+    color: var(--ec-primary);
+    text-decoration: none;
+    background: var(--ec-primary-bg);
+  }
+}
+
+.ec-header__register-btn {
+  --border-radius: var(--ec-radius-full);
+  --border-color: var(--ec-primary);
+  --color: var(--ec-primary-dark);
+  font-weight: 600;
+  text-transform: none;
+}
+
+.ec-header__user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 230px;
+  font-size: 0.85rem;
+  color: var(--ec-text);
+  font-weight: 500;
+  padding: 6px 12px;
+  background: var(--ec-surface-2);
+  border-radius: var(--ec-radius-full);
+  text-decoration: none;
+
+  &-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
+  }
+
+  &-name {
+    font-weight: 600;
+    color: var(--ec-text-dark);
+  }
+
+  &-mail {
+    font-size: 0.7rem;
+    color: var(--ec-text-muted);
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  ion-icon {
+    font-size: 1.15rem;
+    color: var(--ec-primary);
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: var(--ec-surface-hover);
+  }
+}
+
+.ec-header__cta {
+  --border-radius: var(--ec-radius-full);
+  --padding-start: 18px;
+  --padding-end: 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  height: 40px;
+  margin: 0;
+
+  /* Solo "Publicar" en el tramo estrecho del shell web */
+  @media (min-width: 992px) and (max-width: 1080px) {
+    --padding-start: 14px;
+    --padding-end: 14px;
+
+    .ec-header__cta-label {
+      display: none;
+    }
+  }
+}
+
+// ========================================
+// FOOTER
+// ========================================
+
+.ec-footer {
+  margin-top: var(--ec-space-2xl);
+  background: var(--ec-surface);
+  border-top: var(--ec-border-width) solid var(--ec-border-light);
+}
+
+.ec-footer__grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.2fr 1fr;
+  gap: var(--ec-space-xl);
+  padding-block: var(--ec-space-2xl) var(--ec-space-lg);
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+    gap: var(--ec-space-lg);
+  }
+}
+
+.ec-footer__brand {
+  p {
+    margin: var(--ec-space-md) 0 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    max-width: 38ch;
+  }
+}
+
+.ec-footer__col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  h3 {
+    font-family: var(--ec-font-sans);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ec-text-light);
+    margin: 0 0 4px;
+  }
+
+  a {
+    font-size: 0.9rem;
+    color: var(--ec-text-muted);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--ec-primary-dark);
+      text-decoration: underline;
+    }
+  }
+}
+
+.ec-footer__note {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--ec-text-light);
+  max-width: 32ch;
+
+  &--demo {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 4px;
+    padding: 4px 10px;
+    border: 1px dashed var(--ec-border);
+    border-radius: var(--ec-radius-full);
+    font-size: 0.72rem;
+  }
+}
+
+.ec-footer__legal {
+  border-top: var(--ec-border-width) solid var(--ec-border-light);
+  padding-block: var(--ec-space-md);
+
+  p {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--ec-text-light);
+  }
+}
+
+// ========================================
+// MOBILE LAYOUT
+// ========================================
+
+.ec-mobile-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--ec-bg);
+}
+
+.ec-mobile-content {
+  flex: 1;
+  --background: var(--ec-bg);
+}
+
+.ec-mobile-tabbar {
+  --background: var(--ec-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  --border: var(--ec-border-width) solid var(--ec-border);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+
+  ion-tab-button {
+    --color: var(--ec-text-muted);
+    --color-selected: var(--ec-primary);
+    background: transparent;
+
+    ion-icon {
+      font-size: 1.3rem;
+    }
+
+    ion-label {
+      font-size: 0.62rem;
+      font-weight: 600;
+    }
+
+    &.tab-selected ion-icon {
+      transform: scale(1.12) translateY(-2px);
+    }
+  }
+}

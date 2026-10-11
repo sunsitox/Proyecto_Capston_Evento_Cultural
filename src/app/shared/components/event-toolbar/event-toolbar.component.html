@@ -1,0 +1,46 @@
+<ng-container [formGroup]="form">
+  <div class="ec-toolbar" role="group" aria-label="Ordenar y ver eventos">
+    <!-- UNA decisión de orden (select) en vez de cinco chips simultáneos -->
+    <label class="ec-sort-field">
+      <span class="ec-sort-label">Ordenar por</span>
+      <ion-select
+        class="ec-sort-select"
+        formControlName="orden"
+        interface="popover"
+        [interfaceOptions]="{ header: 'Ordenar por' }"
+        (ionChange)="setOrden($event.detail.value)"
+        aria-label="Ordenar eventos"
+        cancel-text="Cancelar"
+        ok-text="Aplicar"
+      >
+        @for (o of ordenes; track o.valor) {
+          <ion-select-option [value]="o.valor">{{ o.etiqueta }}</ion-select-option>
+        }
+      </ion-select>
+    </label>
+
+    <!-- Toggle de vista: dos opciones, estado anunciado con aria-pressed -->
+    <div class="ec-view-toggle" role="group" aria-label="Cambiar vista">
+      <ion-chip
+        type="button"
+        (click)="setVista('grid')"
+        [class.active]="vista === 'grid'"
+        class="ec-view-btn"
+        [attr.aria-pressed]="vista === 'grid'"
+        aria-label="Vista en grilla"
+      >
+        <ion-icon name="grid-outline" aria-hidden="true"></ion-icon>
+      </ion-chip>
+      <ion-chip
+        type="button"
+        (click)="setVista('lista')"
+        [class.active]="vista === 'lista'"
+        class="ec-view-btn"
+        [attr.aria-pressed]="vista === 'lista'"
+        aria-label="Vista en lista"
+      >
+        <ion-icon name="list-outline" aria-hidden="true"></ion-icon>
+      </ion-chip>
+    </div>
+  </div>
+</ng-container>

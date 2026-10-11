@@ -1,0 +1,157 @@
+<div class="ec-page ec-perfil">
+  <span class="ec-eyebrow">Tu cuenta</span>
+  <h1 class="ec-perfil-title">Perfil</h1>
+
+  <div class="ec-perfil-card">
+    <ion-icon name="person-circle-outline" class="ec-perfil-avatar" aria-hidden="true"></ion-icon>
+    @if (api.estaAutenticado()) {
+      <h2>{{ api.usuario()?.nombre || 'Usuario' }}</h2>
+      @if (api.usuario()?.email; as correo) {
+        <p class="ec-perfil-mail">{{ correo }}</p>
+      }
+      <p class="ec-perfil-sub">
+        Cuenta {{ api.usuario()?.rol === 'organizador' ? 'de Organizador' : 'registrada' }} activa.
+      </p>
+    } @else {
+      <h2>Usuario invitado</h2>
+      <p class="ec-perfil-sub">
+        Explora eventos y recibe sugerencias durante esta visita.
+      </p>
+    }
+
+    <div class="ec-perfil-stats" aria-label="Resumen de actividad">
+      <div class="ec-perfil-stat">
+        <span class="ec-perfil-stat__num">{{ interesesExplorados().length }}</span>
+        <span class="ec-perfil-stat__label">Intereses explorados en esta visita</span>
+      </div>
+      @if ((api.usuario()?.rol === 'organizador')) {
+        <div class="ec-perfil-stat">
+          <span class="ec-perfil-stat__num">1</span>
+          <span class="ec-perfil-stat__label">Eventos publicados</span>
+        </div>
+      }
+    </div>
+
+    @if (interesesExplorados().length > 0) {
+      <p class="ec-perfil-intereses">
+        @for (cat of interesesExplorados(); track cat) {
+          <span class="ec-cat ec-cat--musica">{{ cat }}</span>
+        }
+      </p>
+    } @else {
+      <p class="ec-perfil-sin-senales">
+        Aún no registras señales de interés en esta visita: abre un evento o
+        marca "Me interesa" para afinar tus sugerencias.
+      </p>
+    }
+
+    @if (!api.estaAutenticado()) {
+      <ion-button routerLink="/login" expand="block" class="ec-perfil-cta">
+        <ion-icon slot="start" name="log-in-outline" aria-hidden="true"></ion-icon>
+        Iniciar sesión o Registrarse
+      </ion-button>
+    } @else {
+      <ion-button (click)="cerrarSesion()" fill="outline" color="danger" expand="block" class="ec-perfil-cta">
+        <ion-icon slot="start" name="log-out-outline" aria-hidden="true"></ion-icon>
+        Cerrar sesión
+      </ion-button>
+    }
+  </div>
+
+  <nav class="ec-perfil-menu" aria-label="Menú de usuario">
+    <ion-item routerLink="/para-ti" lines="full" button detail="true">
+      <ion-icon slot="start" name="sparkles-outline" aria-hidden="true"></ion-icon>
+      <ion-label>Preferencias de descubrimiento</ion-label>
+    </ion-item>
+    @if (api.estaAutenticado()) {
+      <ion-item routerLink="/publicar" lines="full" button detail="true">
+        <ion-icon slot="start" name="storefront-outline" aria-hidden="true"></ion-icon>
+        <ion-label>Publicar como organizador</ion-label>
+      </ion-item>
+    }
+    @if (api.estaAutenticado()) {
+      <ion-item (click)="cerrarSesion()" lines="none" button detail="false">
+        <ion-icon slot="start" name="log-out-outline" aria-hidden="true"></ion-icon>
+        <ion-label color="danger">Cerrar sesión</ion-label>
+      </ion-item>
+    }
+  </nav>
+
+  <!-- ================= Preferencias de descubrimiento ================= -->
+  <section class="ec-perfil-preferencias" aria-labelledby="ec-perfil-prefs-title">
+    <app-recommendation-empty-state
+      variante="ajustes"
+    ></app-recommendation-empty-state>
+  </section>
+
+  @if (api.estaAutenticado()) {
+    <div class="ec-perfil-promo">
+      <span class="ec-perfil-promo__icon" aria-hidden="true">
+        <ion-icon name="megaphone-outline"></ion-icon>
+      </span>
+      <div>
+        <h2>¿Eres municipalidad u organizador?</h2>
+        <p>Publica tus eventos en un solo canal y llega a ciudadanos y turistas de todo el país.</p>
+        <ion-button routerLink="/publicar" fill="outline" size="small" class="ec-perfil-promo__cta">
+          Publicar un evento
+        </ion-button>
+      </div>
+    </div>
+  }
+
+  <p class="ec-perfil-nota">
+    <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+    En este piloto, tus preferencias y señales se usan temporalmente para
+    ordenar eventos. No se guardan de forma permanente.
+  </p>
+
+  <!-- ================= Zona de peligro (escondida) ================= -->
+  @if (api.estaAutenticado()) {
+    <details class="ec-perfil-peligro" [open]="zonaPeligroAbierta()" (toggle)="zonaPeligroAbierta.set($any($event).target.open)">
+      <summary>
+        <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+        Opciones avanzadas de cuenta
+      </summary>
+
+      @if (!confirmandoEliminar()) {
+        <button type="button" class="ec-perfil-peligro__link" (click)="pedirConfirmacionEliminar()">
+          Eliminar mi cuenta
+        </button>
+      } @else {
+        <div class="ec-perfil-peligro__caja" role="alertdialog" aria-labelledby="ec-peligro-titulo">
+          <h3 id="ec-peligro-titulo">¿Seguro que quieres eliminar tu cuenta?</h3>
+          <p>
+            Esta acción es permanente: borra tu usuario y no podrás iniciar
+            sesión de nuevo con este correo.
+          </p>
+          <label class="ec-perfil-peligro__label" for="ec-peligro-frase">
+            Escribe <strong>{{ fraseConfirmacion }}</strong> para confirmar
+          </label>
+          <input
+            id="ec-peligro-frase"
+            class="ec-perfil-peligro__input"
+            type="text"
+            autocomplete="off"
+            [(ngModel)]="textoConfirmacion"
+          />
+          @if (errorEliminar(); as err) {
+            <p class="ec-perfil-peligro__error">{{ err }}</p>
+          }
+          <div class="ec-perfil-peligro__acciones">
+            <button type="button" class="ec-perfil-peligro__cancelar" (click)="toggleZonaPeligro()">
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="ec-perfil-peligro__confirmar"
+              [disabled]="!puedeEliminar || eliminando()"
+              (click)="confirmarEliminar()"
+            >
+              @if (eliminando()) { Eliminando… } @else { Eliminar definitivamente }
+            </button>
+          </div>
+        </div>
+      }
+    </details>
+  }
+</div>

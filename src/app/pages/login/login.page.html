@@ -1,0 +1,268 @@
+<div class="ec-api-error" role="alert">@if (errorServidor()) { {{ errorServidor() }} }</div>
+<div class="ec-auth">
+  <!-- Panel de propuesta de valor (solo escritorio) -->
+  <aside class="ec-auth-panel">
+    <div class="ec-auth-panel__content">
+      <span class="ec-brand-mark ec-brand-mark--light" aria-hidden="true">EC</span>
+      <h2>El panorama cultural de Chile, en un solo lugar</h2>
+      <ul class="ec-auth-panel__list">
+        <li>
+          <ion-icon name="compass-outline" aria-hidden="true"></ion-icon>
+          <span><strong>Ciudadanos y turistas</strong> descubren panoramas cerca, con información validada.</span>
+        </li>
+        <li>
+          <ion-icon name="storefront-outline" aria-hidden="true"></ion-icon>
+          <span><strong>Municipalidades</strong> dan más alcance a sus eventos municipales.</span>
+        </li>
+        <li>
+          <ion-icon name="megaphone-outline" aria-hidden="true"></ion-icon>
+          <span><strong>Organizadores</strong> publican una vez y llegan a todo el país.</span>
+        </li>
+      </ul>
+      <p class="ec-auth-panel__note">Piloto · datos de referencia</p>
+    </div>
+  </aside>
+
+  <!-- Tarjeta de acceso -->
+  <div class="ec-auth-card-wrap">
+    <div class="ec-auth-card" [class.ec-auth-card--register]="modo() === 'registrarse'">
+      <div class="ec-auth-brand">
+        <span class="ec-brand-mark" aria-hidden="true">EC</span>
+      </div>
+
+      <!-- Indicador visual de modo -->
+      <div class="ec-auth-badge" [class.ec-auth-badge--register]="modo() === 'registrarse'">
+        <ion-icon [name]="modo() === 'ingresar' ? 'log-in-outline' : 'person-add-outline'" aria-hidden="true"></ion-icon>
+        <span>{{ modo() === 'ingresar' ? 'Iniciar sesión' : 'Creación de cuenta' }}</span>
+      </div>
+
+      <h1 class="ec-auth-title">
+        {{ modo() === 'ingresar' ? 'Bienvenido de vuelta' : 'Regístrate en Evento Cultural' }}
+      </h1>
+      <p class="ec-subtitle ec-auth-subtitle">
+        @if (modo() === 'ingresar') {
+          Ingresa tus credenciales para acceder a tu cuenta y gestionar tus panoramas.
+        } @else {
+          Crea tu cuenta ciudadana o de organizador para publicar y personalizar tus eventos.
+        }
+      </p>
+
+      <ion-segment
+        [value]="modo()"
+        (ionChange)="cambiarModo($event.detail.value)"
+        class="ec-auth-segment"
+        aria-label="Cambiar entre ingresar y registrarse"
+      >
+        <ion-segment-button value="ingresar" aria-label="Modo ingresar">
+          <ion-icon name="log-in-outline"></ion-icon>
+          <ion-label>Ingresar</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="registrarse" aria-label="Modo registrarse">
+          <ion-icon name="person-add-outline"></ion-icon>
+          <ion-label>Registrarse</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      <form [formGroup]="formulario" (ngSubmit)="enviar()" class="ec-auth-form" novalidate>
+        @if (modo() === 'registrarse') {
+          <div class="ec-field">
+            <ion-item
+              class="ec-auth-input"
+              [class.ec-auth-input--invalid]="errorPara('nombre')"
+              lines="none"
+            >
+              <ion-icon slot="start" name="person-outline" aria-hidden="true"></ion-icon>
+              <ion-input
+                type="text"
+                autocomplete="name"
+                placeholder="Ej: María Pérez"
+                label="Nombre completo"
+                labelPlacement="floating"
+                formControlName="nombre"
+                [attr.aria-invalid]="!!errorPara('nombre')"
+                aria-describedby="ec-auth-nombre-err ec-auth-nombre-ayuda"
+              ></ion-input>
+            </ion-item>
+            @if (errorPara('nombre'); as msg) {
+              <p class="ec-field-error" id="ec-auth-nombre-err" role="alert">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                {{ msg }}
+              </p>
+            }
+          </div>
+        }
+
+        <div class="ec-field">
+          <ion-item
+            class="ec-auth-input"
+            [class.ec-auth-input--invalid]="errorPara('email')"
+            lines="none"
+          >
+            <ion-icon slot="start" name="mail-outline" aria-hidden="true"></ion-icon>
+            <ion-input
+              type="email"
+              inputmode="email"
+              autocomplete="email"
+              placeholder="correo@ejemplo.cl"
+              label="Correo electrónico"
+              labelPlacement="floating"
+              formControlName="email"
+              [attr.aria-invalid]="!!errorPara('email')"
+              aria-describedby="ec-auth-email-err"
+            ></ion-input>
+          </ion-item>
+          @if (errorPara('email'); as msg) {
+            <p class="ec-field-error" id="ec-auth-email-err" role="alert">
+              <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+              {{ msg }}
+            </p>
+          }
+        </div>
+
+        <div class="ec-field">
+          <ion-item
+            class="ec-auth-input"
+            [class.ec-auth-input--invalid]="errorPara('password')"
+            lines="none"
+          >
+            <ion-icon slot="start" name="lock-closed-outline" aria-hidden="true"></ion-icon>
+            <ion-input
+              type="password"
+              [autocomplete]="modo() === 'ingresar' ? 'current-password' : 'new-password'"
+              placeholder="Mínimo 8 caracteres"
+              [label]="modo() === 'ingresar' ? 'Contraseña' : 'Crear contraseña'"
+              labelPlacement="floating"
+              formControlName="password"
+              [attr.aria-invalid]="!!errorPara('password')"
+              aria-describedby="ec-auth-pass-err"
+            ></ion-input>
+          </ion-item>
+          @if (errorPara('password'); as msg) {
+            <p class="ec-field-error" id="ec-auth-pass-err" role="alert">
+              <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+              {{ msg }}
+            </p>
+          } @else if (modo() === 'registrarse') {
+            <ul class="ec-pass-requisitos" aria-label="Requisitos de la contraseña" [attr.aria-live]="'polite'">
+              <li [class.ec-req-ok]="requisito().mayus">
+                <ion-icon [name]="requisito().mayus ? 'checkmark-circle-outline' : 'ellipse-outline'" aria-hidden="true"></ion-icon>
+                Una mayúscula
+              </li>
+              <li [class.ec-req-ok]="requisito().minus">
+                <ion-icon [name]="requisito().minus ? 'checkmark-circle-outline' : 'ellipse-outline'" aria-hidden="true"></ion-icon>
+                Una minúscula
+              </li>
+              <li [class.ec-req-ok]="requisito().numero">
+                <ion-icon [name]="requisito().numero ? 'checkmark-circle-outline' : 'ellipse-outline'" aria-hidden="true"></ion-icon>
+                Un número
+              </li>
+              <li [class.ec-req-ok]="requisito().simbolo">
+                <ion-icon [name]="requisito().simbolo ? 'checkmark-circle-outline' : 'ellipse-outline'" aria-hidden="true"></ion-icon>
+                Un símbolo (¡?#$%…)
+              </li>
+              <li [class.ec-req-ok]="requisito().largo">
+                <ion-icon [name]="requisito().largo ? 'checkmark-circle-outline' : 'ellipse-outline'" aria-hidden="true"></ion-icon>
+                Al menos 8 caracteres
+              </li>
+            </ul>
+          }
+        </div>
+
+        @if (modo() === 'registrarse') {
+          <div class="ec-field">
+            <ion-item
+              class="ec-auth-input"
+              [class.ec-auth-input--invalid]="errorPara('confirmar')"
+              lines="none"
+            >
+              <ion-icon slot="start" name="lock-closed-outline" aria-hidden="true"></ion-icon>
+              <ion-input
+                type="password"
+                autocomplete="new-password"
+                placeholder="Repite la contraseña"
+                label="Confirmar contraseña"
+                labelPlacement="floating"
+                formControlName="confirmar"
+                [attr.aria-invalid]="!!errorPara('confirmar')"
+                aria-describedby="ec-auth-conf-err"
+              ></ion-input>
+            </ion-item>
+            @if (errorPara('confirmar'); as msg) {
+              <p class="ec-field-error" id="ec-auth-conf-err" role="alert">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                {{ msg }}
+              </p>
+            }
+          </div>
+        }
+
+        @if (modo() === 'registrarse') {
+          <div class="ec-auth-register-box">
+            <ion-item class="ec-auth-checkbox" lines="none">
+              <ion-checkbox slot="start" formControlName="esOrganizador"></ion-checkbox>
+              <ion-label>
+                <strong>Cuenta de organizador</strong>
+                <span class="ec-auth-checkbox-desc">Para municipalidades, centros culturales y productoras</span>
+              </ion-label>
+            </ion-item>
+          </div>
+        }
+
+        <ion-button
+          expand="block"
+          type="submit"
+          class="ec-auth-submit"
+          [class.ec-auth-submit--register]="modo() === 'registrarse'"
+          [disabled]="cargando()"
+        >
+          @if (cargando()) {
+            <ion-spinner name="crescent" slot="start"></ion-spinner>
+            {{ modo() === 'ingresar' ? 'Iniciando sesión…' : 'Creando tu cuenta…' }}
+          } @else {
+            <ion-icon slot="start" [name]="modo() === 'ingresar' ? 'log-in-outline' : 'person-add-outline'" aria-hidden="true"></ion-icon>
+            {{ modo() === 'ingresar' ? 'Iniciar sesión' : 'Completar registro' }}
+          }
+        </ion-button>
+      </form>
+
+      <!-- Alternador de modo con texto explicativo -->
+      <div class="ec-auth-switch-mode">
+        @if (modo() === 'ingresar') {
+          <span>¿No tienes una cuenta aún?</span>
+          <button type="button" class="ec-auth-switch-link" (click)="cambiarModo('registrarse')">
+            Regístrate aquí
+          </button>
+        } @else {
+          <span>¿Ya tienes una cuenta registrada?</span>
+          <button type="button" class="ec-auth-switch-link" (click)="cambiarModo('ingresar')">
+            Inicia sesión aquí
+          </button>
+        }
+      </div>
+
+      <!-- Login con proveedor externo (OAuth). PREPARADO: requiere activar
+           el proveedor en Supabase Auth y registrar la URL de callback. -->
+      <div class="ec-auth-oauth">
+        <div class="ec-auth-oauth__divider" aria-hidden="true"><span>o</span></div>
+        <ion-button
+          expand="block"
+          fill="outline"
+          type="button"
+          class="ec-auth-oauth__btn"
+          (click)="ingresarConOAuth()"
+        >
+          <ion-icon slot="start" name="globe-outline" aria-hidden="true"></ion-icon>
+          {{ modo() === 'ingresar' ? 'Continuar con Google' : 'Registrarse con Google' }}
+        </ion-button>
+        <p class="ec-auth-oauth__note">
+          El acceso con Google requiere activar el proveedor en Supabase y registrar
+          http://localhost:4200/auth/callback como URL de redirección.
+        </p>
+      </div>
+
+      <p class="ec-auth-footer">
+        <a routerLink="/home">Continuar explorando sin iniciar sesión</a>
+      </p>
+    </div>
+  </div>
+</div>

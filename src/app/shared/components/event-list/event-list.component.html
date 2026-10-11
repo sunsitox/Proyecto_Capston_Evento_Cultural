@@ -1,0 +1,196 @@
+<!-- Cabecera de resultados + live region (compartida) -->
+<div class="ec-list-header">
+  <h2 id="ec-results-count" class="ec-list-title">
+    @if (cargando()) {
+      Buscando eventos…
+    } @else {
+      {{ eventos().length }}
+      {{ eventos().length === 1 ? 'evento encontrado' : 'eventos encontrados' }}
+    }
+  </h2>
+  @if (tieneFiltrosActivos()) {
+    <button class="ec-clear-chip" (click)="limpiarFiltros()" type="button">
+      <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+      Limpiar todo
+    </button>
+  }
+</div>
+
+<!-- Filtros activos: combinados, visibles y eliminables uno a uno -->
+@if (filtrosActivos().length > 0) {
+  <div class="ec-filtros-activos" role="group" aria-label="Filtros aplicados">
+    @for (f of filtrosActivos(); track f.clave) {
+      <button class="ec-filtro-chip" type="button" (click)="quitar(f.clave)">
+        {{ f.etiqueta }}
+        <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+        <span class="ec-sr-only">quitar filtro</span>
+      </button>
+    }
+  </div>
+}
+
+<!-- Live region: anuncia cantidad al cambiar filtros -->
+<div class="ec-sr-only" aria-live="polite" aria-atomic="true">
+  @if (!cargando()) {
+    {{ eventos().length }}
+    {{ eventos().length === 1 ? 'evento disponible' : 'eventos disponibles' }}
+    @if (modoVista() === 'paginas' && totalPaginas() > 1) {
+      · página {{ paginaActual() }} de {{ totalPaginas() }}
+    }
+  }
+</div>
+
+<!-- Lista / Skeletons / Empty / Error -->
+<div
+  [class]="layout === 'grid' ? 'ec-events-grid' : 'ec-events-list'"
+  [attr.aria-busy]="cargando()"
+  aria-labelledby="ec-results-count"
+>
+  @if (cargando()) {
+    @for (s of skeletons.slice(0, skeletonCount); track $index) {
+      <app-evento-card-skeleton [layout]="layout"></app-evento-card-skeleton>
+    }
+  } @else if (error()) {
+    <div class="ec-empty" role="alert">
+      <div class="ec-empty__icon" aria-hidden="true">
+        <ion-icon name="cloud-offline-outline"></ion-icon>
+      </div>
+      <h3>No pudimos actualizar los eventos</h3>
+      <p>
+        Es posible que la información ya no esté vigente. Revisa tu conexión
+        e inténtalo de nuevo.
+      </p>
+      <button class="ec-btn" type="button" (click)="onReintentar()">
+        <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
+        Reintentar
+      </button>
+    </div>
+  } @else if (eventos().length > 0) {
+    @for (evento of visibles(); track evento.id) {
+      <app-evento-card
+        [evento]="evento"
+        [layout]="layout"
+        (salidaTerminada)="onSalidaTerminada($event)"
+      ></app-evento-card>
+    }
+  } @else {
+    <div class="ec-empty" role="status">
+      <div class="ec-empty__icon" aria-hidden="true">
+        <ion-icon name="compass-outline"></ion-icon>
+      </div>
+      <h3>No encontramos eventos</h3>
+      <p>Prueba con otra búsqueda, cambia los filtros o explora todas las categorías.</p>
+      @if (showClearInEmpty && tieneFiltrosActivos()) {
+        <button class="ec-btn ec-btn-outline" (click)="limpiarFiltros()" type="button">
+          <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+          Limpiar filtros
+        </button>
+      }
+    </div>
+  }
+</div>
+
+<!-- Avance del recorrido del catálogo -->
+@if (!cargando() && !error() && rango(); as r) {
+  <p class="ec-list-rango" role="status" aria-live="polite">
+    Mostrando <strong>{{ r.desde }}–{{ r.hasta }}</strong> de
+    <strong>{{ r.total }}</strong> eventos
+  </p>
+}
+
+<!-- PAGINACIÓN (vista web: páginas, anterior/siguiente y selector) -->
+@if (!cargando() && !error() && modoVista() === 'paginas' && totalPaginas() > 1) {
+  <nav class="ec-paginacion" aria-label="Paginación de resultados">
+    <button
+      class="ec-pag-btn"
+      type="button"
+      (click)="anterior()"
+      [disabled]="paginaActual() === 1"
+    >
+      <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+      Anterior
+    </button>
+
+    <ul class="ec-pag-lista">
+      @if (paginas()[0] > 1) {
+        <li>
+          <button class="ec-pag-num" type="button" (click)="irA(1)">1</button>
+        </li>
+        @if (paginas()[0] > 2) {
+          <li class="ec-pag-puntos" aria-hidden="true">…</li>
+        }
+      }
+      @for (p of paginas(); track p) {
+        <li>
+          <button
+            class="ec-pag-num"
+            type="button"
+            [class.active]="p === paginaActual()"
+            [attr.aria-current]="p === paginaActual() ? 'page' : null"
+            [attr.aria-label]="'Página ' + p"
+            (click)="irA(p)"
+          >
+            {{ p }}
+          </button>
+        </li>
+      }
+      @if (paginas()[paginas().length - 1] < totalPaginas()) {
+        @if (paginas()[paginas().length - 1] < totalPaginas() - 1) {
+          <li class="ec-pag-puntos" aria-hidden="true">…</li>
+        }
+        <li>
+          <button class="ec-pag-num" type="button" (click)="irA(totalPaginas())">
+            {{ totalPaginas() }}
+          </button>
+        </li>
+      }
+    </ul>
+
+    <button
+      class="ec-pag-btn"
+      type="button"
+      (click)="siguiente()"
+      [disabled]="paginaActual() === totalPaginas()"
+    >
+      Siguiente
+      <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+    </button>
+
+    <label class="ec-pag-salto">
+      <span class="ec-sr-only">Ir a la página</span>
+      <select
+        aria-label="Ir a la página"
+        [value]="paginaActual()"
+        (change)="irA(+$any($event.target).value)"
+      >
+        @for (p of todasLasPaginas(); track p) {
+          <option [value]="p">Página {{ p }} de {{ totalPaginas() }}</option>
+        }
+      </select>
+    </label>
+  </nav>
+}
+
+<!-- SCROLL INFINITO (vista móvil).
+     El centinela vive siempre en el DOM (oculto cuando la vista pagina) para
+     que el observador esté listo desde el arranque: al mostrarse carga el
+     bloque siguiente. -->
+<div
+  #centinela
+  class="ec-list-centinela"
+  [class.ec-list-centinela--oculto]="modoVista() !== 'infinite' || cargando() || !!error()"
+  aria-hidden="true"
+></div>
+
+@if (modoVista() === 'infinite' && !cargando() && !error()) {
+  @if (hayMas()) {
+    <div class="ec-cargar-mas">
+      <button class="ec-btn ec-btn-outline" type="button" (click)="cargarMas()">
+        <ion-icon name="chevron-down-outline" aria-hidden="true"></ion-icon>
+        Cargar más eventos
+      </button>
+    </div>
+  } @else if (eventos().length > tamanoBloque()) {
+    <p class="ec-list-fin">No hay más eventos para mostrar.</p>
+  }
+}

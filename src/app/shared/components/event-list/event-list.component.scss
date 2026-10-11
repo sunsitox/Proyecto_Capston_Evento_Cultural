@@ -1,0 +1,297 @@
+/* ========================================
+   LISTA COMPARTIDA — Resultados, grid y empty state
+   ======================================== */
+
+/* Sin esto el custom element queda display:inline (default) y el grid
+   calcula los 1fr sobre un ancho shrink-to-fit: columnas desiguales y
+   desborde horizontal en desktop. */
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.ec-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ec-space-sm);
+  margin-bottom: var(--ec-space-md);
+  flex-wrap: wrap;
+  /* Al cambiar de página el foco visual vuelve aquí sin quedar tapado
+     por la cabecera fija de la aplicación. */
+  scroll-margin-top: calc(var(--ec-header-h, 64px) + var(--ec-space-md));
+}
+
+.ec-list-title {
+  font-family: var(--ec-font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--ec-text-muted);
+}
+
+.ec-clear-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 6px 14px;
+  background: transparent;
+  border: var(--ec-border-width) solid var(--ec-border);
+  border-radius: var(--ec-radius-full);
+  color: var(--ec-danger);
+  font-family: var(--ec-font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--ec-duration-fast) var(--ec-ease);
+
+  &:hover {
+    background: var(--ec-danger-bg);
+  }
+}
+
+/* ========================================
+   FILTROS ACTIVOS — visibles y eliminables uno a uno
+   ======================================== */
+
+.ec-filtros-activos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--ec-space-md);
+}
+
+.ec-filtro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 5px 12px;
+  background: var(--ec-primary-bg);
+  border: 1px solid var(--ec-primary-light);
+  border-radius: var(--ec-radius-full);
+  color: var(--ec-primary-dark);
+  font-family: var(--ec-font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--ec-duration-fast) var(--ec-ease);
+
+  ion-icon {
+    font-size: 0.85rem;
+  }
+
+  .ec-sr-only {
+    position: absolute;
+  }
+
+  &:hover {
+    background: var(--ec-surface-hover);
+  }
+}
+
+/* ========================================
+   GRID — fluido por contenido
+   ======================================== */
+
+.ec-events-grid {
+  display: grid;
+  gap: var(--ec-space-lg);
+  /* minmax(0, 1fr): evita que min-content de una tarjeta fuerce columnas
+     desiguales o desborde el contenedor (contenidos largos sin partir). */
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (min-width: 1440px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ========================================
+   LISTA — una columna
+   ======================================== */
+
+.ec-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ec-space-md);
+  max-width: 780px;
+}
+
+/* ========================================
+   EMPTY STATE
+   ======================================== */
+
+.ec-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--ec-space-2xl) var(--ec-space-md);
+
+  &__icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--ec-space-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--ec-radius-circle);
+    background: var(--ec-primary-bg);
+    color: var(--ec-primary-dark);
+
+    ion-icon {
+      font-size: 1.8rem;
+    }
+  }
+
+  h3 {
+    margin: 0 0 var(--ec-space-xs);
+    color: var(--ec-text-dark);
+  }
+
+  p {
+    font-size: 0.92rem;
+    max-width: 42ch;
+    margin: 0 auto var(--ec-space-lg);
+  }
+}
+
+/* ========================================
+   AVANCE DEL CATÁLOGO — rango, páginas y scroll infinito
+   El catálogo real trae más de mil eventos: nunca se pintan todos.
+   ======================================== */
+
+.ec-list-rango {
+  margin: var(--ec-space-md) 0 0;
+  font-size: 0.78rem;
+  color: var(--ec-text-light);
+  font-variant-numeric: tabular-nums;
+
+  strong {
+    color: var(--ec-text-muted);
+  }
+}
+
+/* --- Paginación clásica (vista web) --- */
+
+.ec-paginacion {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ec-space-sm);
+  margin-top: var(--ec-space-md);
+  padding-top: var(--ec-space-md);
+  border-top: 1px solid var(--ec-border-light);
+}
+
+.ec-pag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--ec-touch-target);
+  padding: 6px 14px;
+  background: var(--ec-surface);
+  border: var(--ec-border-width) solid var(--ec-border);
+  border-radius: var(--ec-radius-full);
+  color: var(--ec-text);
+  font-family: var(--ec-font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--ec-duration-fast) var(--ec-ease);
+
+  &:hover:not(:disabled) {
+    background: var(--ec-surface-hover);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.ec-pag-lista {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ec-pag-num {
+  min-width: var(--ec-touch-target);
+  min-height: var(--ec-touch-target);
+  padding: 4px 8px;
+  background: transparent;
+  border: var(--ec-border-width) solid transparent;
+  border-radius: var(--ec-radius-md);
+  color: var(--ec-text-muted);
+  font-family: var(--ec-font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background var(--ec-duration-fast) var(--ec-ease);
+
+  &:hover {
+    background: var(--ec-surface-hover);
+  }
+
+  &.active {
+    background: var(--ec-primary-bg);
+    border-color: var(--ec-primary-light);
+    color: var(--ec-primary-dark);
+  }
+}
+
+.ec-pag-puntos {
+  padding: 0 4px;
+  color: var(--ec-text-light);
+}
+
+.ec-pag-salto {
+  margin-left: auto;
+
+  select {
+    min-height: var(--ec-touch-target);
+    padding: 6px 10px;
+    background: var(--ec-surface-2);
+    border: var(--ec-border-width) solid var(--ec-border);
+    border-radius: var(--ec-radius-md);
+    color: var(--ec-text);
+    font-family: var(--ec-font-sans);
+    font-size: 0.8rem;
+  }
+}
+
+/* --- Scroll infinito (vista móvil) --- */
+
+.ec-list-centinela {
+  height: 1px;
+  margin-top: var(--ec-space-md);
+}
+
+.ec-list-centinela--oculto {
+  display: none;
+}
+
+.ec-cargar-mas {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--ec-space-md);
+}
+
+.ec-list-fin {
+  margin: var(--ec-space-md) 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--ec-text-light);
+}

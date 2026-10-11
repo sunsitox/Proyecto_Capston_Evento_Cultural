@@ -1,0 +1,415 @@
+/* ========================================
+   EVENTO CARD — "papel y tinta"
+   Grid: vertical · Lista: horizontal
+   ======================================== */
+
+.ec-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--ec-surface);
+  border: var(--ec-border-width) solid var(--ec-border-light);
+  border-radius: var(--ec-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--ec-shadow-sm);
+  transition:
+    box-shadow var(--ec-duration-medium) var(--ec-ease),
+    transform var(--ec-duration-medium) var(--ec-ease);
+}
+
+.ec-card:hover {
+  box-shadow: var(--ec-shadow-md);
+  transform: translateY(-3px);
+}
+
+.ec-card-link {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 3px solid var(--ec-primary-dark);
+    outline-offset: -3px;
+    border-radius: inherit;
+  }
+}
+
+/* ---------- Media ---------- */
+
+.ec-card-media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--ec-surface-2);
+}
+
+.ec-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--ec-duration-slow) var(--ec-ease);
+
+  .ec-card:hover & {
+    transform: scale(1.05);
+  }
+}
+
+.ec-card-media .ec-cat {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  box-shadow: var(--ec-shadow-sm);
+}
+
+.ec-card-gratis {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 4px 10px;
+  background: var(--ec-green-bg);
+  color: var(--ec-green);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--ec-radius-full);
+}
+
+/* ---------- Body ---------- */
+
+.ec-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  padding: var(--ec-space-md);
+  min-width: 0;
+}
+
+.ec-card-fecha {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ec-primary-dark);
+
+  ion-icon {
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+}
+
+.ec-card-title {
+  margin: 0;
+  font-family: var(--ec-font-serif);
+  font-size: 1.08rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ec-text-dark);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ec-card-lugar {
+  margin: auto 0 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--ec-text-muted);
+
+  ion-icon {
+    font-size: 0.95rem;
+    color: var(--ec-text-light);
+    flex-shrink: 0;
+  }
+}
+
+/* ---------- Motivo de recomendación (Para ti) ---------- */
+
+.ec-card-motivo {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--ec-radius-full);
+  background: var(--ec-primary-bg);
+  color: var(--ec-primary-dark);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.3;
+
+  ion-icon {
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+}
+
+/* ---------- Acciones de interés + menú contextual ---------- */
+
+.ec-card-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ec-card-actions {
+  min-width: 0;
+}
+
+.ec-card-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ec-card-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ec-touch-target, 44px);
+  height: var(--ec-touch-target, 44px);
+  padding: 0;
+  border: none;
+  border-radius: var(--ec-radius-full);
+  background: transparent;
+  color: var(--ec-text-muted);
+  cursor: pointer;
+  transition: background var(--ec-duration-fast) var(--ec-ease);
+
+  ion-icon {
+    font-size: 1.1rem;
+  }
+
+  &:hover {
+    background: var(--ec-surface-hover);
+    color: var(--ec-text-dark);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--ec-primary-dark);
+    outline-offset: 2px;
+  }
+}
+
+.ec-card-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  min-width: 190px;
+  padding: 4px;
+  background: var(--ec-surface);
+  border: var(--ec-border-width) solid var(--ec-border-light);
+  border-radius: var(--ec-radius-md);
+  box-shadow: var(--ec-shadow-md);
+  z-index: var(--ec-z-card-menu, 5);
+  transform-origin: bottom right;
+  animation: ec-card-menu-in 140ms var(--ec-ease) both;
+}
+
+@keyframes ec-card-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.ec-card-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--ec-radius-sm);
+  background: transparent;
+  color: var(--ec-text-dark);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 1rem;
+    color: var(--ec-text-muted);
+  }
+
+  &:hover {
+    background: var(--ec-surface-hover);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--ec-primary-dark);
+    outline-offset: -2px;
+  }
+
+  &--negativo {
+    color: var(--ec-danger);
+
+    ion-icon {
+      color: var(--ec-danger);
+    }
+  }
+}
+
+/* ---------- Salida al descartar ("No me interesa") ---------- */
+
+.ec-card--saliendo {
+  opacity: 0;
+  transform: scale(0.94);
+  transition:
+    opacity 200ms var(--ec-ease),
+    transform 200ms var(--ec-ease),
+    box-shadow var(--ec-duration-medium) var(--ec-ease);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ec-card--saliendo {
+    transition: opacity 1ms linear;
+    transform: none;
+  }
+}
+
+/* ---------- Variante lista ---------- */
+
+.ec-card--list {
+  flex-direction: row;
+  align-items: stretch;
+
+  .ec-card-link {
+    flex-direction: row;
+  }
+
+  .ec-card-media {
+    width: 150px;
+    min-width: 150px;
+    aspect-ratio: auto;
+  }
+
+  .ec-card-title {
+    -webkit-line-clamp: 2;
+  }
+
+  .ec-card-body {
+    justify-content: center;
+  }
+
+  @media (max-width: 767px) {
+    .ec-card-media {
+      width: 120px;
+      min-width: 120px;
+    }
+  }
+}
+
+/* ---------- Estado (próximo/hoy/en curso/suspendido/cancelado) ---------- */
+
+.ec-card-estado {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  padding: 3px 8px;
+  border-radius: var(--ec-radius-full);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  &--hoy {
+    background: var(--ec-primary-bg);
+    color: var(--ec-primary-dark);
+  }
+
+  &--en_curso {
+    background: var(--ec-green-bg);
+    color: var(--ec-green);
+  }
+
+  &--suspendido {
+    background: var(--ec-surface-2);
+    color: var(--ec-text-light);
+    border: 1px dashed var(--ec-border);
+  }
+
+  &--cancelado {
+    background: var(--ec-danger-bg);
+    color: var(--ec-danger);
+  }
+}
+
+/* Eventos suspendidos o cancelados: atenuados */
+.ec-card--inactiva .ec-card-img {
+  filter: grayscale(65%);
+  opacity: 0.72;
+}
+
+.ec-card--inactiva .ec-card-body {
+  opacity: 0.72;
+}
+
+/* Modalidad + recinto */
+.ec-card-modalidad {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ec-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  ion-icon {
+    color: var(--ec-primary-dark);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+}
+
+/* Precio sobre la imagen (si no es gratuito) */
+.ec-card-precio {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  max-width: calc(100% - 20px);
+  padding: 4px 10px;
+  background: var(--ec-overlay, rgba(33, 28, 22, 0.88));
+  color: var(--pr-white, #fffdf9);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: var(--ec-radius-full);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Movimiento reducido ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ec-card,
+  .ec-card-img {
+    transition: none;
+  }
+
+  .ec-card-menu {
+    animation: none;
+  }
+}
