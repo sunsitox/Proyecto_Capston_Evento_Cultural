@@ -25,6 +25,8 @@ import {
   ellipseOutline, checkmarkCircleOutline, pauseOutline, warningOutline
 } from 'ionicons/icons';
 import { routes } from './app.routes';
+import { PersistenciaRecomendaciones } from './core/services/recomendacion-persistencia';
+import { SupabaseRecomendacionPersistencia } from './core/services/supabase-recomendacion-persistencia.service';
 
 // Fechas formateadas en español (DatePipe 'd MMM', 'EEEE d MMMM y', etc.)
 registerLocaleData(localeEs);
@@ -33,6 +35,12 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(),
     { provide: LOCALE_ID, useValue: 'es-CL' },
+    // Guarda señales de interés y preferencias en la cuenta para que "Para ti"
+    // siga al usuario entre dispositivos (RLS de Supabase gobierna el acceso).
+    {
+      provide: PersistenciaRecomendaciones,
+      useClass: SupabaseRecomendacionPersistencia
+    },
     // Forzar 'md' en todo momento: ionicons elige sprite según mode, y sin un
     // mode estable puede construir el `URL()` con una base vacía y lanzar el
     // warning "URL constructor: '' is not a valid URL".

@@ -21,7 +21,8 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
  * Variante 'onboarding': flujo progresivo en 4 pasos.
  * Variante 'ajustes': mismos controles de una vez, encabezado compacto.
  *
- * Nada se persiste: las preferencias viven sólo durante esta visita.
+ * Con sesión iniciada, las preferencias se guardan en la cuenta (via
+ * RecomendacionService → Supabase); sin sesión viven sólo en memoria.
  */
 @Component({
   selector: 'app-recommendation-empty-state',
@@ -290,7 +291,7 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
           @if (variante() === 'ajustes') {
             <button type="button" class="ec-onb__skip" (click)="reiniciar()">
               <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
-              Reiniciar intereses de esta visita
+              Reiniciar mis intereses
             </button>
           }
         }
@@ -298,8 +299,9 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
 
       <p class="ec-onb__nota">
         <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
-        Estas preferencias se usan sólo durante esta visita en el prototipo.
-        No se guardan de forma permanente.
+        Con sesión iniciada, tus preferencias e intereses se guardan en tu
+        cuenta y te siguen en otros dispositivos. Sin sesión duran sólo esta
+        visita.
       </p>
     </div>
   `,

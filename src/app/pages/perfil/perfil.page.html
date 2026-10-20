@@ -81,6 +81,7 @@
   <section class="ec-perfil-preferencias" aria-labelledby="ec-perfil-prefs-title">
     <app-recommendation-empty-state
       variante="ajustes"
+      (guardarClick)="verRecomendaciones()"
     ></app-recommendation-empty-state>
   </section>
 
@@ -101,8 +102,8 @@
 
   <p class="ec-perfil-nota">
     <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
-    En este piloto, tus preferencias y señales se usan temporalmente para
-    ordenar eventos. No se guardan de forma permanente.
+    Con sesión iniciada, tus preferencias e intereses se guardan en tu cuenta
+    y te siguen en otros dispositivos. Sin sesión duran sólo esta visita.
   </p>
 
   <!-- ================= Zona de peligro (escondida) ================= -->

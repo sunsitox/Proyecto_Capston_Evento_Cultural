@@ -72,6 +72,15 @@ export class PerfilPage {
 
   readonly totalSenales = this.recomendacion.totalSenales;
 
+  /**
+   * "Ver recomendaciones" desde Preferencias: el componente ya guardó la
+   * selección; aquí sólo llevamos a la persona a la página Para ti (antes el
+   * botón guardaba sin navegar y parecía no hacer nada).
+   */
+  verRecomendaciones(): void {
+    void this.router.navigateByUrl('/para-ti');
+  }
+
   /** Etiquetas de preferencias activas (para el bloque de resumen). */
   readonly preferenciasActivas = computed(() => {
     const p = this.recomendacion.preferencias();

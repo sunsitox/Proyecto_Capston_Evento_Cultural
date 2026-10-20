@@ -9,7 +9,12 @@
       <p>La información de eventos rota y vence: te mostramos alternativas con fechas actuales.</p>
       <div class="ec-events-grid">
         @for (alt of alternativasVigentes(); track alt.id) {
-          <app-evento-card [evento]="alt"></app-evento-card>
+          <app-evento-card
+            [evento]="alt"
+            (meInteresaCambiado)="onMeInteresa($event)"
+            (salidaTerminada)="onNoMeInteresa($event)"
+            (verSimilaresClick)="onVerSimilares($event)"
+          ></app-evento-card>
         }
       </div>
       <ion-button routerLink="/home" color="primary">Volver al inicio</ion-button>

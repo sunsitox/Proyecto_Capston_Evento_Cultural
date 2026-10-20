@@ -70,7 +70,9 @@
       <app-evento-card
         [evento]="evento"
         [layout]="layout"
+        (meInteresaCambiado)="onMeInteresa($event)"
         (salidaTerminada)="onSalidaTerminada($event)"
+        (verSimilaresClick)="onVerSimilares($event)"
       ></app-evento-card>
     }
   } @else {

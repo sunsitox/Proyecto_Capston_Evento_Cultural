@@ -55,8 +55,13 @@ export interface CommuneRaw {
  */
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
-  /** Cliente único compartido (maneja refresh de tokens automáticamente). */
-  private readonly cliente: SupabaseClient = createClient(
+  /**
+   * Cliente único compartido (maneja refresh de tokens automáticamente).
+   * Es público para que los servicios de dominio (p. ej. la persistencia de
+   * recomendaciones) consulten sus tablas con la sesión del usuario; RLS
+   * sigue gobernando qué puede leer y escribir cada quien.
+   */
+  readonly cliente: SupabaseClient = createClient(
     environment.supabaseUrl,
     environment.supabaseAnonKey,
     {

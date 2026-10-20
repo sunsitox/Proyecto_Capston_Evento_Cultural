@@ -1,5 +1,6 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Evento } from '../models/evento.model';
+import { PersistenciaRecomendaciones } from './recomendacion-persistencia';
 import {
   PREFERENCIAS_INICIALES,
   SIGNAL_WEIGHT,
@@ -11,10 +12,13 @@ import {
 } from '../models/recomendacion.model';
 
 /**
- * Adaptador local de señales de interés (maqueta).
+ * Motor de señales de interés y afinidad.
  *
- * - Todo vive en MEMORIA: no persiste en localStorage, sessionStorage ni
- *   base de datos. Tras recargar la página, el estado se reinicia.
+ * - Para invitados todo vive en MEMORIA: al recargar la página el estado se
+ *   reinicia (no se guarda nada sin cuenta).
+ * - Con sesión iniciada, el historial se guarda en la cuenta mediante
+ *   `PersistenciaRecomendaciones` (Supabase), de modo que las recomendaciones
+ *   sigan a la persona entre dispositivos y recargas.
  * - Reemplaza al antiguo FavoritosService: no existe "biblioteca
  *   permanente de eventos guardados", sólo señales temporales.
  * - La forma (SignalKind, RecommendationSignal, UserPreferences, …) está
@@ -40,6 +44,38 @@ export class RecomendacionService {
 
   /** Resolver de eventos inyectado por EventosService (para categorías). */
   private eventoPorId?: (id: string) => Evento | undefined;
+
+  /**
+   * Persistencia opcional: si no está provista (pruebas o invitados) el
+   * servicio funciona sólo en memoria.
+   */
+  private readonly persistencia = inject(PersistenciaRecomendaciones, {
+    optional: true
+  });
+
+  /** Usuario cuyo historial ya se recuperó (evita recargas repetidas). */
+  private usuarioHidratado: string | null = null;
+
+  constructor() {
+    const persistencia = this.persistencia;
+    if (!persistencia) return;
+
+    // Al iniciar sesión se recupera el historial de la cuenta: así el orden
+    // de "Para ti" sigue al usuario en cualquier dispositivo.
+    effect(() => {
+      const userId = persistencia.usuarioId();
+      if (this.usuarioHidratado === userId) return;
+      this.usuarioHidratado = userId;
+
+      // Cambió la persona (o se cerró sesión): no se arrastra en memoria el
+      // historial de la cuenta anterior. Sólo se limpia lo local; las filas
+      // guardadas no se tocan.
+      this.limpiarMemoria();
+      if (!userId) return;
+
+      void this.hidratarDesdeCuenta(persistencia);
+    });
+  }
 
   readonly senales = this._senales.asReadonly();
   readonly ocultos = this._ocultos.asReadonly();
@@ -92,6 +128,7 @@ export class RecomendacionService {
     if (kind === 'no_me_interesa') {
       this._ocultos.update((set) => new Set(set).add(eventId));
     }
+    this.persistirSenal(kind, eventId);
   }
 
   /** Si ya existe una señal concreta para un evento. */
@@ -112,6 +149,7 @@ export class RecomendacionService {
       this._senales.update((lista) =>
         lista.filter((s) => !(s.eventId === eventId && s.kind === 'me_interesa'))
       );
+      this.olvidarSenal('me_interesa', eventId);
     }
   }
 
@@ -140,6 +178,7 @@ export class RecomendacionService {
   guardarPreferencias(p: Partial<UserPreferences>): void {
     this._preferencias.update((actuales) => ({ ...actuales, ...p }));
     this._preferenciasConfiguradas.set(true);
+    this.persistirPreferencias();
   }
 
   reiniciarPreferencias(): void {
@@ -156,6 +195,93 @@ export class RecomendacionService {
     this._ocultos.set(new Set());
     this._preferencias.set({ ...PREFERENCIAS_INICIALES });
     this._preferenciasConfiguradas.set(false);
+    this.limpiarCuenta();
+  }
+
+  // ------------------------------------------------------------------
+  // Persistencia en la cuenta (opcional)
+  // ------------------------------------------------------------------
+
+  /** Vacía el estado local sin tocar lo que está guardado en la cuenta. */
+  private limpiarMemoria(): void {
+    this._senales.set([]);
+    this._ocultos.set(new Set());
+    this._preferencias.set({ ...PREFERENCIAS_INICIALES });
+    this._preferenciasConfiguradas.set(false);
+  }
+
+  /**
+   * Recupera historial y preferencias de la cuenta y los mezcla con lo que
+   * ya se exploró en esta visita (sin duplicar señales).
+   */
+  private async hidratarDesdeCuenta(
+    persistencia: PersistenciaRecomendaciones
+  ): Promise<void> {
+    // Cada fuente se resuelve por separado: si una falla (sin red, token
+    // vencido) la otra igual se aplica.
+    const [senales, prefs] = await Promise.all([
+      persistencia.cargarSenales().catch((e: unknown) => {
+        console.warn('Recomendaciones: no se recuperaron las señales', e);
+        return [];
+      }),
+      persistencia.cargarPreferencias().catch((e: unknown) => {
+        console.warn('Recomendaciones: no se recuperaron las preferencias', e);
+        return null;
+      })
+    ]);
+
+    try {
+      const clave = (s: RecommendationSignal) => `${s.kind}|${s.eventId}`;
+      const unicas = new Map<string, RecommendationSignal>();
+      for (const s of this._senales()) unicas.set(clave(s), s);
+      for (const s of senales) unicas.set(clave(s), s);
+
+      const lista = [...unicas.values()].sort((a, b) =>
+        a.at.localeCompare(b.at)
+      );
+      this._senales.set(lista);
+      this._ocultos.set(
+        new Set(
+          lista
+            .filter((s) => s.kind === 'no_me_interesa')
+            .map((s) => s.eventId)
+        )
+      );
+
+      if (prefs) {
+        this._preferencias.set({ ...PREFERENCIAS_INICIALES, ...prefs });
+        this._preferenciasConfiguradas.set(true);
+      }
+    } catch (e) {
+      // Sin conexión o sin permisos: la visita continúa en memoria.
+      console.warn('Recomendaciones: no se pudo recuperar el historial', e);
+    }
+  }
+
+  private persistirSenal(kind: SignalKind, eventId: string): void {
+    this.persistencia?.guardarSenal(kind, eventId).catch((e: unknown) =>
+      console.warn('Recomendaciones: no se pudo guardar la señal', e)
+    );
+  }
+
+  private olvidarSenal(kind: SignalKind, eventId: string): void {
+    this.persistencia?.borrarSenal(kind, eventId).catch((e: unknown) =>
+      console.warn('Recomendaciones: no se pudo borrar la señal', e)
+    );
+  }
+
+  private persistirPreferencias(): void {
+    this.persistencia
+      ?.guardarPreferencias(this._preferencias())
+      .catch((e: unknown) =>
+        console.warn('Recomendaciones: no se guardaron las preferencias', e)
+      );
+  }
+
+  private limpiarCuenta(): void {
+    this.persistencia?.limpiarSenales().catch((e: unknown) =>
+      console.warn('Recomendaciones: no se reinició el historial remoto', e)
+    );
   }
 
   // ------------------------------------------------------------------
