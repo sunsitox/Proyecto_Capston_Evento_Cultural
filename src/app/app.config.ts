@@ -20,9 +20,9 @@ import {
   videocamOutline, layersOutline, accessibilityOutline,
   peopleOutline, informationCircleOutline, documentTextOutline,
   navigateOutline, sparklesOutline, sparkles, ellipsisVertical,
-  chevronBackOutline, todayOutline, calendarClearOutline, refreshOutline,
+  chevronBackOutline, chevronDownOutline, todayOutline, calendarClearOutline, refreshOutline,
   cloudOfflineOutline, location, globeOutline, personAddOutline,
-  ellipseOutline, checkmarkCircleOutline
+  ellipseOutline, checkmarkCircleOutline, pauseOutline, warningOutline
 } from 'ionicons/icons';
 import { routes } from './app.routes';
 
@@ -63,9 +63,9 @@ export const appConfig: ApplicationConfig = {
           videocamOutline, layersOutline, accessibilityOutline,
           peopleOutline, informationCircleOutline, documentTextOutline,
           navigateOutline, sparklesOutline, sparkles, ellipsisVertical,
-          chevronBackOutline, todayOutline, calendarClearOutline, refreshOutline,
+          chevronBackOutline, chevronDownOutline, todayOutline, calendarClearOutline, refreshOutline,
           cloudOfflineOutline, location, globeOutline, personAddOutline,
-          ellipseOutline, checkmarkCircleOutline
+          ellipseOutline, checkmarkCircleOutline, pauseOutline, warningOutline
         });
       }
     },

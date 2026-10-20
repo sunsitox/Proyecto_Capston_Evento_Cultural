@@ -152,7 +152,7 @@
           </div>
         } @else if (eventosDelDia().length > 0) {
           <div class="ec-events-list">
-            @for (evento of eventosDelDia(); track evento.id) {
+            @for (evento of eventosDelDiaVisibles(); track evento.id) {
               <app-evento-card
                 [evento]="evento"
                 layout="lista"
@@ -162,6 +162,18 @@
               ></app-evento-card>
             }
           </div>
+          @if (hayMasDia()) {
+            <div class="ec-cal__ver-mas">
+              <p class="ec-cal__avance" role="status">
+                Mostrando {{ eventosDelDiaVisibles().length }} de
+                {{ eventosDelDia().length }} eventos
+              </p>
+              <button type="button" class="ec-btn ec-btn-outline" (click)="verMasDia()">
+                <ion-icon name="chevron-down-outline" aria-hidden="true"></ion-icon>
+                Ver más eventos
+              </button>
+            </div>
+          }
         } @else {
           <div class="ec-empty" role="status">
             <div class="ec-empty__icon" aria-hidden="true">

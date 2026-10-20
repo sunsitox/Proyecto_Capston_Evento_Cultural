@@ -158,9 +158,11 @@
           class="ec-mapa__btn-ubicacion"
           (click)="pedirMiUbicacion()"
           [disabled]="ubicacionEstado() === 'cargando'"
-          [attr.aria-label]="posicionUsuario()
-            ? 'Ampliar radio de búsqueda a ' + radiosSiguienteEtiqueta()
-            : 'Centrar el mapa en mi ubicación'"
+          [attr.aria-label]="!posicionUsuario()
+            ? 'Centrar el mapa en mi ubicación'
+            : radioEsMaximo()
+              ? 'Quitar el filtro por ubicación'
+              : 'Ampliar radio de búsqueda a ' + radiosSiguienteEtiqueta()"
         >
           <!-- Lupa (SVG) que indica búsqueda por ubicación -->
           <svg
@@ -186,16 +188,20 @@
           }
         </button>
         <span class="ec-mapa__resumen" role="status">
-          {{ conUbicacion() }} eventos con posición en el mapa
+          {{ pinesEnVista().length }} de {{ conUbicacion() }} en vista ({{ eventosFiltrados().length }} vigentes)
         </span>
       </div>
 
-      <div
-        #lienzoRef
-        class="ec-mapa__lienzo ec-mapa__lienzo--leaflet"
-        role="application"
-        [attr.aria-label]="'Mapa interactivo con ' + conUbicacion() + ' eventos ubicados. La lista accesible se encuentra bajo el mapa.'"
-      ></div>
+      <!-- El popover vive DENTRO del wrap posicionado: antes era hermano del
+           lienzo sin ancestro posicionado y se anclaba al viewport,
+           solapando lista y tab bar en vez del mapa. -->
+      <div class="ec-mapa__wrap">
+        <div
+          #lienzoRef
+          class="ec-mapa__lienzo ec-mapa__lienzo--leaflet"
+          role="application"
+          [attr.aria-label]="'Mapa interactivo con ' + conUbicacion() + ' eventos ubicados. La lista accesible se encuentra bajo el mapa.'"
+        ></div>
 
       @if (ubicacionEstado() === 'denegada') {
         <p class="ec-mapa__nota" role="status">
@@ -205,35 +211,44 @@
         </p>
       }
 
-      <!-- Mini-tarjeta del evento seleccionado desde pin o lista -->
-      @if (destacado(); as id) {
-        @for (ev of pines(); track ev.id) {
-          @if (ev.id === id) {
-            <div class="ec-mapa__popover" role="dialog" [attr.aria-label]="ev.titulo">
-              <button
-                type="button"
-                class="ec-mapa__popover-cerrar"
-                aria-label="Cerrar tarjeta del evento"
-                (click)="destacado.set(null)"
-              >
-                <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
-              </button>
-              <img [src]="ev.imagen" [alt]="''" aria-hidden="true" />
-              <div class="ec-mapa__popover-body">
-                <p class="ec-mapa__popover-fecha">
-                  {{ ev.fecha | date: 'd MMM' }} · {{ ev.hora }} · {{ ev.comuna }}
-                </p>
-                <h3 class="ec-mapa__popover-titulo">{{ ev.titulo }}</h3>
-                <div class="ec-mapa__popover-acciones">
-                  <a class="ec-mapa__popover-link" [routerLink]="['/evento', ev.id]" (click)="registrarVerDetalle(ev.id)">
-                    Ver ficha
-                  </a>
+        <!-- Mini-tarjeta del evento seleccionado desde pin o lista -->
+        @if (destacado(); as id) {
+          @for (ev of pines(); track ev.id) {
+            @if (ev.id === id) {
+              <div class="ec-mapa__popover" role="dialog" [attr.aria-label]="ev.titulo">
+                <button
+                  type="button"
+                  class="ec-mapa__popover-cerrar"
+                  aria-label="Cerrar tarjeta del evento"
+                  (click)="destacado.set(null)"
+                >
+                  <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+                </button>
+                <img [src]="ev.imagen" [alt]="''" aria-hidden="true" />
+                <div class="ec-mapa__popover-body">
+                  <p class="ec-mapa__popover-fecha">
+                    {{ ev.fecha | date: 'd MMM' }} · {{ ev.hora }} · {{ ev.comuna }}
+                  </p>
+                  <h3 class="ec-mapa__popover-titulo">{{ ev.titulo }}</h3>
+                  <div class="ec-mapa__popover-acciones">
+                    <a class="ec-mapa__popover-link" [routerLink]="['/evento', ev.id]" (click)="registrarVerDetalle(ev.id)">
+                      Ver ficha
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
+            }
           }
         }
-      }
+      </div>
+    }
+
+    @if (pinesRecortados() > 0) {
+      <p class="ec-mapa__nota" role="status">
+        <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+        Por rendimiento se dibujan {{ pinesEnVista().length }} pines: acerca el
+        mapa o filtra para ver el resto ({{ pinesRecortados() }} fuera de vista).
+      </p>
     }
 
     <p class="ec-mapa__nota">
@@ -252,7 +267,7 @@
 
     <!-- ================= Lista accesible ================= -->
     <div class="ec-mapa__lista">
-      <h2>Eventos vigentes ({{ eventosFiltrados().length }})</h2>
+      <h2>Eventos vigentes ({{ eventosEnRadio().length }})</h2>
 
       @if (cargando()) {
         <div class="ec-mapa__skeletons">
@@ -272,7 +287,7 @@
             Reintentar
           </button>
         </div>
-      } @else if (eventosFiltrados().length > 0) {
+      } @else if (eventosEnRadio().length > 0) {
         <div class="ec-events-list">
           @for (evento of eventosLista(); track evento.id) {
             <app-evento-card
@@ -291,7 +306,7 @@
           <div class="ec-mapa__ver-mas">
             <p class="ec-mapa__avance" role="status">
               Mostrando {{ eventosLista().length }} de
-              {{ eventosFiltrados().length }} eventos
+              {{ eventosEnRadio().length }} eventos
             </p>
             <button type="button" class="ec-btn ec-btn-outline" (click)="verMasLista()">
               <ion-icon name="chevron-down-outline" aria-hidden="true"></ion-icon>

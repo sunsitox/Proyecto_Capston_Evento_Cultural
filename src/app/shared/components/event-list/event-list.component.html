@@ -155,19 +155,6 @@
       Siguiente
       <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
     </button>
-
-    <label class="ec-pag-salto">
-      <span class="ec-sr-only">Ir a la página</span>
-      <select
-        aria-label="Ir a la página"
-        [value]="paginaActual()"
-        (change)="irA(+$any($event.target).value)"
-      >
-        @for (p of todasLasPaginas(); track p) {
-          <option [value]="p">Página {{ p }} de {{ totalPaginas() }}</option>
-        }
-      </select>
-    </label>
   </nav>
 }
 

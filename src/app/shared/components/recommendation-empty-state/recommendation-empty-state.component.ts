@@ -9,8 +9,9 @@ import {
 } from '@angular/core';
 import { IonIcon } from '@ionic/angular';
 import { RecomendacionService } from '../../../core/services/recomendacion.service';
+import { EventosService } from '../../../core/services/eventos.service';
 import { UserPreferences } from '../../../core/models/recomendacion.model';
-import { CATEGORIAS, COMUNAS, REGIONES, MOCK_EVENTOS } from '../../../data/mock-eventos';
+import { CATEGORIAS } from '../../../data/mock-eventos';
 
 /**
  * Pantalla amable de personalización temporal ("Cuéntanos qué quieres
@@ -81,15 +82,15 @@ import { CATEGORIAS, COMUNAS, REGIONES, MOCK_EVENTOS } from '../../../data/mock-
         <fieldset class="ec-onb__field">
           <legend>Regiones preferidas</legend>
           <div class="ec-onb__chips" role="group" aria-label="Regiones preferidas">
-            @for (r of regiones; track r) {
+            @for (op of regiones(); track op.valor) {
               <button
                 type="button"
                 class="ec-chip"
-                [class.ec-chip--active]="seleccion().regiones.includes(r)"
-                [attr.aria-pressed]="seleccion().regiones.includes(r)"
-                (click)="toggle('regiones', r)"
+                [class.ec-chip--active]="seleccion().regiones.includes(op.valor)"
+                [attr.aria-pressed]="seleccion().regiones.includes(op.valor)"
+                (click)="toggle('regiones', op.valor)"
               >
-                {{ r }}
+                {{ op.valor }}
               </button>
             }
           </div>
@@ -100,15 +101,15 @@ import { CATEGORIAS, COMUNAS, REGIONES, MOCK_EVENTOS } from '../../../data/mock-
         <fieldset class="ec-onb__field">
           <legend>Comunas (opcional, según tus regiones)</legend>
           <div class="ec-onb__chips" role="group" aria-label="Comunas preferidas">
-            @for (c of comunasSugeridas(); track c) {
+            @for (op of comunasSugeridas(); track op.valor) {
               <button
                 type="button"
                 class="ec-chip ec-chip--soft"
-                [class.ec-chip--active]="seleccion().comunas.includes(c)"
-                [attr.aria-pressed]="seleccion().comunas.includes(c)"
-                (click)="toggle('comunas', c)"
+                [class.ec-chip--active]="seleccion().comunas.includes(op.valor)"
+                [attr.aria-pressed]="seleccion().comunas.includes(op.valor)"
+                (click)="toggle('comunas', op.valor)"
               >
-                {{ c }}
+                {{ op.valor }}
               </button>
             }
           </div>
@@ -538,6 +539,7 @@ import { CATEGORIAS, COMUNAS, REGIONES, MOCK_EVENTOS } from '../../../data/mock-
 })
 export class RecommendationEmptyStateComponent {
   private readonly recomendacion = inject(RecomendacionService);
+  private readonly eventos = inject(EventosService);
 
   /** 'onboarding' (Para ti inicial) o 'ajustes' (Perfil). */
   readonly variante = input<'onboarding' | 'ajustes'>('onboarding');
@@ -546,9 +548,14 @@ export class RecommendationEmptyStateComponent {
   readonly omitirClick = output<void>();
 
   readonly categorias = CATEGORIAS;
-  readonly regiones = REGIONES;
-  readonly comunas = COMUNAS;
   readonly modalidades = ['Presencial', 'Virtual', 'Híbrido'];
+
+  /**
+   * Regiones del catálogo vigente (no una lista fija): así lo elegido
+   * coincide con el `region` exacto que después compara el motor de
+   * recomendaciones. Con el catálogo de demostración también funciona.
+   */
+  readonly regiones = this.eventos.regionesDisponibles;
 
   /**
    * Flujo progresivo del onboarding (sólo variante 'onboarding'):
@@ -558,13 +565,17 @@ export class RecommendationEmptyStateComponent {
   readonly paso = signal(1);
   readonly pasosTotales = 4;
 
-  /** Comunas de las regiones elegidas (no todas las del catálogo). */
+  /** Comunas con eventos en las regiones elegidas (no todo el catálogo). */
   readonly comunasSugeridas = computed(() => {
-    const regiones = this.seleccion().regiones;
-    if (regiones.length === 0) return [];
-    return COMUNAS.filter((comuna) =>
-      MOCK_EVENTOS.some((e) => e.comuna === comuna && regiones.includes(e.region))
-    );
+    const totales = new Map<string, number>();
+    for (const region of this.seleccion().regiones) {
+      for (const opcion of this.eventos.comunasDe(region)) {
+        totales.set(opcion.valor, (totales.get(opcion.valor) ?? 0) + opcion.total);
+      }
+    }
+    return [...totales.entries()]
+      .map(([valor, total]) => ({ valor, total }))
+      .sort((a, b) => b.total - a.total || a.valor.localeCompare(b.valor, 'es'));
   });
 
   readonly puedeContinuar = computed(() => {

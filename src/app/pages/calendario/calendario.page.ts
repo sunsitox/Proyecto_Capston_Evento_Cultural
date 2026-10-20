@@ -193,6 +193,27 @@ export class CalendarioPage {
     () => !!this.filtroRegion() || !!this.filtroComuna() || !!this.filtroCategoria()
   );
 
+  /** DEF-QA-005: la agenda diaria pintaba 500+ tarjetas de una vez.
+   *  Se pagina por bloques de 24 como en el mapa. */
+  private readonly tamanoDia = 24;
+  private readonly paginaDia = signal(1);
+
+  readonly eventosDelDiaVisibles = computed(() =>
+    this.eventosDelDia().slice(0, this.paginaDia() * this.tamanoDia)
+  );
+
+  readonly hayMasDia = computed(
+    () => this.eventosDelDiaVisibles().length < this.eventosDelDia().length
+  );
+
+  verMasDia(): void {
+    this.paginaDia.update((p) => p + 1);
+  }
+
+  private reiniciarPaginaDia(): void {
+    this.paginaDia.set(1);
+  }
+
   /** Reintenta la carga (estado de error). */
   onReintentar(): void {
     this.eventosService.setError(null);
@@ -263,6 +284,7 @@ export class CalendarioPage {
     }
 
     const r = this.rango();
+    this.reiniciarPaginaDia();
     if (!r || r.hasta) {
       // Rango nuevo desde este día (pendiente del segundo clic).
       this.rango.set({ desde: dia.iso });
@@ -282,6 +304,7 @@ export class CalendarioPage {
   limpiarRango(): void {
     this.rango.set(null);
     this.fechaSeleccionada.set(EventosService.hoyISO());
+    this.reiniciarPaginaDia();
   }
 
   /** ¿El día está dentro del rango armado (inclusive)? */
@@ -301,17 +324,20 @@ export class CalendarioPage {
   irAHoy(): void {
     this.mes.set(this.inicioMes(new Date()));
     this.fechaSeleccionada.set(EventosService.hoyISO());
+    this.reiniciarPaginaDia();
   }
 
   limpiarFiltros(): void {
     this.filtroRegion.set('');
     this.filtroComuna.set('');
     this.filtroCategoria.set('');
+    this.reiniciarPaginaDia();
   }
 
   /** Cambiar de región reinicia la comuna cuando no pertenece a ella. */
   onRegion(region: string): void {
     this.filtroRegion.set(region);
+    this.reiniciarPaginaDia();
     const comuna = this.filtroComuna();
     const pertenece =
       !comuna ||

@@ -65,7 +65,7 @@
               } @else {
                 {{ ev.fecha | date: 'EEEE d MMMM y' }}
               }
-              · {{ ev.hora }}@if (ev.horaTermino) { – {{ ev.horaTermino }} } hrs
+              · @if (ev.hora) { {{ ev.hora }}@if (ev.horaTermino) { – {{ ev.horaTermino }} } hrs } @else { Horario por confirmar }
             </span>
           </p>
           <h1>{{ ev.titulo }}</h1>
@@ -198,7 +198,7 @@
               <div>
                 <span class="ec-info-label">Horario</span>
                 <span class="ec-info-value">
-                  {{ ev.hora }}@if (ev.horaTermino) { – {{ ev.horaTermino }} } hrs
+                  @if (ev.hora) { {{ ev.hora }}@if (ev.horaTermino) { – {{ ev.horaTermino }} } hrs } @else { Horario por confirmar }
                 </span>
               </div>
             </div>
@@ -242,7 +242,7 @@
                   (click)="registrarFuente()"
                 >
                   <ion-icon name="ticket-outline" aria-hidden="true"></ion-icon>
-                  {{ ev.gratuito ? 'Inscribirme' : 'Comprar entradas' }}
+                  {{ ev.gratuito ? 'Inscribirme' : 'Ver fuente oficial' }}
                 </a>
               } @else {
                 <span class="ec-btn-accent-link ec-btn-accent-link--mudo">

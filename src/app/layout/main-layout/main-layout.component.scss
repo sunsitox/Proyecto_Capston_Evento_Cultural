@@ -6,15 +6,29 @@
 :host {
   display: block;
   height: 100%;
-  overflow-y: auto;
+  overflow: hidden;
   scroll-behavior: smooth;
+
+  /* RESERVA DE LA TAB BAR (DEF-QA-002, robusta):
+     MainLayoutComponent mide la altura REAL de .ec-mobile-tabbar con un
+     ResizeObserver y la escribe aquí. Antes eran calc(72px + safe-area)
+     hard-coded, que solo coincidía por casualidad con los iconos/labels
+     del navegador: con otra mezcla de fuente o zoom del sistema la barra
+     volvía a quedar encima de los bordes del mapa, calendario y perfil. */
+  --ec-tabbar-h: 76px;
 }
 
 .ec-web-layout {
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-height: 100vh;
   background: var(--ec-bg);
+  /* El :host va con overflow:hidden (un solo scroll en móvil vía
+     ion-content). El shell web necesita su propio contenedor de scroll,
+     si no la página queda recortada sin poder bajar. */
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
 }
 
 .ec-web-content {
@@ -355,15 +369,27 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
   background: var(--ec-bg);
 }
 
 .ec-mobile-content {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   --background: var(--ec-bg);
+  --overflow: auto;
+}
+
+/* DEF-QA-002: el fullscreeen de ion-content expande su contenido por
+   detrás de la tab bar; con la variable medida, ya ningún borde inferior
+   (mapa, calendario o perfil) queda bajo la barra. */
+.ec-mobile-layout .ec-main {
+  padding-bottom: var(--ec-tabbar-h);
 }
 
 .ec-mobile-tabbar {
+  flex-shrink: 0;
   --background: var(--ec-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);

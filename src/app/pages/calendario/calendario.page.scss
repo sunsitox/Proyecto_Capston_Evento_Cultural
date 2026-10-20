@@ -292,6 +292,22 @@
   gap: var(--ec-space-md, 16px);
 }
 
+/* DEF-QA-005: avance paginado de la agenda diaria. */
+.ec-cal__ver-mas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.ec-cal__avance {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--ec-text-light, #6d6557);
+  font-variant-numeric: tabular-nums;
+}
+
 .ec-empty {
   text-align: center;
   padding: var(--ec-space-xl, 32px) var(--ec-space-md, 16px);

@@ -8,6 +8,7 @@ import {
 } from '../models/evento.model';
 import { MOCK_EVENTOS, PUNTO_REFERENCIA } from '../../data/mock-eventos';
 import { SupabaseService } from './supabase.service';
+import { RecomendacionService } from './recomendacion.service';
 
 export type OrdenEventos =
   | 'fecha'
@@ -77,11 +78,18 @@ export interface FacetasEventos {
 @Injectable({ providedIn: 'root' })
 export class EventosService {
   private readonly supabase = inject(SupabaseService);
+  private readonly recomendacion = inject(RecomendacionService);
   private readonly _eventos = signal<Evento[]>(MOCK_EVENTOS);
   private readonly _filtros = signal<FiltrosEventos>({ ...FILTROS_INICIALES });
   private readonly _ordenPor = signal<OrdenEventos>('fecha');
   private readonly _cargando = signal<boolean>(false);
   private readonly _error = signal<string | null>(null);
+
+  constructor() {
+    // DEF-QA-011: sin resolver, Perfil siempre veía 0 intereses aunque
+    // Para ti sí usara las señales (el servicio no podía mapear id→evento).
+    this.recomendacion.registrarResolverEventos((id) => this.obtenerPorId(id));
+  }
 
   readonly eventos = this._eventos.asReadonly();
   readonly filtros = this._filtros.asReadonly();
@@ -237,6 +245,24 @@ export class EventosService {
     if (!region) return [];
     return this.comunasPorRegion().get(region) ?? [];
   }
+
+  /**
+   * Regiones presentes en el catálogo vigente, con su cantidad de eventos.
+   *
+   * Las etiquetas salen de los propios eventos (p. ej. "Región de
+   * Valparaíso"): el onboarding de Para ti debe guardar exactamente el
+   * mismo texto que luego compara el motor de recomendaciones.
+   */
+  readonly regionesDisponibles = computed<OpcionFiltro[]>(() => {
+    const conteo = new Map<string, number>();
+    for (const evento of this.eventosVigentes()) {
+      const region = evento.region || 'Sin región';
+      conteo.set(region, (conteo.get(region) ?? 0) + 1);
+    }
+    return ordenarOpciones(
+      [...conteo.entries()].map(([valor, total]) => ({ valor, total }))
+    );
+  });
 
   /**
    * Cuántos eventos vigentes coinciden con un estado de filtros dado.
@@ -478,9 +504,20 @@ export class EventosService {
         ? { lat, lng }
         : undefined;
     const enlace = e.official_url || e.source_url || '';
-    const inicio = e.start_at || '';
-    const termino = e.end_at || '';
+    const inicio = (e.start_at || '').slice(0, 10);
+    let termino = (e.end_at || '').slice(0, 10);
     const comuna = e.commune_id ? comunas.get(e.commune_id) : undefined;
+    // DEF-QA-007: un rango de años (p. ej. 2019→2030) es un espacio
+    // permanente, no un evento con fecha/horario. Se colapsa a fecha única.
+    if (inicio && termino) {
+      const dias =
+        (new Date(`${termino}T00:00:00`).getTime() -
+          new Date(`${inicio}T00:00:00`).getTime()) /
+        86_400_000;
+      if (Number.isFinite(dias) && dias > 366) termino = '';
+    }
+    const horaInicio = (e.start_at || '').slice(11, 16);
+    const horaTermino = (e.end_at || '').slice(11, 16);
 
     return {
       id: e.id,
@@ -489,8 +526,8 @@ export class EventosService {
       imagen: e.image_url || 'assets/icon/favicon.png',
       fecha: inicio,
       fechaTermino: termino || undefined,
-      hora: inicio.slice(11, 16) || '00:00',
-      horaTermino: termino.slice(11, 16) || undefined,
+      hora: horaInicio || '',
+      horaTermino: horaTermino || undefined,
       recinto: e.venue || e.address || '',
       direccion: e.address || '',
       comuna: comuna?.name || e.city || 'Sin comuna',
@@ -498,7 +535,7 @@ export class EventosService {
       modalidad: (e.venue || e.address || e.city ? 'Presencial' : 'Virtual') as ModalidadEvento,
       categoria: (categorias[0] ?? 'Otros') as CategoriaEvento,
       categorias: categorias as CategoriaEvento[],
-      organizador: 'Fuente pública',
+      organizador: 'Organizador no informado',
       precio: e.price_text || '',
       gratuito: !!e.is_free,
       publico: (e.audience || '').trim() || 'Todo público',

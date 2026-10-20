@@ -103,6 +103,7 @@ export interface RecommendationReason {
     | 'similar_guardado'
     | 'gratuito'
     | 'tu_region'
+    | 'modalidad_preferida'
     | 'editorial';
   /** Texto ya resuelto para mostrar en la etiqueta. */
   etiqueta: string;

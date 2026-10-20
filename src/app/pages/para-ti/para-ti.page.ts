@@ -7,6 +7,13 @@ import { EventoCardComponent } from '../../shared/components/evento-card/evento-
 import { RecommendationEmptyStateComponent } from '../../shared/components/recommendation-empty-state/recommendation-empty-state.component';
 import { Recommendation } from '../../core/models/recomendacion.model';
 
+/** Etiqueta legible de los momentos del día del onboarding. */
+const MOMENTOS: Record<string, string> = {
+  manana: 'mañanas',
+  tarde: 'tardes',
+  noche: 'noches'
+};
+
 /**
  * Para ti (reemplaza a Favoritos).
  *
@@ -54,13 +61,23 @@ export class ParaTiPage {
     if (zona.length > 0) partes.push(zona.join(', '));
     if (p.precio === 'gratis') partes.push('gratis');
     if (p.precio === 'costo') partes.push('con costo');
+    if (p.modalidades.length > 0) partes.push(p.modalidades.join(' / '));
+    if (p.momentos.length > 0) {
+      partes.push(p.momentos.map((m) => MOMENTOS[m]).join(' y '));
+    }
     if (p.accesibilidad) partes.push('accesible');
-    return partes.length > 0 ? partes.join(' · ') : 'Sin preferencias fijas: ordenadas por lo que exploras en esta visita.';
+    return partes.length > 0
+      ? partes.join(' · ')
+      : 'Sin preferencias fijas: ordenadas por lo que exploras en esta visita.';
   });
 
+  /**
+   * El onboarding guarda por su cuenta (`RecommendationEmptyStateComponent`
+   * llama a guardarPreferencias antes de emitir); aquí sólo se confirma el
+   * flujo. La grilla ya se recalcula sola por los signals.
+   */
   onGuardarOnboarding(): void {
-    // guardarPreferencias marca la visita como configurada; la grilla
-    // recomputed sola via computed().
+    this.recomendacion.guardarPreferencias({});
   }
 
   /** Volver al onboarding limpiando señales y preferencias. */
@@ -68,8 +85,9 @@ export class ParaTiPage {
     this.recomendacion.reiniciarVisita();
   }
 
+  /** "Explorar sin personalizar": mantiene la visita como configurada. */
   onOmitirOnboarding(): void {
-    // No-op: preferenciasConfiguradas ya fue marcado por el componente.
+    this.recomendacion.guardarPreferencias({});
   }
 
   onMeInteresa(cambio: { eventoId: string; activo: boolean }): void {

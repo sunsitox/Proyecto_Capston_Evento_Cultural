@@ -30,6 +30,17 @@ interface PinMapa {
 }
 
 /**
+ * Representación de un pin según zoom:
+ * - 'canvas' (punto circular sobre un único canvas): vista alejada
+ *   (país/región).
+ * - 'marker' (gota con punta del design system): vista cercana.
+ * El cambio de modo ocurre al cruzar el umbral y el diffing reescribe
+ * sólo lo que cambió de representación.
+ */
+type ModoPin = 'canvas' | 'marker';
+
+
+/**
  * Mapa de eventos con Leaflet + tiles de OpenStreetMap.
  *
  * Mapa interactivo real: pan, zoom, pines vinculados a coordenadas
@@ -140,22 +151,65 @@ export class MapaPage implements AfterViewInit, OnDestroy {
     return 2 * R * Math.asin(Math.sqrt(h));
   }
 
-  readonly pines = computed<Evento[]>(() => {
-    const conCoordenadas = this.eventosFiltrados().filter((e) => !!e.coordenadas);
+  /** Vigentes con coordenadas (base del mapa, sin filtro de radio). */
+  private readonly conCoordenadasBase = computed(() =>
+    this.eventosFiltrados().filter((e) => !!e.coordenadas)
+  );
+
+  /**
+   * Búsqueda por ubicación: con posición activa, el radio filtra mapa Y
+   * lista (antes solo filtraba pines y la lista seguía mostrando todo).
+   * Sin posición, equivale a los vigentes filtrados.
+   */
+  readonly eventosEnRadio = computed<Evento[]>(() => {
     const pos = this.posicionUsuario();
-    if (!pos) return conCoordenadas;
+    if (!pos) return this.eventosFiltrados();
     const radio = this.radioKm();
-    return conCoordenadas.filter(
-      (e) => this.distanciaKm(pos, e.coordenadas!) <= radio
+    return this.eventosFiltrados().filter(
+      (e) => !!e.coordenadas && this.distanciaKm(pos, e.coordenadas!) <= radio
     );
   });
+
+  readonly pines = computed<Evento[]>(() =>
+    this.eventosEnRadio().filter((e) => !!e.coordenadas)
+  );
 
   /** Eventos ya dibujados en el mapa (para el badge del resumen). */
   readonly conUbicacion = computed(() => this.pines().length);
 
-  /** Coordenadas sin posición para el aviso accesible. */
+  /**
+   * Tope de pines en el DOM: cientos de divIcon + popups pre-atados
+   * congelan el hilo principal en móvil. Se dibuja solo lo visible.
+   */
+  private readonly limitePines = 250;
+
+  /** Encuadre actual del mapa (se actualiza en moveend/zoomend). */
+  private readonly regionVisible = signal<{ n: number; s: number; e: number; o: number } | null>(null);
+
+  /** Pines dentro del encuadre, topados al límite (lo que se dibuja). */
+  readonly pinesEnVista = computed<Evento[]>(() => {
+    const todos = this.pines();
+    const region = this.regionVisible();
+    const enVista = !region
+      ? todos
+      : todos.filter((ev) => {
+        const c = ev.coordenadas!;
+        return c.lat <= region.n && c.lat >= region.s && c.lng <= region.e && c.lng >= region.o;
+      });
+    return enVista.slice(0, this.limitePines);
+  });
+
+  /** Cuántos pines quedan fuera del dibujo (por tope o encuadre). */
+  readonly pinesRecortados = computed(
+    () => this.pines().length - this.pinesEnVista().length
+  );
+
+  /**
+   * Sin coordenadas reales (independiente del radio: antes, con ubicación
+   * activa, los fuera de radio se contaban erróneamente como "sin ubicación").
+   */
   readonly sinCoordenadas = computed(
-    () => this.eventosFiltrados().length - this.pines().length
+    () => this.eventosFiltrados().length - this.conCoordenadasBase().length
   );
 
   /** Estado de la geolocalización del usuario. */
@@ -166,8 +220,25 @@ export class MapaPage implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (typeof window !== 'undefined' && this.onVentanaResize) {
+      window.removeEventListener('resize', this.onVentanaResize);
+    }
     this.mapa?.remove();
     this.mapa = null;
+  }
+
+  /** DEF-QA-001: Leaflet mide el lienzo al crearse; en móvil el contenedor
+   *  aún puede estar a tamaño 0 (skeleton / transición). Revalida tras el
+   *  montaje y en cada resize para completar los mosaicos. */
+  private readonly onVentanaResize = (): void => {
+    this.mapa?.invalidateSize(false);
+  };
+
+  private invalidarTamanoMapa(): void {
+    const mapa = this.mapa;
+    if (!mapa || typeof window === 'undefined') return;
+    window.setTimeout(() => mapa.invalidateSize(false), 120);
+    window.setTimeout(() => mapa.invalidateSize(false), 400);
   }
 
   private inicializarMapa(): void {
@@ -179,76 +250,158 @@ export class MapaPage implements AfterViewInit, OnDestroy {
         center: [-35.5, -71.0], // Chile continental
         zoom: 4.5,
         zoomControl: true,
-        attributionControl: true
+        attributionControl: true,
+        // Menos trabajo por frame: canvas para vectores y sin rebote.
+        preferCanvas: true,
+        zoomSnap: 0.5,
+        inertiaMaxSpeed: 1200
       });
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: this.atribucion,
-        maxZoom: 19
+        maxZoom: 19,
+        // No pedir mosaicos a cada pixel de paneo: espera a soltar.
+        updateWhenIdle: true,
+        keepBuffer: 2,
+        updateInterval: 200
       }).addTo(mapa);
 
       this.capaPines = L.layerGroup().addTo(mapa);
       this.mapa = mapa;
       this.initialised.set(true);
+      const publicarEncuadre = (): void => {
+        try {
+          const b = mapa.getBounds();
+          const region = { n: b.getNorth(), s: b.getSouth(), e: b.getEast(), o: b.getWest() };
+          this.zona.run(() => this.regionVisible.set(region));
+        } catch {
+          /* mapa aún sin tamaño: se reintenta en el siguiente evento */
+        }
+      };
+      mapa.on('moveend zoomend', publicarEncuadre);
+      publicarEncuadre();
+      window.addEventListener('resize', this.onVentanaResize);
+      window.setTimeout(() => { mapa.invalidateSize(false); publicarEncuadre(); }, 120);
+      window.setTimeout(() => { mapa.invalidateSize(false); publicarEncuadre(); }, 400);
     });
 
-    this.dibujarPines(this.pines());
+    this.dibujarPines(this.pinesEnVista());
   }
 
-  /** Icono de pin propio del design system (SVG color marca), más
-   *  pequeño que el de Leaflet y anclado en la punta. */
+  /**
+   * Icono de pin del design system: gota dibujada DIRECTAMENTE en el
+   * sistema 30×42 (antes se estiraba un 24×24 y salía deformada/planas).
+   * Estructura: cabeza circular (r 13.5 en cy 13.5) + curvas a la punta
+   * en (15, 41) con borde crema de 1.5; la punta queda en el iconAnchor
+   * [15, 42] → toca exactamente la coordenada del evento.
+   */
   private static readonly pinIcon = L.divIcon({
     className: 'ec-mapa__pin',
     html:
-      '<svg viewBox="0 0 24 24" width="30" height="42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-      '<path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="#7a4f2e" stroke="#fffdf9" stroke-width="1.5"/>' +
-      '<circle cx="12" cy="12" r="5" fill="#fffdf9"/></svg>',
+      '<svg viewBox="0 0 30 42" width="30" height="42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<path d="M15 41 C 6.5 28.5, 1.5 20, 1.5 13.5 A 13.5 13.5 0 1 1 28.5 13.5 C 28.5 20, 23.5 28.5, 15 41 Z" fill="#7a4f2e" stroke="#fffdf9" stroke-width="1.5" stroke-linejoin="round"/>' +
+      '<circle cx="15" cy="13.5" r="5.5" fill="#fffdf9"/></svg>',
     iconSize: [30, 42],
     iconAnchor: [15, 42],
     popupAnchor: [0, -42]
   });
 
+  /** HTML del popup de un evento (se genera solo al abrir, no por pin). */
+  private popupHtml(evento: Evento): string {
+    return (
+      `<div class="ec-mapa__popup-card">` +
+      `<img src="${this.escapar(evento.imagen)}" alt="" />` +
+      `<div class="ec-mapa__popup-info">` +
+      `<p class="ec-mapa__popup-meta">${this.escapar(evento.comuna)}</p>` +
+      `<h3>${this.escapar(evento.titulo)}</h3>` +
+      `<p class="ec-mapa__popup-fecha">${this.escapar(this.fechaPopup(evento.fecha))} · ${this.escapar(evento.hora)}</p>` +
+      `<a href="/evento/${this.escapar(evento.id)}">Ver ficha</a>` +
+      `</div></div>`
+    );
+  }
+
+  /** Abre el popup de un evento en su posición (perezoso). */
+  private abrirPopup(evento: Evento): void {
+    if (!this.mapa) return;
+    const c = evento.coordenadas!;
+    L.popup({
+      className: 'ec-mapa__popup',
+      maxWidth: 264,
+      minWidth: 240,
+      closeButton: true,
+      autoPan: true,
+      autoPanPadding: [56, 24],
+      keepInView: true
+    })
+      .setLatLng([c.lat, c.lng])
+      .setContent(this.popupHtml(evento))
+      .openOn(this.mapa);
+  }
+
+  /**
+   * Caché de pins activos por id (diffing): reconstruir el DOM de los
+   * marcadores en cada paneo era el mayor costo; sólo cambia add/remove.
+   */
+  /** Umbral de zoom: por debajo → puntos canvas; igual o mayor → gota. */
+  private static readonly UMBRAL_ARTES = 12;
+
+  private readonly cachePines = new Map<
+    string,
+    { kind: ModoPin; capa: L.Marker | L.CircleMarker }
+  >();
+  private firmaPines = '';
+  private modoPines: ModoPin = 'marker';
+
   private dibujarPines(lista: Evento[]): void {
-    if (!this.mapa || !this.capaPines) return;
+    const mapa = this.mapa;
+    if (!mapa || !this.capaPines) return;
+
+    const modo: ModoPin =
+      (mapa.getZoom() ?? 0) < MapaPage.UMBRAL_ARTES ? 'canvas' : 'marker';
+    const firma = lista.map((e) => e.id).join('|');
+
+    // SKIP total: mismos ids Y mismo modo (paneo corto estable).
+    if (firma === this.firmaPines && modo === this.modoPines) return;
+    this.firmaPines = firma;
+    this.modoPines = modo;
+
     this.zona.runOutsideAngular(() => {
-      this.capaPines!.clearLayers();
+      const presentes = new Set(lista.map((e) => e.id));
+
+      // 1) Retirar lo que salió de vista O cambió de representación
+      //    (punto ↔ gota al cruzar el umbral de zoom).
+      for (const [id, entrada] of this.cachePines) {
+        if (!presentes.has(id) || entrada.kind !== modo) {
+          this.capaPines!.removeLayer(entrada.capa);
+          this.cachePines.delete(id);
+        }
+      }
+
+      // 2) Crear sólo los nuevos (los demás se reutilizan intactos).
       for (const evento of lista) {
+        if (this.cachePines.has(evento.id)) continue;
         const c = evento.coordenadas!;
-        const marcador = L.marker([c.lat, c.lng], {
-          icon: MapaPage.pinIcon,
-          title: evento.titulo,
-          keyboard: false,
-          riseOnHover: true
-        });
-        marcador.addTo(this.capaPines!);
-        marcador.on('click', () => {
-          // Sincroniza el "destacado" con la lista accesible al abrir la tarjeta.
+        const capa: L.Marker | L.CircleMarker =
+          modo === 'marker'
+            ? L.marker([c.lat, c.lng], {
+                icon: MapaPage.pinIcon,
+                title: evento.titulo,
+                keyboard: false,
+                riseOnHover: true
+              })
+            : L.circleMarker([c.lat, c.lng], {
+                radius: 7,
+                color: '#fffdf9',
+                weight: 2,
+                fillColor: '#7a4f2e',
+                fillOpacity: 0.95
+              });
+        capa.addTo(this.capaPines!);
+        capa.on('click', () => {
           this.zona.run(() => this.destacado.set(evento.id));
+          this.abrirPopup(evento);
         });
-        marcador.bindPopup(
-          `
-          <div class="ec-mapa__popup-card">
-            <img src="${this.escapar(evento.imagen)}" alt="" />
-            <div class="ec-mapa__popup-info">
-              <p class="ec-mapa__popup-meta">${this.escapar(evento.comuna)}</p>
-              <h3>${this.escapar(evento.titulo)}</h3>
-              <p class="ec-mapa__popup-fecha">${this.escapar(
-                this.fechaPopup(evento.fecha)
-              )} · ${this.escapar(evento.hora)}</p>
-              <a href="/evento/${this.escapar(evento.id)}">Ver ficha</a>
-            </div>
-          </div>
-          `,
-          {
-            className: 'ec-mapa__popup',
-            maxWidth: 264,
-            minWidth: 240,
-            closeButton: true,
-            autoPan: true,
-            autoPanPadding: [56, 24],
-            keepInView: true
-          }
-        );
+        this.cachePines.set(evento.id, { kind: modo, capa });
       }
     });
   }
@@ -259,12 +412,7 @@ export class MapaPage implements AfterViewInit, OnDestroy {
     if (!pin || !this.mapa) return;
     this.mapa.setView([pin.coordenadas!.lat, pin.coordenadas!.lng], 14);
     this.destacado.set(eventoId);
-    const marcadores = Object.values((this.capaPines as unknown as {_layers?: Record<string, L.Marker>})._layers ?? {});
-    const marcador = marcadores.find(
-      (m) => Math.abs((m.getLatLng().lat - pin.coordenadas!.lat)) < 1e-7 &&
-             Math.abs((m.getLatLng().lng - pin.coordenadas!.lng)) < 1e-7
-    );
-    marcador?.openPopup();
+    this.abrirPopup(pin);
   }
 
   /** Fecha corta para el popup: "11 jun". */
@@ -285,14 +433,25 @@ export class MapaPage implements AfterViewInit, OnDestroy {
       .replaceAll('"', '&quot;');
   }
 
+  /** ¿El radio ya está al máximo? (la siguiente pulsación lo desactiva). */
+  readonly radioEsMaximo = computed(
+    () => this.radioKm() >= this.radiosDisponibles[this.radiosDisponibles.length - 1]
+  );
+
   /** Solicita la ubicación actual del usuario (opt-in) y dibuja su marca.
-   *  Si ya hay ubicación, cada pulsación amplía el radio de búsqueda. */
+   *  Con ubicación activa, cada pulsación amplía el radio (10 → 25 → 50 →
+   *  100 km); en el máximo, la siguiente pulsación quita el filtro — antes
+   *  no había forma de desactivarlo y el mapa ni se reencuadraba. */
   pedirMiUbicacion(): void {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       this.ubicacionEstado.set('denegada');
       return;
     }
     if (this.posicionUsuario()) {
+      if (this.radioEsMaximo()) {
+        this.limpiarUbicacion();
+        return;
+      }
       const i = this.radiosDisponibles.indexOf(this.radioKm() as never);
       const siguiente = this.radiosDisponibles[
         Math.min(i + 1, this.radiosDisponibles.length - 1)
@@ -321,7 +480,26 @@ export class MapaPage implements AfterViewInit, OnDestroy {
   private actualizarRadioCirculo(): void {
     if (this.circuloUsuario) {
       this.circuloUsuario.setRadius(this.radioKm() * 1000);
+      // Reencuadra al nuevo radio (antes el círculo crecía fuera de vista).
+      try {
+        this.mapa?.fitBounds(this.circuloUsuario.getBounds(), { padding: [32, 32] });
+      } catch {
+        /* mapa aún sin tamaño: el siguiente moveend lo corrige */
+      }
     }
+  }
+
+  /** Quita el filtro por ubicación (marca, círculo y radio inicial). */
+  limpiarUbicacion(): void {
+    this.zona.runOutsideAngular(() => {
+      this.marcadorUsuario?.remove();
+      this.marcadorUsuario = null;
+      this.circuloUsuario?.remove();
+      this.circuloUsuario = null;
+    });
+    this.posicionUsuario.set(null);
+    this.radioKm.set(this.radiosDisponibles[0]);
+    this.ubicacionEstado.set('inactiva');
   }
 
   /** Etiqueta del siguiente radio (para el aria-label del botón). */
@@ -363,22 +541,22 @@ export class MapaPage implements AfterViewInit, OnDestroy {
   );
 
   private readonly paginaLista = computed(() => {
-    const firma = this.eventosFiltrados();
+    const firma = this.eventosEnRadio();
     const estado = this.avanceLista();
     return estado && estado.firma === firma ? estado.pagina : 1;
   });
 
   readonly eventosLista = computed(() =>
-    this.eventosFiltrados().slice(0, this.paginaLista() * this.tamanoLista)
+    this.eventosEnRadio().slice(0, this.paginaLista() * this.tamanoLista)
   );
 
   readonly hayMasLista = computed(
-    () => this.eventosLista().length < this.eventosFiltrados().length
+    () => this.eventosLista().length < this.eventosEnRadio().length
   );
 
   verMasLista(): void {
     this.avanceLista.set({
-      firma: this.eventosFiltrados(),
+      firma: this.eventosEnRadio(),
       pagina: this.paginaLista() + 1
     });
   }
@@ -406,8 +584,11 @@ export class MapaPage implements AfterViewInit, OnDestroy {
 
   private readonly sincronizarPines = effect(() => {
     if (!this.initialised()) return;
-    const lista = this.pines();
-    if (this.mapa) this.dibujarPines(lista);
+    // Solo lo visible y topado: mover el mapa ya no reconstruye cientos de pines.
+    const lista = this.pinesEnVista();
+    if (this.mapa) {
+      this.dibujarPines(lista);
+    }
   });
 
   /** Cambiar de región reinicia la comuna cuando no pertenece a ella. */
@@ -436,6 +617,7 @@ export class MapaPage implements AfterViewInit, OnDestroy {
     this.filtroRegion.set('');
     this.filtroComuna.set('');
     this.filtroModalidad.set('');
+    this.limpiarUbicacion();
   }
 
   /** Reintenta la carga (estado de error). */

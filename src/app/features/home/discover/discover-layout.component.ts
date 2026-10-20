@@ -31,16 +31,17 @@ export class DiscoverLayoutComponent {
   readonly vista = this.prefs.vista;
   readonly ordenPor = this.prefs.ordenPor;
 
-  /** Métricas de contexto para el hero (datos demo) */
-  readonly totalEventos = computed(() => this.eventosService.eventos().length);
+  /** DEF-QA-010: el KPI usaba el catálogo crudo (incluye vencidos) mientras
+   *  la lista cuenta vigentes. Todo el hero usa vigentes para coincidir. */
+  readonly totalEventos = computed(() => this.eventosService.eventosVigentes().length);
   readonly totalComunas = computed(
-    () => new Set(this.eventosService.eventos().map((e) => e.comuna)).size
+    () => new Set(this.eventosService.eventosVigentes().map((e) => e.comuna)).size
   );
   readonly totalRegiones = computed(
-    () => new Set(this.eventosService.eventos().map((e) => e.region)).size
+    () => new Set(this.eventosService.eventosVigentes().map((e) => e.region)).size
   );
   readonly totalGratuitos = computed(
-    () => this.eventosService.eventos().filter((e) => e.gratuito).length
+    () => this.eventosService.eventosVigentes().filter((e) => e.gratuito).length
   );
 
   private readonly CAT_CLASS: Record<string, string> = {

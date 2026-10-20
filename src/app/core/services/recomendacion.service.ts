@@ -68,7 +68,8 @@ export class RecomendacionService {
     for (const s of this._senales()) {
       if (s.kind === 'no_me_interesa') {
         const ev = this.eventoPorId?.(s.eventId);
-        if (ev) vistos.add(ev.categoria);
+        // Todas las categorías del evento descartado, no sólo la principal.
+        if (ev) for (const c of ev.categorias) vistos.add(c);
       }
     }
     return Array.from(vistos);
@@ -172,7 +173,7 @@ export class RecomendacionService {
   ): Recommendation[] {
     const hoy = opciones.fechaRef ?? new Date();
     const isoHoy = fechaISO(hoy);
-    const max = opciones.max ?? 12;
+    const max = Math.max(0, opciones.max ?? 12);
 
     const candidatas = eventos.filter(
       (e) => !this._ocultos().has(e.id) && vigenteHasta(e, isoHoy)
@@ -193,62 +194,80 @@ export class RecomendacionService {
 
   /**
    * Afinidad mock: señales directas + preferencias declaradas
-   * (categorías, zona, precio, accesibilidad) + proyección desde otros
-   * eventos explorados.
+   * (categorías, zona, modalidad, precio, accesibilidad, alcance y
+   * momento del día) + proyección desde otros eventos explorados y
+   * descuento por categorías descartadas.
    */
   private puntajeAfinidad(e: Evento): number {
+    const prefs = this._preferencias();
     let p = 0;
 
     // 1) Señales directas del evento (incluye negativas).
     p += this.puntajeDe(e.id);
 
     // 2) Preferencias declaradas: categorías.
-    if (this._preferencias().categorias.some((c) => e.categorias.includes(c as never))) {
-      p += 2.2;
-    }
+    if (e.categorias.some((c) => prefs.categorias.includes(c))) p += 2.2;
 
     // 3) Zona preferida (región o comuna).
-    if (
-      this._preferencias().regiones.includes(e.region) ||
-      this._preferencias().comunas.includes(e.comuna)
-    ) {
+    if (prefs.regiones.includes(e.region) || prefs.comunas.includes(e.comuna)) {
       p += 1.6;
     }
 
     // 4) Señales hacia otros eventos proyectan afinidad: misma región o
-    //    categorías compartidas con eventos explorados.
+    //    categorías compartidas con eventos explorados. Se cuenta una
+    //    sola vez por evento distinto (varias señales sobre el mismo
+    //    evento no multiplican la proyección).
+    const explorados = new Set<string>();
     for (const s of this._senales()) {
-      if (s.kind === 'no_me_interesa' || s.eventId === e.id) continue;
-      const otro = this.eventoPorId?.(s.eventId);
+      if (s.kind !== 'no_me_interesa' && s.eventId !== e.id) explorados.add(s.eventId);
+    }
+    for (const id of explorados) {
+      const otro = this.eventoPorId?.(id);
       if (!otro) continue;
       if (otro.region === e.region) p += 0.55;
       if (otro.categorias.some((c) => e.categorias.includes(c))) p += 0.75;
     }
 
-    // 5) Preferencia de precio.
-    const precio = this._preferencias().precio;
-    if (precio === 'gratis' && e.gratuito) p += 0.5;
-    if (precio === 'costo' && !e.gratuito) p += 0.5;
+    // 5) Descartes: lo que se apartó con "No me interesa" resta
+    //    afinidad a los eventos que comparten sus categorías.
+    const descartadas = this.categoriasDescartadas();
+    if (e.categorias.some((c) => descartadas.includes(c))) p -= 0.8;
 
-    // 6) Accesibilidad como requisito.
-    if (this._preferencias().accesibilidad && !!e.accesibilidad) p += 0.4;
+    // 6) Preferencia de precio.
+    if (prefs.precio === 'gratis' && e.gratuito) p += 0.5;
+    if (prefs.precio === 'costo' && !e.gratuito) p += 0.5;
 
-    // 7) Alcance de traslado: devalúa eventos fuera del alcance elegido.
-    //    'pais' no penaliza; 'region' baja fuera de la región preferida;
-    //    'comuna' baja cualquier comuna distinta de las preferidas.
-    const alcance = this._preferencias().alcance;
-    if (alcance === 'region' && !this._preferencias().regiones.includes(e.region)) p -= 1.2;
-    if (alcance === 'comuna' && !this._preferencias().comunas.includes(e.comuna)) p -= 1.8;
+    // 7) Modalidad declarada: premia la elegida y devalúa el resto.
+    if (prefs.modalidades.length > 0) {
+      p += prefs.modalidades.includes(e.modalidad) ? 0.8 : -0.8;
+    }
 
-    // 8) Momento del día: booleano según la hora del evento.
-    if (this._preferencias().momentos.length > 0 && !this.eventoEnMomentos(e)) p -= 0.9;
+    // 8) Accesibilidad como requisito.
+    if (prefs.accesibilidad && !!e.accesibilidad) p += 0.4;
+
+    // 9) Alcance de traslado: devalúa eventos fuera del alcance elegido.
+    //    'pais' no penaliza. Sólo se compara contra la zona declarada: si
+    //    la persona eligió un alcance sin comuna/región de referencia, no
+    //    se penaliza nada (evita restar a todo el catálogo).
+    if (prefs.alcance === 'region' && prefs.regiones.length > 0) {
+      if (!prefs.regiones.includes(e.region)) p -= 1.2;
+    }
+    if (prefs.alcance === 'comuna' && prefs.comunas.length > 0) {
+      if (!prefs.comunas.includes(e.comuna)) p -= 1.8;
+    }
+
+    // 10) Momento del día.
+    if (prefs.momentos.length > 0 && !this.eventoEnMomentos(e)) p -= 0.9;
 
     return p;
   }
 
   /** ¿La hora de inicio del evento cae dentro de los momentos preferidos? */
   private eventoEnMomentos(e: Evento): boolean {
-    const hora = Number(String(e.hora ?? '00:00').slice(0, 2)) || 0;
+    // Sin hora informada no hay evidencia para penalizar: se deja pasar.
+    const match = /^(\d{1,2})/.exec(String(e.hora ?? ''));
+    if (!match) return true;
+    const hora = Number(match[1]);
     const momentos = this._preferencias().momentos;
     if (momentos.includes('manana') && hora < 12) return true;
     if (momentos.includes('tarde') && hora >= 12 && hora < 19) return true;
@@ -304,15 +323,26 @@ export class RecomendacionService {
         s.eventId !== e.id &&
         this.eventoPorId?.(s.eventId)?.region === e.region
     );
-    if (zonaPorSenal || prefs.regiones.includes(e.region)) {
+    if (zonaPorSenal) {
       return {
         tipo: 'zona_preferida',
         etiqueta: `Cerca de eventos que revisaste · ${e.comuna}`
       };
     }
 
+    // Zona declarada en el onboarding (sin señales que la respalden).
+    if (prefs.comunas.includes(e.comuna)) {
+      return {
+        tipo: 'zona_preferida',
+        etiqueta: `En tu comuna preferida · ${e.comuna}`
+      };
+    }
+    if (prefs.regiones.includes(e.region)) {
+      return { tipo: 'tu_region', etiqueta: `En tu región preferida · ${e.comuna}` };
+    }
+
     // Preferencia de categoría declarada en el onboarding.
-    const prefCat = e.categorias.find((c) => prefs.categorias.includes(c as never));
+    const prefCat = e.categorias.find((c) => prefs.categorias.includes(c));
     if (prefCat) {
       return {
         tipo: 'preferencia_categoria',
@@ -323,6 +353,14 @@ export class RecomendacionService {
     // Gratuitos cuando hay preferencia de precio.
     if (prefs.precio === 'gratis' && e.gratuito) {
       return { tipo: 'gratuito', etiqueta: 'Gratis, como prefieres' };
+    }
+
+    // Modalidad declarada (presencial, virtual o híbrido).
+    if (prefs.modalidades.length > 0 && prefs.modalidades.includes(e.modalidad)) {
+      return {
+        tipo: 'modalidad_preferida',
+        etiqueta: `${e.modalidad}, como prefieres`
+      };
     }
 
     // Editorial: llenar con eventos vigentes de la agenda.
@@ -341,9 +379,13 @@ function fechaISO(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Vigente: fechaTermino (o fecha) es hoy o futuro. */
+/**
+ * Vigente: fechaTermino (o fecha) es hoy o futuro. Un evento sin fecha no
+ * se puede ordenar ni recomendar por agenda y queda fuera.
+ */
 function vigenteHasta(e: Evento, isoHoy: string): boolean {
-  return (e.fechaTermino ?? e.fecha) >= isoHoy;
+  const fin = e.fechaTermino || e.fecha;
+  return !!fin && fin >= isoHoy;
 }
 
 /** Re-export para uso cómodo desde componentes. */

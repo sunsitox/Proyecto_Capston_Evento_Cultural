@@ -191,11 +191,6 @@ export class EventListComponent implements OnChanges, AfterViewInit, OnDestroy {
     return lista;
   });
 
-  /** Todas las páginas: para el selector "Ir a la página". */
-  readonly todasLasPaginas = computed(() =>
-    Array.from({ length: this.totalPaginas() }, (_, i) => i + 1)
-  );
-
   @ViewChild('centinela') private centinela?: ElementRef<HTMLElement>;
   private observador?: IntersectionObserver;
 

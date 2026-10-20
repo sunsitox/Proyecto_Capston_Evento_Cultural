@@ -257,21 +257,6 @@
   color: var(--ec-text-light);
 }
 
-.ec-pag-salto {
-  margin-left: auto;
-
-  select {
-    min-height: var(--ec-touch-target);
-    padding: 6px 10px;
-    background: var(--ec-surface-2);
-    border: var(--ec-border-width) solid var(--ec-border);
-    border-radius: var(--ec-radius-md);
-    color: var(--ec-text);
-    font-family: var(--ec-font-sans);
-    font-size: 0.8rem;
-  }
-}
-
 /* --- Scroll infinito (vista móvil) --- */
 
 .ec-list-centinela {
