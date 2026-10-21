@@ -88,34 +88,71 @@
 
 // ---------- Marca ----------
 
+/* Marca: el icono de la app (assets/icon/icon.svg) dentro de una pastilla
+   blanca. La ilustración está dibujada para fondo claro (sus trazos celestes
+   y blancos se pierden sobre el papel y sobre el marrón), así que la pastilla
+   le devuelve el contraste y un borde definido, igual que en el header. */
 .ec-brand-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--ec-radius-md);
-  background: linear-gradient(135deg, var(--ec-primary), var(--ec-accent));
-  color: #fff;
-  font-family: var(--ec-font-serif);
-  font-weight: 700;
-  font-size: 1.1rem;
-  box-shadow: var(--ec-shadow-md);
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  box-sizing: border-box;
+  padding: 3px;
+  flex-shrink: 0;
+  background: var(--ec-surface);
+  border: 1px solid var(--ec-border-light);
+  border-radius: 17px;
+  box-shadow: var(--ec-shadow-sm);
 
-  &--light {
-    background: rgba(255, 255, 255, 0.14);
-    box-shadow: none;
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  &--sm {
+    width: 52px;
+    height: 52px;
+    padding: 2px;
+    border-radius: 14px;
   }
 }
 
+// Firma de marca: icono + nombre, en el panel de escritorio
+.ec-auth-lockup {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ec-auth-lockup__name {
+  font-family: var(--ec-font-serif);
+  font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+
+// Firma de marca en la tarjeta (sólo móvil)
 .ec-auth-brand {
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 10px;
   margin-bottom: var(--ec-space-lg);
 
   @media (min-width: 992px) {
     display: none; // el panel ya muestra la marca
   }
+}
+
+.ec-auth-brand__name {
+  font-family: var(--ec-font-serif);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  color: var(--ec-text-dark);
 }
 
 // ---------- Tarjeta ----------

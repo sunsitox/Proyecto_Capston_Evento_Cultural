@@ -314,7 +314,13 @@ export class MapaPage implements AfterViewInit, OnDestroy {
       `<div class="ec-mapa__popup-info">` +
       `<p class="ec-mapa__popup-meta">${this.escapar(evento.comuna)}</p>` +
       `<h3>${this.escapar(evento.titulo)}</h3>` +
-      `<p class="ec-mapa__popup-fecha">${this.escapar(this.fechaPopup(evento.fecha))} · ${this.escapar(evento.hora)}</p>` +
+      `<p class="ec-mapa__popup-fecha">${this.escapar(
+        evento.permanente
+          ? 'Vigencia permanente'
+          : [this.fechaPopup(evento.fecha), evento.hora && `${evento.hora} hrs`]
+              .filter(Boolean)
+              .join(' · ')
+      )}</p>` +
       `<a href="/evento/${this.escapar(evento.id)}">Ver ficha</a>` +
       `</div></div>`
     );

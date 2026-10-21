@@ -65,6 +65,7 @@ export class PublicarEventoPage {
   readonly publicos = PUBLICOS;
   readonly enviado = signal(false);
   readonly cargando = signal(false);
+  readonly activandoOrganizador = signal(false);
   readonly errorServidor = signal<string | null>(null);
   readonly api = inject(ApiService);
 
@@ -91,6 +92,27 @@ export class PublicarEventoPage {
     paginaOficial: [''],
     gratuito: [true]
   });
+
+  /**
+   * Autoservicio desde el bloqueo por rol: pasa la cuenta a organizador.
+   * Al cambiar el rol, la plantilla deja de mostrar el bloqueo y renderiza
+   * el formulario, sin recargar la página.
+   */
+  async activarCuentaOrganizador(): Promise<void> {
+    if (this.activandoOrganizador()) return;
+    this.activandoOrganizador.set(true);
+    this.errorServidor.set(null);
+    try {
+      await this.api.convertirEnOrganizador();
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      this.errorServidor.set(
+        err.message || 'No se pudo activar la cuenta de organizador. Intenta más tarde.'
+      );
+    } finally {
+      this.activandoOrganizador.set(false);
+    }
+  }
 
   errorPara(campo: CampoPublicar): string | null {
     const ctrl: AbstractControl | null = this.formulario.get(campo);

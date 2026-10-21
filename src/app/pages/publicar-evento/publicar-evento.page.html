@@ -11,7 +11,14 @@
     </p>
   </div>
 
-  @if (!api.estaAutenticado()) {
+  @if (!api.sesionLista()) {
+    <!-- La sesión se restaura de forma asíncrona: sin esto, una cuenta de
+         organizador vería el bloqueo de "inicia sesión" por un instante. -->
+    <div class="ec-publish-checking" role="status" aria-live="polite">
+      <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+      <span>Verificando tu cuenta…</span>
+    </div>
+  } @else if (!api.estaAutenticado()) {
     <!-- Bloqueo para usuarios sin cuenta -->
     <div class="ec-auth-gate">
       <div class="ec-auth-gate__card">
@@ -30,6 +37,40 @@
           </ion-button>
           <ion-button routerLink="/home" fill="clear" class="ec-auth-gate__btn-home">
             Volver a Explorar eventos
+          </ion-button>
+        </div>
+      </div>
+    </div>
+  } @else if (!api.esOrganizador()) {
+    <!-- Cuenta ciudadana: el formulario no se renderiza. Sólo se ofrece
+         activar el perfil de organizador (autoservicio) o volver. -->
+    <div class="ec-auth-gate">
+      <div class="ec-auth-gate__card">
+        <div class="ec-auth-gate__icon" aria-hidden="true">
+          <ion-icon name="storefront-outline"></ion-icon>
+        </div>
+        <h2>Esta cuenta todavía no es de organizador</h2>
+        <p>
+          Para publicar eventos necesitas una cuenta de organizador o
+          municipalidad. Puedes activarla ahora mismo con la cuenta
+          <strong>{{ api.usuario()?.email }}</strong>.
+        </p>
+        <div class="ec-auth-gate__actions">
+          <ion-button
+            class="ec-auth-gate__btn-login"
+            [disabled]="activandoOrganizador()"
+            (click)="activarCuentaOrganizador()"
+          >
+            @if (activandoOrganizador()) {
+              <ion-spinner name="crescent" slot="start" aria-hidden="true"></ion-spinner>
+              Activando…
+            } @else {
+              <ion-icon slot="start" name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+              Activar mi cuenta
+            }
+          </ion-button>
+          <ion-button routerLink="/home" fill="clear" class="ec-auth-gate__btn-home">
+            Volver a explorar
           </ion-button>
         </div>
       </div>

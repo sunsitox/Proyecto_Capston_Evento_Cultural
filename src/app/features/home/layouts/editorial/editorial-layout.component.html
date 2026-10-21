@@ -11,7 +11,7 @@
       @if (eventoDestacado(); as ev) {
         <h1 class="ec-editorial__hero-title">{{ ev.titulo }}</h1>
         <p class="ec-editorial__hero-meta">
-          {{ ev.categoria }} · {{ ev.comuna }} · {{ ev.fecha | date:'longDate' }}
+          {{ ev.categoria }} · {{ ev.comuna }} · @if (ev.permanente) { Vigencia permanente } @else { {{ ev.fecha | date:'longDate' }} }
         </p>
         <p class="ec-editorial__hero-excerpt">
           Una experiencia cultural imperdible que reúne a la comunidad

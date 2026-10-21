@@ -227,7 +227,8 @@
                 <img [src]="ev.imagen" [alt]="''" aria-hidden="true" />
                 <div class="ec-mapa__popover-body">
                   <p class="ec-mapa__popover-fecha">
-                    {{ ev.fecha | date: 'd MMM' }} · {{ ev.hora }} · {{ ev.comuna }}
+                    @if (ev.permanente) { Vigencia permanente } @else { {{ ev.fecha | date: 'd MMM' }}@if (ev.hora) { · {{ ev.hora }} } }
+                    · {{ ev.comuna }}
                   </p>
                   <h3 class="ec-mapa__popover-titulo">{{ ev.titulo }}</h3>
                   <div class="ec-mapa__popover-acciones">

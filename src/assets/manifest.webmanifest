@@ -1,0 +1,32 @@
+{
+  "name": "Evento Cultural — Descubre eventos en Chile",
+  "short_name": "Evento Cultural",
+  "description": "Eventos culturales, comerciales y municipales en Chile: ferias, festivales, expos y panoramas de Arica a Punta Arenas.",
+  "lang": "es-CL",
+  "dir": "ltr",
+  "start_url": "/home",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f2ec",
+  "theme_color": "#7a4f2e",
+  "icons": [
+    {
+      "src": "icon/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

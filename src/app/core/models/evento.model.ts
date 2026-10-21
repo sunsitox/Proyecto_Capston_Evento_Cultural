@@ -25,6 +25,13 @@ export interface Evento {
   fecha: string;
   /** Fecha de término para eventos de más de un día */
   fechaTermino?: string;
+  /**
+   * Espacio de vigencia indefinida (museo, centro cultural, plaza abierta):
+   * la fuente trae un rango de años, no fechas/horario concretos. No lleva
+   * fecha ni hora: se muestra como "Vigencia permanente" y no se bloquea
+   * por "ya venció".
+   */
+  permanente?: boolean;
   /** Horario de inicio */
   hora: string;
   /** Horario de término */

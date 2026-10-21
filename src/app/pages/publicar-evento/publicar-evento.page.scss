@@ -20,6 +20,20 @@
   }
 }
 
+// ---------- Restauración de sesión ----------
+
+/* Mientras se resuelve la sesión no se muestra ni el formulario ni el
+   bloqueo: evita el parpadeo de "inicia sesión" en cuentas de organizador. */
+.ec-publish-checking {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ec-space-sm);
+  padding: var(--ec-space-2xl) 0;
+  color: var(--ec-text-muted);
+  font-size: 0.9rem;
+}
+
 // ---------- Acceso restringido (Auth Gate) ----------
 
 .ec-auth-gate {

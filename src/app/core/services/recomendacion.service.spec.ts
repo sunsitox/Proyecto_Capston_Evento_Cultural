@@ -95,6 +95,29 @@ describe('RecomendacionService', () => {
     expect(recomendaciones.map((r) => r.evento.id)).toEqual(['b']);
   });
 
+  it('los espacios permanentes quedan vigentes aunque no tengan fecha', () => {
+    const museo = evento({
+      id: 'museo',
+      fecha: '',
+      hora: '',
+      permanente: true
+    });
+
+    const recomendaciones = servicio.recomendar([museo], { fechaRef: REF });
+
+    expect(recomendaciones.map((r) => r.evento.id)).toEqual(['museo']);
+  });
+
+  it('los permanentes van después de los eventos con fecha concreta', () => {
+    const agenda = evento({ id: 'agenda' });
+    const museo = evento({ id: 'museo', fecha: '', permanente: true });
+
+    const recomendaciones = servicio.recomendar([museo, agenda], { fechaRef: REF });
+
+    expect(recomendaciones[0].evento.id).toBe('agenda');
+    expect(recomendaciones[1].evento.id).toBe('museo');
+  });
+
   it('ordena primero la modalidad declarada en el onboarding', () => {
     const virtual = evento({ id: 'virtual', modalidad: 'Virtual' });
     const presencial = evento({ id: 'presencial', modalidad: 'Presencial' });

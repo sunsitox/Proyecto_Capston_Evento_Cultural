@@ -108,12 +108,19 @@ export class EventosService {
   /**
    * Eventos VIGENTES (aún no terminan): los datos rotan y vencen,
    * nunca se muestran eventos pasados.
+   *
+   * - Un evento SIN término ya vencido (fecha cruda antigua sin rango)
+   *   queda fuera: sería visible en el catálogo pero bloqueado en la ficha.
+   * - Los espacios permanentes (museos, centros abiertos todo el año) no
+   *   tienen fecha y siguen vigentes.
    */
   readonly eventosVigentes = computed(() => {
     const hoy = EventosService.hoyISO();
-    return this._eventos().filter(
-      (e) => !e.fechaTermino || e.fechaTermino >= hoy
-    );
+    return this._eventos().filter((e) => {
+      if (e.permanente) return true;
+      if (!e.fechaTermino) return !e.fecha || e.fecha >= hoy;
+      return e.fechaTermino >= hoy;
+    });
   });
 
   readonly eventosFiltrados = computed(() => {
@@ -160,10 +167,17 @@ export class EventosService {
 
     const inicio = evento.fecha;
     const fin = evento.fechaTermino ?? evento.fecha;
+    // Los espacios permanentes rigen siempre: ningún rango los excluye.
     const coincideDesde =
-      !aplica('fechaDesde') || !f.fechaDesde || fin >= f.fechaDesde;
+      evento.permanente ||
+      !aplica('fechaDesde') ||
+      !f.fechaDesde ||
+      fin >= f.fechaDesde;
     const coincideHasta =
-      !aplica('fechaHasta') || !f.fechaHasta || inicio <= f.fechaHasta;
+      evento.permanente ||
+      !aplica('fechaHasta') ||
+      !f.fechaHasta ||
+      inicio <= f.fechaHasta;
 
     const coincideGratuito =
       !aplica('gratuito') || f.gratuito === null || evento.gratuito === f.gratuito;
@@ -355,6 +369,8 @@ export class EventosService {
 
   private ordenar(lista: Evento[], orden: OrdenEventos): Evento[] {
     const copia = [...lista];
+    // Los permanentes (sin fecha) van al final, no se cuelan primero por "".
+    const clave = (e: Evento): string => `${e.fecha || '9999-12-31'}T${e.hora}`;
     switch (orden) {
       case 'nombre':
         return copia.sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
@@ -362,7 +378,7 @@ export class EventosService {
         return copia.sort(
           (a, b) =>
             a.categoria.localeCompare(b.categoria, 'es') ||
-            a.fecha.localeCompare(b.fecha)
+            clave(a).localeCompare(clave(b))
         );
       case 'cercania':
         return copia.sort((a, b) => distanciaKm(a) - distanciaKm(b));
@@ -370,13 +386,11 @@ export class EventosService {
         return copia.sort(
           (a, b) =>
             b.ultimaComprobacion.localeCompare(a.ultimaComprobacion) ||
-            a.fecha.localeCompare(b.fecha)
+            clave(a).localeCompare(clave(b))
         );
       case 'fecha':
       default:
-        return copia.sort((a, b) =>
-          `${a.fecha}T${a.hora}`.localeCompare(`${b.fecha}T${b.hora}`)
-        );
+        return copia.sort((a, b) => clave(a).localeCompare(clave(b)));
     }
   }
 
@@ -418,7 +432,12 @@ export class EventosService {
   obtenerPorFecha(fechaISO: string): Evento[] {
     const vigentes = this.eventosVigentes();
     return vigentes
-      .filter((e) => e.fecha <= fechaISO && (e.fechaTermino ?? e.fecha) >= fechaISO)
+      .filter(
+        (e) =>
+          !e.permanente &&
+          e.fecha <= fechaISO &&
+          (e.fechaTermino ?? e.fecha) >= fechaISO
+      )
       .sort((a, b) => `${a.fecha}T${a.hora}`.localeCompare(`${b.fecha}T${b.hora}`));
   }
 
@@ -427,6 +446,8 @@ export class EventosService {
     const hoy = EventosService.hoyISO();
     const fechas = new Set<string>();
     for (const e of this.eventosVigentes()) {
+      // Los permanentes no marcan días: su vigencia es indefinida.
+      if (e.permanente) continue;
       if (e.fechaTermino && e.fechaTermino < hoy) continue;
       const inicio = new Date(`${e.fecha}T00:00:00`);
       const fin = new Date(`${(e.fechaTermino ?? e.fecha)}T00:00:00`);
@@ -503,29 +524,39 @@ export class EventosService {
       Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0
         ? { lat, lng }
         : undefined;
-    const enlace = e.official_url || e.source_url || '';
+    const enlace = enlaceEspecifico(e.official_url, e.source_url);
     const inicio = (e.start_at || '').slice(0, 10);
     let termino = (e.end_at || '').slice(0, 10);
     const comuna = e.commune_id ? comunas.get(e.commune_id) : undefined;
-    // DEF-QA-007: un rango de años (p. ej. 2019→2030) es un espacio
-    // permanente, no un evento con fecha/horario. Se colapsa a fecha única.
+    // DEF-QA-007 (actualizado): un rango de años (p. ej. 2019→2031) es un
+    // espacio PERMANENTE (museo, centro cultural abierta gran parte del año),
+    // no un evento con fecha/horario. Se marca `permanente` y se descartan
+    // ambas fechas: antes quedaba la fecha cruda "1 ene 2019" y la ficha la
+    // bloqueaba como vencida. Sin fechas no se puede calcular "ya venció".
+    let permanente = false;
     if (inicio && termino) {
       const dias =
         (new Date(`${termino}T00:00:00`).getTime() -
           new Date(`${inicio}T00:00:00`).getTime()) /
         86_400_000;
-      if (Number.isFinite(dias) && dias > 366) termino = '';
+      if (Number.isFinite(dias) && dias > 366) {
+        permanente = true;
+        termino = '';
+      }
     }
-    const horaInicio = (e.start_at || '').slice(11, 16);
-    const horaTermino = (e.end_at || '').slice(11, 16);
+    const horaInicioRaw = (e.start_at || '').slice(11, 16);
+    const horaInicio = permanente ? '' : horaInicioRaw;
+    const horaTerminoRaw = (e.end_at || '').slice(11, 16);
+    const horaTermino = permanente ? '' : horaTerminoRaw;
 
     return {
       id: e.id,
       titulo: e.title || 'Evento sin título',
       descripcion: e.description || '',
       imagen: e.image_url || 'assets/icon/favicon.png',
-      fecha: inicio,
+      fecha: permanente ? '' : inicio,
       fechaTermino: termino || undefined,
+      permanente: permanente || undefined,
       hora: horaInicio || '',
       horaTermino: horaTermino || undefined,
       recinto: e.venue || e.address || '',
@@ -546,19 +577,52 @@ export class EventosService {
       ultimaComprobacion:
         (e.updated_at || e.last_seen_at || e.created_at || '').slice(0, 10) ||
         EventosService.hoyISO(),
-      estado: estadoDe(inicio, termino),
+      estado: permanente ? 'en_curso' : estadoDe(inicio, termino),
       coordenadas
     };
   }
 }
 
-/** Estado del evento según sus fechas (hoy / en curso / próximo). */
-function estadoDe(inicio: string, termino: string): EstadoEvento {
+/**
+ * Estado del evento según sus fechas (hoy / en curso / próximo).
+ * Los espacios permanentes se muestran como "en curso": su vigencia no
+ * termina, no son "próximos".
+ */
+function estadoDe(inicio: string, termino: string, permanente?: boolean): EstadoEvento {
+  if (permanente) return 'en_curso';
   const hoy = EventosService.hoyISO();
   if (!inicio) return 'proximo';
   if (termino && inicio <= hoy && termino >= hoy) return 'en_curso';
   if (inicio === hoy) return 'hoy';
   return 'proximo';
+}
+
+/**
+ * Elegir el enlace más específico para la ficha.
+ *
+ * `official_url` suele ser el sitio genérico del recinto (ej.
+ * "http://www.unap.cl") mientras `source_url` apunta a la publicación
+ * concreta del evento (ej. "chilecultura.gob.cl/events/341/"). Se prefiere
+ * la URL con página específica (path más allá de la raíz) para que el
+ * botón de inscripción/fuente lleve a la publicación y no a la portada.
+ */
+function enlaceEspecifico(
+  official_url: string | null,
+  source_url: string | null
+): string {
+  const oficial = (official_url ?? '').trim();
+  const fuente = (source_url ?? '').trim();
+  const especifica = (url: string): boolean => {
+    try {
+      const u = new URL(url);
+      return u.pathname.length > 1 || u.search.length > 0 || u.hash.length > 0;
+    } catch {
+      return false;
+    }
+  };
+  if (especifica(oficial)) return oficial;
+  if (especifica(fuente)) return fuente;
+  return oficial || fuente;
 }
 
 /** Nombre legible de la fuente a partir de su enlace (sin el www). */

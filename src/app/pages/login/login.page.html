@@ -3,7 +3,12 @@
   <!-- Panel de propuesta de valor (solo escritorio) -->
   <aside class="ec-auth-panel">
     <div class="ec-auth-panel__content">
-      <span class="ec-brand-mark ec-brand-mark--light" aria-hidden="true">EC</span>
+      <div class="ec-auth-lockup">
+        <span class="ec-brand-mark">
+          <img src="assets/icon/icon.svg" alt="" width="56" height="56" decoding="async" />
+        </span>
+        <span class="ec-auth-lockup__name">Evento Cultural</span>
+      </div>
       <h2>El panorama cultural de Chile, en un solo lugar</h2>
       <ul class="ec-auth-panel__list">
         <li>
@@ -27,7 +32,10 @@
   <div class="ec-auth-card-wrap">
     <div class="ec-auth-card" [class.ec-auth-card--register]="modo() === 'registrarse'">
       <div class="ec-auth-brand">
-        <span class="ec-brand-mark" aria-hidden="true">EC</span>
+        <span class="ec-brand-mark ec-brand-mark--sm">
+          <img src="assets/icon/icon.svg" alt="" width="44" height="44" decoding="async" />
+        </span>
+        <span class="ec-auth-brand__name">Evento Cultural</span>
       </div>
 
       <!-- Indicador visual de modo -->

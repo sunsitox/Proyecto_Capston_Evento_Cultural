@@ -149,10 +149,17 @@ export class LoginPage {
 
     this.cargando.set(true);
     this.errorServidor.set(null);
-    const { nombre, email, password } = this.formulario.getRawValue();
+    const { nombre, email, password, esOrganizador } = this.formulario.getRawValue();
     try {
       if (this.modo() === 'registrarse') {
-        const { correoAConfirmar } = await this.api.registrar(email!, password!, nombre!);
+        // El rol elegido en el registro debe persistir en la cuenta: es lo que
+        // decide si luego ve el formulario de publicación.
+        const { correoAConfirmar } = await this.api.registrar(
+          email!,
+          password!,
+          nombre!,
+          esOrganizador ? 'organizador' : 'usuario'
+        );
         if (correoAConfirmar) {
           // Supabase con "Confirm email" activado: el usuario existe, falta
           // verificar el buzón; no intentamos login todavía.

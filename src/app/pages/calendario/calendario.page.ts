@@ -136,6 +136,8 @@ export class CalendarioPage {
   private readonly conteoPorFecha = computed(() => {
     const mapa = new Map<string, number>();
     for (const e of this.eventosService.obtenerVigentes()) {
+      // Los permanentes no marcan días: su vigencia es indefinida.
+      if (e.permanente) continue;
       const inicio = new Date(`${e.fecha}T00:00:00`);
       const fin = new Date(`${e.fechaTermino ?? e.fecha}T00:00:00`);
       for (let d = new Date(inicio); d <= fin; d.setDate(d.getDate() + 1)) {

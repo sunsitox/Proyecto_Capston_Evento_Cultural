@@ -94,6 +94,10 @@ export class DetalleEventoPage {
   readonly noVigente = computed(() => {
     const ev = this.evento();
     if (!ev) return false;
+    // Espacio permanente (museo, centro abierto todo el año): no vence.
+    if (ev.permanente) return false;
+    // Sin fecha no hay forma de calcular "ya venció": no se bloquea.
+    if (!ev.fecha) return false;
     const hoy = EventosService.hoyISO();
     return (ev.fechaTermino ?? ev.fecha) < hoy;
   });
@@ -197,7 +201,9 @@ export class DetalleEventoPage {
     const url = typeof window !== 'undefined' ? window.location.href : '';
     const datos: ShareData = {
       title: ev.titulo,
-      text: `${ev.titulo} — ${ev.fecha} en ${ev.comuna}`,
+      text: ev.permanente
+        ? `${ev.titulo} — ${ev.recinto}, ${ev.comuna}`
+        : `${ev.titulo} — ${ev.fecha} en ${ev.comuna}`,
       url
     };
 

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Eventos para ti esta semana</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style>
+    /* Resets y adaptaciones para clientes de correo */
+    table, tbody, tr, td, th, p, ul, ol, li, blockquote, pre, form, fieldset, input, select, textarea, hr, figure, figcaption {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      font-size: 100%;
+      font: inherit;
+      vertical-align: baseline;
+    }
+
+    body, table, tbody, tr {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    /* Relleno del cuerpo en clientes que no soportan background en body */
+    .body-padding {
+      padding: 32px 20px 48px;
+    }
+
+    .main {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    @media only screen and (min-width: 480px) {
+      .body-padding {
+        padding: 48px 40px 64px;
+      }
+    }
+
+    /* Contenedor para Outlook sin background-color en el main */
+    .background {
+      background-color: #242424;
+    }
+
+    .row {
+      width: 100%;
+    }
+
+    .link {
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .block {
+      display: block;
+    }
+
+    .spacer {
+      display: block;
+      height: 16px;
+    }
+
+    .section-divider {
+      height: 1px;
+      background: #3a3a3a;
+    }
+  </style>
+</head>
+<body class="background">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#242424;">
+    <tr>
+      <td class="body-padding">
+        <table role="presentation" class="main" cellpadding="0" cellspacing="0" width="100%">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding-top: 8px; padding-bottom: 16px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="text-align: center;">
+                    <a class="link block" href="{{app_url}}" style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 0.3px; line-height: 1.2;">
+                      Evento Cultural
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr class="spacer"><td style="height: 24px;"></td></tr>
+
+          <!-- Saludo -->
+          <tr>
+            <td style="text-align: left; color: #ffffff; font-size: 15px; line-height: 1.55; padding-bottom: 16px;">
+              Hola {{nombre}},
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left; color: #cccccc; font-size: 15px; line-height: 1.55; padding-bottom: 24px;">
+              Te traemos una selección de eventos cercanos a lo que suele interesarte.
+              Puedes verlos, guardarlos y ajustar tus preferencias desde la app.
+            </td>
+          </tr>
+
+          <!-- Sección de recomendaciones -->
+          {% for evento in eventos %}
+          <tr class="spacer"><td style="height: 16px;"></td></tr>
+          <tr class="section-divider">
+            <td style="padding-top: 12px; padding-bottom: 12px;"></td>
+          </tr>
+          <tr class="section-divider">
+            <td style="padding-top: 12px; padding-bottom: 12px;"></td>
+          </tr>
+
+          <tr>
+            <td style="text-align: left; color: #9e9e9e; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding-bottom: 10px;">
+              {{evento.seccion_o_agenda}}
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #333333; border-radius: 8px; overflow: hidden;">
+                <tr>
+                  <td style="padding: 14px 16px; background-color: #333333;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                      <!-- Imagen de destinación -->
+                      <tr>
+                        <td style="width: 100%; padding-bottom: 12px;">
+                          <a class="link" href="{{evento.url_evento}}">
+                            <img
+                              src="{{evento.imagen}}"
+                              alt="{{evento.titulo}}"
+                              style="
+                                width: 100%;
+                                max-width: 100%;
+                                height: auto;
+                                display: block;
+                                border-radius: 6px;
+                                background-color: #4a4a4a;
+                              "
+                              width="568"
+                            />
+                          </a>
+                        </td>
+                      </tr>
+
+                      <!-- Cuerpo de la tarjeta -->
+                      <tr>
+                        <td style="padding-top: 14px; padding-bottom: 14px;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                            <tr>
+                              <td>
+                                <a class="link" href="{{evento.url_evento}}" style="text-decoration: none; color: #ffffff; font-size: 17px; font-weight: 600; line-height: 1.35; display: block; margin-bottom: 6px;">
+                                  {{evento.titulo}}
+                                </a>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="color: #9e9e9e; font-size: 13px; line-height: 1.45; padding-bottom: 10px;">
+                                <span style="white-space: nowrap;">{{evento.fecha}}</span>
+                                <span style="margin: 0 6px; color: #555555;">·</span>
+                                <span style="white-space: nowrap;">{{evento.hora}}</span>
+                                <span style="margin: 0 6px; color: #555555;">·</span>
+                                <span style="white-space: nowrap;">{{evento.modalidad}}</span>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="color: #bcbcbc; font-size: 13px; line-height: 1.4; padding-bottom: 6px;">
+                                {{evento.comuna}}, {{evento.region}}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="color: #ffffff; font-size: 13px; font-weight: 500; padding-bottom: 10px;">
+                                {{evento.categoria}}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="color: #b0b0b0; font-size: 14px; line-height: 1.5; padding-bottom: 10px;">
+                                {{evento.descripcion}}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding-bottom: 14px;">
+                                <table role="presentation" cellpadding="0" cellspacing="0">
+                                  <tr>
+                                    <td style="padding-bottom: 6px;">
+                                      <span style="display: inline-block; font-size: 13px; color: #ffffff; background-color: #43a047; padding: 6px 10px; border-radius: 20px; font-weight: 600;">
+                                        {{evento.precio_o_gratis}}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+
+                            <!-- CTA + motivo -->
+                            <tr>
+                              <td style="padding-top: 4px; padding-bottom: 14px;">
+                                <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                                  <tr>
+                                    <td style="padding-bottom: 8px;">
+                                      <a class="link" href="{{evento.url_conocer}}" style="
+                                        text-decoration: none;
+                                        color: #ffffff;
+                                        background-color: #1db954;
+                                        font-size: 14px;
+                                        font-weight: 600;
+                                        padding: 10px 14px;
+                                        border-radius: 6px;
+                                        display: inline-block;
+                                        line-height: 1.2;
+                                      ">
+                                        Ver detalles
+                                      </a>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td style="padding-top: 8px; color: #8a8a8a; font-size: 12px; line-height: 1.45;">
+                                      {{evento.motivo}}
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          {% endfor %}
+
+          <!-- Cierre y preferencias -->
+          <tr class="spacer"><td style="height: 24px;"></td></tr>
+          <tr class="section-divider">
+            <td style="padding-top: 16px; padding-bottom: 16px;"></td>
+          </tr>
+
+          <tr>
+            <td style="text-align: left; color: #ffffff; font-size: 15px; line-height: 1.55; padding-bottom: 16px;">
+              Disfrutá la semana cultural.
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left; color: #b0b0b0; font-size: 13px; line-height: 1.5; padding-bottom: 20px;">
+              Puedes cambiar qué preferencias tenés o dejar de recibir estos correos cuando quieras.
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="padding-bottom: 10px;">
+                    <a class="link" href="{{app_url}}" style="
+                      text-decoration: none;
+                      color: #ffffff;
+                      background-color: #1db954;
+                      font-size: 14px;
+                      font-weight: 600;
+                      padding: 12px 16px;
+                      border-radius: 6px;
+                      display: inline-block;
+                      line-height: 1.2;
+                    ">
+                      Abrir evento cultural
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top: 10px; padding-bottom: 6px;">
+                    <a class="link" href="{{prefs_url}}" style="text-decoration: none; color: #9e9e9e; font-size: 13px;">
+                      Cambiar preferencias de correo
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top: 6px; padding-bottom: 6px;">
+                    <a class="link" href="{{logout_url}}" style="text-decoration: none; color: #9e9e9e; font-size: 13px;">
+                      Cerrar sesión o cambiar cuenta
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr class="spacer"><td style="height: 32px;"></td></tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="text-align: left; color: #666666; font-size: 12px; line-height: 1.55; padding-bottom: 12px;">
+              Este correo es automático. No respondas este mensaje, pues las respuestas no se conectan con tu cuenta.
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left; color: #666666; font-size: 12px; line-height: 1.55; padding-bottom: 18px;">
+              <a class="link" href="{{politica_privacidad_url}}" style="color: #8a8a8a;">Política de privacidad</a>
+              <span style="margin: 0 6px; color: #444444;">·</span>
+              <a class="link" href="{{terminos_url}}" style="color: #8a8a8a;">Términos de uso</a>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left; color: #666666; font-size: 12px; line-height: 1.55; padding-bottom: 24px;">
+              {{producto_nombre}}
+              <br/>
+              {{soporte_contacto}}
+              <br/>
+              © {{anio}} {{producto_nombre}}. Todos los derechos reservados.
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

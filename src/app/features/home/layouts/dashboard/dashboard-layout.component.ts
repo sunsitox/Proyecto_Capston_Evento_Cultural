@@ -60,7 +60,9 @@ export class DashboardLayoutComponent {
   });
 
   readonly proximosEventos = computed(() => {
+    // Los permanentes (sin fecha) no son "próximos": no van en la agenda diaria.
     return [...this.eventosService.eventosFiltrados()]
+      .filter((e) => !!e.fecha)
       .sort((a, b) => a.fecha.localeCompare(b.fecha))
       .slice(0, 5);
   });

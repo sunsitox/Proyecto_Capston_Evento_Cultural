@@ -129,6 +129,9 @@ export class EventoCardComponent {
     () => ICONO_MODALIDAD[this.evento()?.modalidad ?? 'Presencial']
   );
 
+  /** Espacio permanente (museo, centro abierto todo el año): sin fecha. */
+  readonly esPermanente = computed(() => !!this.evento()?.permanente);
+
   /** "Me interesa" activo para este evento (memoria de la visita). */
   readonly meInteresaActivo = computed(
     () => this.recomendacion.tieneSenal(this.evento()?.id ?? '', 'me_interesa')

@@ -11,7 +11,14 @@
       <ion-toolbar class="ec-header__toolbar">
         <div class="ec-header__inner ec-container">
           <a routerLink="/home" class="ec-header__logo" aria-label="Evento Cultural — Inicio">
-            <span class="ec-header__logo-icon" aria-hidden="true">EC</span>
+            <img
+              class="ec-header__logo-icon"
+              src="assets/icon/icon.svg"
+              alt=""
+              width="44"
+              height="44"
+              decoding="async"
+            />
             <span class="ec-header__logo-text">Evento Cultural</span>
           </a>
 
@@ -61,7 +68,7 @@
                   }
                 </span>
               </a>
-              @if (esEscritorio()) {
+              @if (esEscritorio() && api.esOrganizador()) {
                 <ion-button
                   routerLink="/publicar"
                   color="primary"
@@ -106,7 +113,14 @@
         <div class="ec-container ec-footer__grid">
           <div class="ec-footer__brand">
             <a routerLink="/home" class="ec-header__logo" aria-label="Evento Cultural — Inicio">
-              <span class="ec-header__logo-icon" aria-hidden="true">EC</span>
+              <img
+                class="ec-header__logo-icon"
+                src="assets/icon/icon.svg"
+                alt=""
+                width="40"
+                height="40"
+                decoding="async"
+              />
               <span class="ec-header__logo-text">Evento Cultural</span>
             </a>
             <p>

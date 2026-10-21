@@ -22,8 +22,17 @@ export class ApiService {
   readonly esOrganizador = this.supabase.esOrganizador;
   readonly sesionLista = this.supabase.sesionLista;
 
-  registrar(email: string, password: string, nombre?: string) {
-    return this.supabase.registrar(email, password, nombre);
+  registrar(
+    email: string,
+    password: string,
+    nombre?: string,
+    rol: UsuarioSesion['rol'] = 'usuario'
+  ) {
+    return this.supabase.registrar(email, password, nombre, rol);
+  }
+
+  convertirEnOrganizador(): Promise<UsuarioSesion> {
+    return this.supabase.convertirEnOrganizador();
   }
 
   async ingresar(email: string, password: string): Promise<UsuarioSesion> {

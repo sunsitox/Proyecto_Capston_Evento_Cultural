@@ -124,12 +124,20 @@ export class SupabaseService {
   // Autenticación por contraseña (GoTrue directo)
   // ------------------------------------------------------------------
 
-  async registrar(email: string, password: string, nombre?: string): Promise<{ correoAConfirmar: boolean }> {
+  async registrar(
+    email: string,
+    password: string,
+    nombre?: string,
+    rol: UsuarioSesion['rol'] = 'usuario'
+  ): Promise<{ correoAConfirmar: boolean }> {
     const nombreLimpio = (nombre ?? '').trim();
+    // `rol` viaja en user_metadata: es lo que `aSesion` lee para distinguir
+    // cuentas de organizador de cuentas ciudadanas.
     const data = {
       nombre: nombreLimpio,
       nombre_display: nombreLimpio,
-      email: email.trim()
+      email: email.trim(),
+      rol
     };
     // emailRedirectTo: lleva al usuario de regreso si Supabase envía un enlace
     // de confirmación de correo (o para OAuth en "signup con enlace mágico").
@@ -146,6 +154,21 @@ export class SupabaseService {
     // vacía hasta confirmar. Sin confirmación, onAuthStateChange ya setea al usuario.
     const { data: sesion } = await this.cliente.auth.getSession();
     return { correoAConfirmar: !sesion.session?.user };
+  }
+
+  /**
+   * Convierte la cuenta en organizador (autoservicio desde la app).
+   * Sólo cambia user_metadata: la escritura de eventos sigue gobernada por RLS.
+   */
+  async convertirEnOrganizador(): Promise<UsuarioSesion> {
+    const { data, error } = await this.cliente.auth.updateUser({
+      data: { rol: 'organizador' }
+    });
+    if (error) throw error;
+    if (!data.user) throw new Error('No se pudo actualizar la cuenta.');
+    const usuario = this.aSesion(data.user);
+    this._usuario.set(usuario);
+    return usuario;
   }
 
   async ingresar(email: string, password: string): Promise<UsuarioSesion> {
@@ -323,6 +346,13 @@ export class SupabaseService {
     const { data: sesion } = await this.cliente.auth.getSession();
     if (!sesion.session?.user) {
       throw new Error('Se requiere sesión de organizador para publicar.');
+    }
+    // Defensa en profundidad: la UI ya oculta el formulario a cuentas de
+    // usuario, pero el INSERT tampoco debe salir desde una cuenta ciudadana.
+    if (this.aSesion(sesion.session.user).rol !== 'organizador') {
+      throw new Error(
+        'Tu cuenta es de usuario. Activa el perfil de organizador para publicar eventos.'
+      );
     }
 
     const category = draft.categories.find((c): c is string => !!c) ?? 'Otros';

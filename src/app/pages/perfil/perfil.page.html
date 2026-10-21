@@ -63,7 +63,7 @@
       <ion-icon slot="start" name="sparkles-outline" aria-hidden="true"></ion-icon>
       <ion-label>Preferencias de descubrimiento</ion-label>
     </ion-item>
-    @if (api.estaAutenticado()) {
+    @if (api.esOrganizador()) {
       <ion-item routerLink="/publicar" lines="full" button detail="true">
         <ion-icon slot="start" name="storefront-outline" aria-hidden="true"></ion-icon>
         <ion-label>Publicar como organizador</ion-label>
@@ -85,7 +85,7 @@
     ></app-recommendation-empty-state>
   </section>
 
-  @if (api.estaAutenticado()) {
+  @if (api.esOrganizador()) {
     <div class="ec-perfil-promo">
       <span class="ec-perfil-promo__icon" aria-hidden="true">
         <ion-icon name="megaphone-outline"></ion-icon>
@@ -95,6 +95,22 @@
         <p>Publica tus eventos en un solo canal y llega a ciudadanos y turistas de todo el país.</p>
         <ion-button routerLink="/publicar" fill="outline" size="small" class="ec-perfil-promo__cta">
           Publicar un evento
+        </ion-button>
+      </div>
+    </div>
+  } @else if (api.estaAutenticado()) {
+    <div class="ec-perfil-promo">
+      <span class="ec-perfil-promo__icon" aria-hidden="true">
+        <ion-icon name="storefront-outline"></ion-icon>
+      </span>
+      <div>
+        <h2>Esta cuenta es de usuario</h2>
+        <p>
+          El formulario de publicación es exclusivo para cuentas de organizador o
+          municipalidad. Puedes activarla cuando quieras.
+        </p>
+        <ion-button routerLink="/publicar" fill="outline" size="small" class="ec-perfil-promo__cta">
+          Activar cuenta de organizador
         </ion-button>
       </div>
     </div>

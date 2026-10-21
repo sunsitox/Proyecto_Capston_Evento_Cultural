@@ -310,10 +310,14 @@ export class RecomendacionService {
       return { evento, puntaje, motivo: this.motivoPara(evento, puntaje) };
     });
 
+    // Sin fecha (espacio permanente) ordena al final: la agenda concreta manda.
+    const claveFecha = (e: Evento): string => e.fecha || '9999-12-31';
+
     return puntuadas
       .sort(
         (a, b) =>
-          b.puntaje - a.puntaje || a.evento.fecha.localeCompare(b.evento.fecha)
+          b.puntaje - a.puntaje ||
+          claveFecha(a.evento).localeCompare(claveFecha(b.evento))
       )
       .slice(0, max);
   }
@@ -506,10 +510,12 @@ function fechaISO(d: Date): string {
 }
 
 /**
- * Vigente: fechaTermino (o fecha) es hoy o futuro. Un evento sin fecha no
- * se puede ordenar ni recomendar por agenda y queda fuera.
+ * Vigente: fechaTermino (o fecha) es hoy o futuro. Un espacio permanente
+ * (museo o centro abierto todo el año, sin fecha) es vigente por
+ * definición: su vigencia no termina.
  */
 function vigenteHasta(e: Evento, isoHoy: string): boolean {
+  if (e.permanente) return true;
   const fin = e.fechaTermino || e.fecha;
   return !!fin && fin >= isoHoy;
 }

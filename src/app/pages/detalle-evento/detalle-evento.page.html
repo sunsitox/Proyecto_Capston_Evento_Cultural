@@ -65,12 +65,14 @@
           <p class="ec-detail-fecha">
             <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
             <span>
-              @if (ev.fechaTermino) {
+              @if (ev.permanente) {
+                Vigencia permanente (museo o centro abierto todo el año)
+              } @else if (ev.fechaTermino) {
                 {{ ev.fecha | date: 'EEEE d MMMM y' }} – {{ ev.fechaTermino | date: 'EEEE d MMMM y' }}
               } @else {
                 {{ ev.fecha | date: 'EEEE d MMMM y' }}
               }
-              · @if (ev.hora) { {{ ev.hora }}@if (ev.horaTermino) { – {{ ev.horaTermino }} } hrs } @else { Horario por confirmar }
+              · @if (ev.hora) { {{ ev.hora }}@if (ev.horaTermino) { – {{ ev.horaTermino }} } hrs } @else if (ev.permanente) { Consulta horarios en la fuente } @else { Horario por confirmar }
             </span>
           </p>
           <h1>{{ ev.titulo }}</h1>
@@ -189,7 +191,9 @@
               <div>
                 <span class="ec-info-label">Fecha</span>
                 <span class="ec-info-value">
-                  @if (ev.fechaTermino) {
+                  @if (ev.permanente) {
+                    Vigencia permanente
+                  } @else if (ev.fechaTermino) {
                     {{ ev.fecha | date: 'd MMM y' }} – {{ ev.fechaTermino | date: 'd MMM y' }}
                   } @else {
                     {{ ev.fecha | date: 'd MMM y' }}
