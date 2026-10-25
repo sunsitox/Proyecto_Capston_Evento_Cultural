@@ -1,0 +1,582 @@
+@use 'leaflet/dist/leaflet.css';
+
+/*
+ * App Global CSS
+ * ----------------------------------------------------------------------------
+ * Punto de entrada de estilos globales.
+ *
+ * 1) CSS base de Ionic (estructura de componentes).
+ * 2) Design tokens + tema "papel y tinta" (src/theme/_tokens.scss, themes.scss).
+ *    Se importan DESPUÉS de Ionic para que la paleta del proyecto gane sobre
+ *    los valores por defecto de Ionic.
+ * 3) Primitivas globales compartidas por varias páginas (.ec-container,
+ *    .ec-page, .ec-cat, .ec-chip, .ec-btn, .ec-eyebrow, .ec-skip-link…).
+ *    Viven aquí —y no en un componente— porque las usan varios componentes y
+ *    los estilos de componente están encapsulados.
+ *
+ * Nota sobre fuente: los tokens usan 'Inter' (texto) y 'Fraunces' (títulos).
+ * Si no están cargadas, el sistema cae a las fuentes del stack de respaldo.
+ */
+
+@use "sass:meta";
+
+/* ============================================================
+   1 · CSS BASE DE IONIC
+   ============================================================ */
+
+/* Core CSS required for Ionic components to work properly */
+@import "@ionic/angular/css/core.css";
+
+/* Basic CSS for apps built with Ionic */
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+@import "@ionic/angular/css/display.css";
+
+/* Optional CSS utils */
+@import "@ionic/angular/css/padding.css";
+@import "@ionic/angular/css/float-elements.css";
+@import "@ionic/angular/css/text-alignment.css";
+@import "@ionic/angular/css/text-transformation.css";
+@import "@ionic/angular/css/flex-utils.css";
+
+/**
+ * Modo oscuro de Ionic: DESACTIVADO a propósito.
+ * El proyecto tiene una identidad única y fija ("Papel" / tema earthy). Si se
+ * activa dark.system.css, el tema del sistema operativo oscurece los
+ * componentes de Ionic mientras la paleta cálida sigue clara, y el resultado
+ * queda incoherente. Para volver a habilitarlo, descomenta la línea.
+ */
+/* @import "@ionic/angular/css/palettes/dark.system.css"; */
+
+/* ============================================================
+   2 · DESIGN TOKENS + TEMA DEL PROYECTO
+   ============================================================ */
+
+/* Tokens base: espaciado, radios, motion, tipografía, layout.
+   Se cargan con meta.load-css() para emitir su CSS AQUÍ (después de Ionic y
+   antes de las primitivas), sin usar el @import de Sass, que está en desuso. */
+@include meta.load-css("theme/tokens");
+
+/* Paleta "papel y tinta" + variables de Ionic (primary, secondary, danger…) */
+@include meta.load-css("theme/themes");
+
+/* ============================================================
+   3 · BASE
+   ============================================================ */
+
+html,
+body {
+  background: var(--ec-bg);
+  color: var(--ec-text);
+  font-family: var(--ec-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--ec-text-dark);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+a {
+  color: var(--ec-primary);
+}
+
+/* Foco visible y consistente en todo el proyecto */
+:focus-visible {
+  outline: 3px solid var(--ec-focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--ec-primary-light);
+  color: var(--ec-text-dark);
+}
+
+/* ============================================================
+   4 · LAYOUT
+   ============================================================ */
+
+/* Ancho máximo centrado. Padding lateral fluido. */
+.ec-container {
+  display: block;
+  width: 100%;
+  max-width: var(--ec-container);
+  margin-inline: auto;
+  padding-inline: var(--ec-space-md);
+}
+
+/* Envoltorio externo de cada página */
+.ec-page {
+  display: block;
+  width: 100%;
+  max-width: var(--ec-container);
+  margin-inline: auto;
+  padding-inline: var(--ec-space-md);
+}
+
+@media (min-width: 768px) {
+  .ec-container,
+  .ec-page {
+    padding-inline: var(--ec-space-lg);
+  }
+}
+
+/* ============================================================
+   5 · TIPOGRAFÍA COMPARTIDA
+   ============================================================ */
+
+/* Etiqueta superior en versalitas (contexto de la página) */
+.ec-eyebrow {
+  display: block;
+  margin: 0 0 var(--ec-space-xs);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ec-primary);
+}
+
+/* Bajada / texto de apoyo bajo un título */
+.ec-subtitle {
+  margin: var(--ec-space-xs) 0 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ec-text-muted);
+  max-width: 62ch;
+}
+
+/* ============================================================
+   6 · ACCESIBILIDAD
+   ============================================================ */
+
+/* Texto solo para lectores de pantalla (visualmente oculto) */
+.ec-sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Enlace "saltar al contenido": oculto hasta recibir foco (WCAG 2.4.1) */
+.ec-skip-link {
+  position: absolute;
+  top: var(--ec-space-sm);
+  left: var(--ec-space-sm);
+  z-index: 2000;
+  padding: var(--ec-space-sm) var(--ec-space-md);
+  background: var(--ec-skip-bg);
+  color: var(--ec-skip-fg);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--ec-radius-sm);
+  box-shadow: var(--ec-shadow-md);
+  transform: translateY(-250%);
+  transition: transform var(--ec-duration-fast) var(--ec-ease);
+}
+
+.ec-skip-link:focus,
+.ec-skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* ============================================================
+   7 · SELLO DE CATEGORÍA (.ec-cat)
+   Base + color por categoría vía --ec-cat-color.
+   Los modificadores --* los genera catClassOf() en TS.
+   ============================================================ */
+
+.ec-cat {
+  --ec-cat-color: var(--ec-primary);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--ec-radius-full);
+  border: var(--ec-border-width) solid color-mix(in srgb, var(--ec-cat-color) 34%, transparent);
+  background: var(--ec-primary-bg);
+  background: color-mix(in srgb, var(--ec-cat-color) 12%, var(--ec-badge-mix-base));
+  color: var(--ec-cat-color);
+  font-family: var(--ec-font-sans);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Variante sólida (sobre imagen): color pleno + texto contrastado */
+.ec-cat--solid {
+  background: var(--ec-cat-color);
+  border-color: transparent;
+  color: var(--ec-on-cat);
+}
+
+/* Color por categoría */
+.ec-cat--musica {
+  --ec-cat-color: var(--cat-musica);
+}
+
+.ec-cat--arte {
+  --ec-cat-color: var(--cat-arte);
+}
+
+.ec-cat--gastro {
+  --ec-cat-color: var(--cat-gastro);
+}
+
+.ec-cat--ferias {
+  --ec-cat-color: var(--cat-ferias);
+}
+
+.ec-cat--municipal {
+  --ec-cat-color: var(--cat-municipal);
+}
+
+.ec-cat--familiar {
+  --ec-cat-color: var(--cat-familiar);
+}
+
+.ec-cat--deporte {
+  --ec-cat-color: var(--cat-deporte);
+}
+
+/* ============================================================
+   8 · CHIP DE FILTRO (.ec-chip)
+   Se combina con .ec-cat--* para heredar el color de la categoría.
+   ============================================================ */
+
+.ec-chip {
+  --ec-cat-color: var(--ec-primary);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: var(--ec-radius-full);
+  border: var(--ec-border-width) solid var(--ec-border);
+  background: var(--ec-surface);
+  color: var(--ec-text-muted);
+  font-family: var(--ec-font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--ec-duration-fast) var(--ec-ease),
+    border-color var(--ec-duration-fast) var(--ec-ease),
+    color var(--ec-duration-fast) var(--ec-ease);
+}
+
+.ec-chip:hover {
+  background: var(--ec-surface-hover);
+  border-color: var(--ec-primary-light);
+}
+
+/* Chip activo: color pleno de su categoría */
+.ec-chip--active {
+  background: var(--ec-cat-color);
+  border-color: transparent;
+  color: var(--ec-on-cat);
+}
+
+/* ============================================================
+   9 · BOTONES DE TEXTO (.ec-btn / .ec-btn-outline)
+   ============================================================ */
+
+.ec-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: var(--ec-border-width) solid transparent;
+  border-radius: var(--ec-radius-md);
+  background: var(--ec-primary);
+  color: var(--ec-btn-fg);
+  font-family: var(--ec-font-sans);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--ec-duration-fast) var(--ec-ease),
+    border-color var(--ec-duration-fast) var(--ec-ease),
+    color var(--ec-duration-fast) var(--ec-ease);
+}
+
+.ec-btn ion-icon {
+  font-size: 1rem;
+}
+
+.ec-btn:hover {
+  background: var(--ec-primary-dark);
+}
+
+/* Variante contorneada sobre superficies claras */
+.ec-btn-outline {
+  background: transparent;
+  border-color: var(--ec-border);
+  color: var(--ec-primary-dark);
+}
+
+.ec-btn-outline:hover {
+  background: var(--ec-primary-bg);
+  border-color: var(--ec-primary-light);
+}
+
+/* ============================================================
+   10 · UTILIDADES
+   ============================================================ */
+
+.mt-md {
+  margin-top: var(--ec-space-md);
+}
+
+.mt-lg {
+  margin-top: var(--ec-space-lg);
+}
+
+/* ============================================================
+   11 · TRANSICIONES DE NAVEGACIÓN (View Transitions API)
+   Deslizamiento nativo del navegador entre rutas. Las pestañas hacen
+   fade con desplazamiento leve; la ficha de evento entra/sale
+   lateralmente. Sin View Transitions API no hay animación (corte
+   simple), nunca una página bloqueada.
+   ============================================================ */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+  animation-timing-function: var(--ec-ease);
+}
+
+/* Fade + desplazamiento vertical leve (pestañas) */
+::view-transition-old(root) {
+  animation-name: ec-vt-fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: ec-vt-fade-in;
+}
+
+@keyframes ec-vt-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes ec-vt-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Entrada lateral de la ficha de evento: animación CSS del contenedor
+   al montarse (no depende de View Transitions nombradas, que pueden
+   abortar y bloquear la interacción). Se complementa con el fundido
+   raíz. */
+@keyframes ec-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+}
+
+.ec-detail {
+  animation: ec-slide-in-right 240ms var(--ec-ease) both;
+}
+
+/* Respeto a prefers-reduced-motion: sin desplazamientos, sólo un
+   fundido muy breve (o nada, según el navegador). */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 1ms !important;
+  }
+
+  .ec-detail {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ============================================================
+   12 · PRIMITIVAS COMPARTIDAS ENTRE PÁGINAS
+   Las usan varios componentes a la vez (lista de eventos, calendario,
+   mapa, ficha de evento). Van aquí porque los estilos de componente
+   están encapsulados: una clase definida en un componente NO alcanza a
+   las plantillas de otro, y el elemento se vería sin estilo.
+   ============================================================ */
+
+/* Botón para quitar todos los filtros ("Limpiar todo") */
+.ec-clear-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 6px 14px;
+  background: transparent;
+  border: var(--ec-border-width) solid var(--ec-border);
+  border-radius: var(--ec-radius-full);
+  color: var(--ec-danger);
+  font-family: var(--ec-font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--ec-duration-fast) var(--ec-ease);
+}
+
+.ec-clear-chip:hover {
+  background: var(--ec-danger-bg);
+}
+
+/* Rejilla fluida de tarjetas de evento: 1 → 2 → 3 columnas.
+   minmax(0, 1fr) evita que un contenido largo ensanche una columna
+   y desborde el contenedor. */
+.ec-events-grid {
+  display: grid;
+  gap: var(--ec-space-lg);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 640px) {
+  .ec-events-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .ec-events-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ===================== MAPA (Leaflet): tema del piloto =====================
+   Los nodos de Leaflet (pins, popups, controles) viven FUERA del
+   encapsulado de Angular, así que se estilan globalmente. */
+.ec-mapa__lienzo--leaflet {
+  .leaflet-bar a { color: var(--ec-primary-dark, #5e3b21); }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: var(--ec-radius-lg, 16px);
+    background: var(--ec-surface, #fffdf9);
+    color: var(--ec-text-dark, #211c16);
+    box-shadow: 0 12px 32px rgba(43, 33, 25, 0.25);
+  }
+
+  .leaflet-popup-content { margin: 0; width: 268px !important; }
+
+  .leaflet-popup-tip { background: var(--ec-surface, #fffdf9); }
+
+  /* Popup compacto tipo Google Maps: imagen 72px y layout horizontal,
+     para que no tape el pin ni exceda el lienzo. */
+  .ec-mapa__popup-card {
+    display: flex;
+    gap: 10px;
+    padding: 8px;
+
+    img {
+      width: 72px;
+      height: 72px;
+      object-fit: cover;
+      border-radius: var(--ec-radius-md, 12px);
+      flex-shrink: 0;
+    }
+
+    .ec-mapa__popup-info {
+      min-width: 0;
+      padding-right: 18px;
+
+      h3 {
+        margin: 0 0 2px;
+        font: 0.85rem/1.25 var(--ec-font-serif, serif);
+        color: var(--ec-text-dark, #211c16);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      a {
+        font: 600 0.8rem var(--ec-font-sans, sans-serif);
+        color: var(--ec-primary-dark, #5e3b21);
+
+        &:hover { text-decoration: underline; }
+      }
+    }
+  }
+
+  .ec-mapa__popup-meta {
+    margin: 0 0 2px;
+    font: 700 0.6rem var(--ec-font-sans, sans-serif);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ec-primary, #7a4f2e);
+  }
+
+  .ec-mapa__popup-fecha,
+  .leaflet-popup-close-button { color: var(--ec-text-muted, #5d564a); }
+
+  .ec-mapa__popup-fecha {
+    margin: 0 0 4px;
+    font-size: 0.68rem;
+  }
+}
+
+/* Pin de evento del design system */
+.ec-mapa__pin {
+  background: transparent;
+  border: none;
+  filter: drop-shadow(0 2px 3px rgba(43, 33, 25, 0.35));
+  transition: transform var(--ec-duration-fast, 160ms) ease;
+}
+
+.ec-mapa__pin:hover {
+  transform: scale(1.12);
+  transform-origin: 50% 100%;
+}
+
+/* Marca de la ubicación del usuario (divIcon) */
+.ec-mapa__usuario { background: transparent; border: none; }
+
+.ec-mapa__usuario-punto {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2f6fb3;
+  border: 3px solid #fffdf9;
+  box-shadow: 0 0 0 4px rgba(47, 111, 179, 0.25);
+}
+

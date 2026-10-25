@@ -1,0 +1,144 @@
+/* ========================================
+   HOME MÓVIL — Descubrir
+   ======================================== */
+
+.ec-home {
+  min-height: 100%;
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0));
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Hero ---------- */
+
+.ec-hero {
+  padding: var(--ec-space-lg) var(--ec-space-md) var(--ec-space-md);
+  background: var(--ec-hero-bg);
+  border-bottom: var(--ec-border-width) solid var(--ec-border-light);
+}
+
+.ec-hero h1 {
+  margin: var(--ec-space-xs) 0;
+  font-size: clamp(1.6rem, 1.3rem + 2vw, 2.1rem);
+  font-weight: 700;
+}
+
+.ec-hero-sub {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ec-text-muted);
+  max-width: 34ch;
+}
+
+.ec-hero-fuente {
+  margin: 8px 0 0;
+  font-size: 0.68rem;
+  color: var(--ec-text-light);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Búsqueda ---------- */
+
+.ec-search-section {
+  padding: var(--ec-space-md) var(--ec-space-md) 0;
+
+  ion-searchbar {
+    --background: var(--ec-surface);
+    --border-radius: var(--ec-radius-full);
+    --box-shadow: var(--ec-shadow-sm);
+    --placeholder-color: var(--ec-text-light);
+    padding: 0;
+    border: var(--ec-border-width) solid var(--ec-border);
+    border-radius: var(--ec-radius-full);
+    transition: box-shadow var(--ec-duration-fast) var(--ec-ease);
+
+    &:focus-within {
+      box-shadow: var(--ec-shadow-md);
+    }
+  }
+}
+
+/* ---------- Chips de categoría (scroll horizontal) ---------- */
+
+.ec-chips-row {
+  display: flex;
+  gap: var(--ec-space-sm);
+  padding: var(--ec-space-md) var(--ec-space-md) var(--ec-space-xs);
+  padding-right: calc(var(--ec-space-md) + 12px);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  scroll-padding-inline: var(--ec-space-md);
+  scroll-snap-type: x proximity;
+  /* DEF-QA-012: fundido lateral como pista de que hay más categorías. */
+  -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, #000 88%, transparent);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ec-chip {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+}
+
+/* ---------- Filtros / Resultados ---------- */
+
+.ec-filters-wrap {
+  padding: var(--ec-space-xs) var(--ec-space-md) 0;
+  margin-bottom: var(--ec-space-md);
+}
+
+/* Botón único que abre los filtros avanzados (bottom sheet):
+   una decisión visible en lugar de 10 controles simultáneos. */
+.ec-filters-trigger {
+  border-radius: var(--ec-radius-full);
+}
+
+/* Contador de filtros activos: el estado no se comunica solo con color. */
+.ec-filters-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: var(--ec-radius-full);
+  background: var(--ec-primary);
+  color: var(--ec-btn-fg);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+#ec-home-results {
+  flex: 1;
+  padding: 0 var(--ec-space-md);
+}
+
+/* ---------- Ad placeholder ---------- */
+
+.ec-adsense-mobile {
+  max-width: 320px;
+  min-height: 100px;
+  margin: var(--ec-space-lg) auto var(--ec-space-md);
+  background: var(--ec-surface);
+  border: 1px dashed var(--ec-border);
+  border-radius: var(--ec-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    content: 'Anuncio';
+    font-size: 0.7rem;
+    color: var(--ec-text-light);
+    font-style: italic;
+  }
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}

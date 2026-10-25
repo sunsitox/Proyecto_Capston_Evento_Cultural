@@ -1,0 +1,7 @@
+{
+  "name": "evento-cultural",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

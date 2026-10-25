@@ -1,0 +1,448 @@
+/* MAPA — Leaflet + OSM */
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+/* Filtros */
+.ec-mapa__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ec-space-xs, 6px);
+  margin: var(--ec-space-md, 16px) 0;
+}
+
+.ec-mapa__filtro select,
+.ec-mapa__filtro input {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--ec-border-light, #ece4d7);
+  border-radius: var(--ec-radius-full, 999px);
+  background: var(--ec-surface, #fffdf9);
+  color: var(--ec-text-dark, #211c16);
+  font: inherit;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.ec-mapa__filtro select {
+  appearance: none;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%236f6156' d='M6 8.5 2.5 5h7z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+}
+
+.ec-mapa__filtro select:focus-visible,
+.ec-mapa__filtro input:focus-visible {
+  outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+  outline-offset: 2px;
+}
+
+/* ---------- Barra de acciones (mi ubicación) ---------- */
+
+.ec-mapa__barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ec-space-md, 16px);
+  margin-bottom: var(--ec-space-sm, 8px);
+  flex-wrap: wrap;
+}
+
+.ec-mapa__btn-ubicacion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: var(--ec-border-width, 1px) solid var(--ec-primary, #7a4f2e);
+  border-radius: var(--ec-radius-full, 999px);
+  background: var(--ec-surface, #fffdf9);
+  color: var(--ec-primary-dark, #5e3b21);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 1rem;
+    color: var(--ec-primary);
+  }
+
+  .ec-mapa__btn-lupa {
+    width: 1rem;
+    height: 1rem;
+    color: var(--ec-primary, #7a4f2e);
+    flex-shrink: 0;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--ec-primary-bg, #f2e9df);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--ec-primary-dark, #5e3b21);
+    outline-offset: 2px;
+  }
+}
+
+.ec-mapa__resumen {
+  font-size: 0.8rem;
+  color: var(--ec-text-muted, #5d564a);
+}
+
+/* El lienzo Leaflet, los pins y los popups se estilan globalmente en
+   src/global.scss (los nodos de Leaflet viven fuera del encapsulado). */
+.ec-mapa__lienzo--leaflet {
+  aspect-ratio: auto;
+  height: 460px;
+  min-height: 320px;
+  background: var(--ec-surface-2, #f6efe4);
+}
+
+/* DEF-QA-001: en móvil el lienzo necesita altura propia tras el reflow. */
+@media (max-width: 767px) {
+  .ec-mapa__lienzo--leaflet {
+    height: 62vw;
+    min-height: 300px;
+    max-height: 420px;
+  }
+}
+
+.ec-mapa__lienzo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 480px;
+  /* DEF-QA-002 (header, escritorio): Leaflet crea panes internos con
+     z-index 200-1000 ATADOS AL CONTEXTO RAÍZ si el contenedor no aísla,
+     y el header sticky (z-index 100) quedaba por debajo: mojones, tiles
+     y popups se dibujaban encima de la barra EC/Descubrir/Mapa. Con
+     stacking context propio, todos los z-index internos de Leaflet viven
+     dentro de este bloque y el header vuelve a ganar. */
+  isolation: isolate;
+  z-index: 0;
+  border-radius: var(--ec-radius-lg, 16px);
+  border: 1px solid var(--ec-border-light, #ece4d7);
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 38px,
+      rgba(151, 129, 106, 0.12) 38px,
+      rgba(151, 129, 106, 0.12) 39px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 52px,
+      rgba(151, 129, 106, 0.1) 52px,
+      rgba(151, 129, 106, 0.1) 53px
+    ),
+    var(--pr-paper, #f6f2ec);
+  overflow: hidden;
+}
+
+/* Skeleton del lienzo */
+.ec-mapa__lienzo--skeleton {
+  background: radial-gradient(circle at 20% 30%, rgba(164,96,47,.06), transparent 40%), var(--pr-paper, #f6f2ec);
+}
+
+.ec-mapa__sk-línea,
+.ec-mapa__sk-pin {
+  position: absolute;
+  background-size: 400px 100%;
+  animation: ec-mapa-shimmer 1.4s infinite linear;
+}
+
+.ec-mapa__sk-línea {
+  left: -5%;
+  width: 115%;
+  height: 14px;
+  border-radius: var(--ec-radius-full);
+  background: linear-gradient(90deg, rgba(151,129,106,.15) 0, rgba(151,129,106,.3) 80px, rgba(151,129,106,.15) 160px) rgba(151,129,106,.2);
+
+  &--uno { top: 30%; }
+  &--dos { top: 62%; }
+}
+
+.ec-mapa__sk-pin {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--ec-radius-circle);
+  background: linear-gradient(90deg, rgba(122,79,46,.12) 0, rgba(122,79,46,.28) 80px, rgba(122,79,46,.12) 160px) rgba(122,79,46,.16);
+
+  &--uno { left: 22%; top: 26%; }
+  &--dos { left: 58%; top: 48%; }
+  &--tres { left: 76%; top: 30%; }
+}
+
+@keyframes ec-mapa-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ec-mapa__sk-línea,
+  .ec-mapa__sk-pin {
+    animation: none;
+  }
+}
+
+/* ---------- Nota y lista ---------- */
+
+.ec-mapa__filtros-web {
+  display: contents;
+}
+
+@media (max-width: 767px) {
+  .ec-mapa__filtros-web {
+    display: none;
+  }
+
+  .ec-mapa__btn-filtros {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--ec-border-light, #ece4d7);
+    border-radius: var(--ec-radius-full, 999px);
+    background: var(--ec-surface, #fffdf9);
+    color: var(--ec-text-dark, #211c16);
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    ion-icon {
+      font-size: 1rem;
+      color: var(--ec-primary-dark, #5e3b21);
+    }
+
+    &:focus-visible {
+      outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+      outline-offset: 2px;
+    }
+  }
+}
+
+@media (min-width: 768px) {
+  .ec-mapa__btn-filtros {
+    display: none;
+  }
+}
+
+.ec-mapa__badge {
+  display: inline-flex;
+  align-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--ec-primary, #7a4f2e);
+  color: #fffdf9;
+  font: 700 0.65rem var(--ec-font-sans, sans-serif);
+}
+
+.ec-mapa__filtro--columna {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+
+  span {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ec-text-light, #6d6557);
+  }
+
+  select {
+    min-height: 44px;
+    padding: 0 34px 0 12px;
+    border: 1px solid var(--ec-border-light, #ece4d7);
+    border-radius: var(--ec-radius-md, 12px);
+    background: var(--ec-surface-2, #f0e9df) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%236f6156' d='M6 8.5 2.5 5h7z'/%3E%3C/svg%3E") no-repeat right 12px center / 12px;
+    color: var(--ec-text-dark, #211c16);
+    font: inherit;
+    font-size: 0.88rem;
+    appearance: none;
+  }
+
+  select:focus-visible {
+    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+    outline-offset: 2px;
+  }
+}
+
+.ec-mapa__sheet-filtros {
+  padding: 4px 0;
+}
+
+.ec-mapa__sheet-pie {
+  display: flex;
+  gap: 8px;
+
+  .ec-btn-outline { flex: 0 0 auto; }
+
+  .ec-btn:not(.ec-btn-outline) { flex: 1; }
+}
+
+/* Wrap posicionado: ancla la mini-tarjeta sobre el mapa (sin él, el
+   popover absoluto se iba al viewport y solapaba lista y tab bar). */
+.ec-mapa__wrap {
+  position: relative;
+}
+
+.ec-mapa__popover {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  width: min(340px, calc(100% - 24px));
+  padding: 10px;
+  background: var(--ec-surface, #fffdf9);
+  border: 1px solid var(--ec-border-light, #ece4d7);
+  border-radius: var(--ec-radius-lg, 16px);
+  box-shadow: 0 12px 32px rgba(43, 33, 25, 0.25);
+  /* Sobre mosaicos y pines de Leaflet, bajo sus controles de zoom. */
+  z-index: 800;
+  animation: ec-mapa-popover-in 160ms var(--ec-ease, ease) both;
+
+  img {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: var(--ec-radius-md, 12px);
+    flex-shrink: 0;
+  }
+}
+
+@keyframes ec-mapa-popover-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+}
+
+.ec-mapa__popover-cerrar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--ec-glass, rgba(255, 253, 249, 0.92));
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+    outline-offset: 2px;
+  }
+}
+
+.ec-mapa__popover-body { min-width: 0; padding-right: 28px; }
+
+.ec-mapa__popover-fecha {
+  margin: 0 0 2px;
+  font: 700 0.68rem var(--ec-font-sans, sans-serif);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ec-primary-dark, #5e3b21);
+}
+
+.ec-mapa__popover-titulo {
+  margin: 0 0 6px;
+  font: 0.95rem/1.25 var(--ec-font-serif, serif);
+  color: var(--ec-text-dark, #211c16);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ec-mapa__popover-link {
+  font: 600 0.82rem var(--ec-font-sans, sans-serif);
+  color: var(--ec-primary-dark, #5e3b21);
+
+  &:focus-visible {
+    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ec-mapa__popover { animation: none; }
+}
+
+.ec-mapa__nota {
+  margin: var(--ec-space-sm, 8px) 0 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--ec-text-muted, #5d564a);
+  line-height: 1.45;
+
+  ion-icon {
+    flex-shrink: 0;
+    font-size: 1rem;
+    margin-top: 1px;
+  }
+}
+
+.ec-mapa__nota--discreta {
+  color: var(--ec-text-light, #6d6557);
+}
+
+.ec-mapa__lista {
+  margin-top: var(--ec-space-lg, 24px);
+
+  h2 {
+    margin: 0 0 var(--ec-space-md, 16px);
+    font: 1.2rem var(--ec-font-serif, serif);
+    color: var(--ec-text-dark, #211c16);
+  }
+}
+
+.ec-mapa__skeletons,
+.ec-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ec-space-md, 16px);
+}
+
+/* La lista accesible se pinta por bloques (catálogo de +1000 eventos). */
+.ec-mapa__ver-mas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ec-space-sm, 12px);
+  margin-top: var(--ec-space-md, 16px);
+}
+
+.ec-mapa__avance {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--ec-text-light, #6d6557);
+  font-variant-numeric: tabular-nums;
+}
+
+.ec-empty {
+  text-align: center;
+  padding: var(--ec-space-xl, 32px) var(--ec-space-md, 16px);
+}

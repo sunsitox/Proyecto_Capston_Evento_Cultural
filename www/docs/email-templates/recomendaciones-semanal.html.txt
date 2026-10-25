@@ -1,0 +1,61 @@
+Hola {{nombre}},
+
+Te compartimos una selección de eventos cercanos a lo que suele gustarte.
+Puedes ver todo, guardar opciones y ajustar tus intereses desde la app cuando quieras.
+
+Sugerencias para esta semana
+────────────────────────────────────────
+📅 {{evento1.titulo}}
+   {{evento1.fecha}} · {{evento1.hora}}
+   {{evento1.modalidad}} · {{evento1.comuna}}, {{evento1.region}}
+   {{evento1.categoria}}
+   {{evento1.descripcion}}
+   {{evento1.precio_o_gratis}}
+
+📅 {{evento2.titulo}}
+   {{evento2.fecha}} · {{evento2.hora}}
+   {{evento2.modalidad}} · {{evento2.comuna}}, {{evento2.region}}
+   {{evento2.categoria}}
+   {{evento2.descripcion}}
+   {{evento2.precio_o_gratis}}
+
+📅 {{evento3.titulo}}
+   {{evento3.fecha}} · {{evento3.hora}}
+   {{evento3.modalidad}} · {{evento3.comuna}}, {{evento3.region}}
+   {{evento3.categoria}}
+   {{evento3.descripcion}}
+   {{evento3.precio_o_gratis}}
+
+Por qué te recomendamos esto
+────────────────────────────────────────
+• {{evento1.motivo}}
+• {{evento2.motivo}}
+• {{evento3.motivo}}
+
+Qué puedes hacer desde la app
+────────────────────────────────────────
+- Ver detalles y ubicación de cada evento
+- Decir “me interesa” para seguir guardando opciones
+- Decir “no me interesa” para que no vuelva a aparecer
+- Actualizar tus preferencias de categoría, comuna, modalidad, frecuencia y horario
+
+Cuentas del producto
+────────────────────────────────────────
+Ver agenda y guardar opciones
+👉 {{app_url}}
+
+Cerrar sesión o cambiar cuenta
+👉 {{logout_url}}
+
+¿No querés recibir estos correos?
+👉 {{prefs_url}}
+
+Importante
+────────────────────────────────────────
+Este correo es automático. No respondas este mensaje: las respuestas no se conectan con tu cuenta.
+
+{{producto_nombre}}
+{{soporte_contacto}}
+{{politica_privacidad_url}}  ·  {{terminos_url}}
+
+© {{anio}} {{producto_nombre}}. Todos los derechos reservados.

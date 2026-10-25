@@ -1,0 +1,85 @@
+<!-- Vista mobile (Descubrir / Buscar).
+     Misma fuente de verdad que el shell web: event-list compartido,
+     filtros del servicio, preferencias de vista. -->
+<div class="ec-home">
+  <a class="ec-skip-link" href="#ec-home-results">Saltar a los resultados</a>
+
+  <section class="ec-hero" aria-labelledby="ec-hero-title">
+    <p class="ec-eyebrow">Descubrir</p>
+    <h1 id="ec-hero-title">¿Qué haremos hoy?</h1>
+    <p class="ec-hero-sub">
+      Eventos culturales, comerciales y municipales en Chile, con datos de
+      municipalidades y organizadores
+    </p>
+    <p class="ec-hero-fuente">
+      Última comprobación: {{ dataActualizacion | date: 'd MMMM y' }} · La
+      información proviene de terceros
+    </p>
+  </section>
+
+  <div class="ec-search-section">
+    <ion-searchbar
+      #searchbar
+      placeholder="Buscar eventos…"
+      [debounce]="300"
+      [showClearButton]="shouldShowClear()"
+      aria-label="Buscar eventos"
+      (ionInput)="onBusqueda($event.detail.value)"
+      (ionClear)="onBusqueda('')"
+    ></ion-searchbar>
+  </div>
+
+  <div class="ec-chips-row" role="group" aria-label="Filtrar por categoría">
+    <button
+      type="button"
+      class="ec-chip"
+      [class.ec-chip--active]="eventosService.filtros().categorias.length === 0"
+      (click)="limpiarCategorias()"
+    >
+      Todas
+    </button>
+    @for (cat of categorias; track cat) {
+      <button
+        type="button"
+        [class]="'ec-chip ' + catClassOf(cat)"
+        [class.ec-chip--active]="eventosService.filtros().categorias.includes(cat)"
+        [attr.aria-pressed]="eventosService.filtros().categorias.includes(cat)"
+        (click)="toggleCategoria(cat)"
+      >
+        {{ cat }}
+      </button>
+    }
+  </div>
+
+  <!-- Filtros avanzados como bottom sheet: un único control abre el
+       panel (ley de Hick); el badge cuenta los filtros activos y el
+       estado se anuncia con aria-expanded. -->
+  <div class="ec-filters-wrap">
+    <button
+      type="button"
+      class="ec-btn ec-btn-outline ec-filters-trigger"
+      (click)="filtrosSheet.abrir()"
+      [attr.aria-expanded]="filtrosSheet.abierto()"
+      aria-controls="ec-filtros-panel"
+    >
+      <ion-icon name="options-outline" aria-hidden="true"></ion-icon>
+      Filtros
+      @if (filtrosAvanzadosActivos() > 0) {
+        <span class="ec-filters-badge">{{ filtrosAvanzadosActivos() }}</span>
+        <span class="ec-sr-only">filtros avanzados activos</span>
+      }
+    </button>
+    <app-event-filters-sheet #filtrosSheet id="ec-filtros-panel"></app-event-filters-sheet>
+  </div>
+
+  <div id="ec-home-results" tabindex="-1">
+    <app-event-list
+      [layout]="'lista'"
+      [skeletonCount]="30"
+      [showClearInEmpty]="true"
+    ></app-event-list>
+  </div>
+
+  <!-- AdSense: Mobile Banner (320x100) -->
+  <div class="ec-adsense-mobile" id="adsense-mobile-banner" aria-hidden="true"></div>
+</div>

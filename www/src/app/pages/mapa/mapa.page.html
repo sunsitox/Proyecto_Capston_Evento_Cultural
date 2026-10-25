@@ -1,0 +1,333 @@
+<section class="ec-page" aria-labelledby="ec-mapa-title">
+  <div class="ec-container ec-page__inner">
+    <p class="ec-eyebrow">Mapa</p>
+    <h1 id="ec-mapa-title">Eventos en el mapa</h1>
+    <p class="ec-page__sub">
+      Mapa interactivo con la ubicación real de los eventos vigentes.
+      Puedes desplazarlo, hacer zoom y acercarlo a tu posición.
+    </p>
+
+    <!-- ================= Filtros: fecha fuera + resto en sheet (móvil) ================= -->
+    <div class="ec-mapa__filtros" role="group" aria-label="Filtrar eventos del mapa">
+      <label class="ec-mapa__filtro">
+        <span class="ec-sr-only">Fecha</span>
+        <input
+          type="date"
+          [min]="hoy"
+          [value]="filtroFecha()"
+          (input)="filtroFecha.set($any($event.target).value)"
+          aria-label="Filtrar por fecha"
+        />
+      </label>
+
+      <!-- Filtros avanzados: selectores visibles en escritorio -->
+      <div class="ec-mapa__filtros-web">
+        <label class="ec-mapa__filtro">
+          <span class="ec-sr-only">Categoría</span>
+          <select [value]="filtroCategoria()" (change)="filtroCategoria.set($any($event.target).value)" aria-label="Filtrar por categoría">
+            <option value="">Todas las categorías</option>
+            @for (cat of categorias(); track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </label>
+        <label class="ec-mapa__filtro">
+          <span class="ec-sr-only">Región</span>
+          <select [value]="filtroRegion()" (change)="onRegion($any($event.target).value)" aria-label="Filtrar por región">
+            <option value="">Todas las regiones</option>
+            @for (r of regiones(); track r) {
+              <option [value]="r">{{ r }}</option>
+            }
+          </select>
+        </label>
+        <label class="ec-mapa__filtro">
+          <span class="ec-sr-only">Comuna</span>
+          <select [value]="filtroComuna()" (change)="filtroComuna.set($any($event.target).value)" aria-label="Filtrar por comuna">
+            <option value="">Todas las comunas</option>
+            @for (c of comunas(); track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+        </label>
+        <label class="ec-mapa__filtro">
+          <span class="ec-sr-only">Modalidad</span>
+          <select [value]="filtroModalidad()" (change)="filtroModalidad.set($any($event.target).value)" aria-label="Filtrar por modalidad">
+            <option value="">Todas las modalidades</option>
+            @for (m of modalidades(); track m) {
+              <option [value]="m">{{ m }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <!-- Trigger del sheet en móvil -->
+      <button
+        type="button"
+        class="ec-mapa__btn-filtros"
+        (click)="filtrosAbiertos.set(true)"
+        [attr.aria-expanded]="filtrosAbiertos()"
+      >
+        <ion-icon name="options-outline" aria-hidden="true"></ion-icon>
+        Filtros
+        @if (filtrosActivos()) {
+          <span class="ec-mapa__badge">{{
+            (filtroCategoria() ? 1 : 0) + (filtroRegion() ? 1 : 0) +
+            (filtroComuna() ? 1 : 0) + (filtroModalidad() ? 1 : 0)
+          }}</span>
+        }
+      </button>
+
+      @if (filtrosActivos()) {
+        <button type="button" class="ec-clear-chip" (click)="limpiarFiltros()">
+          <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+          Limpiar
+        </button>
+      }
+    </div>
+
+    <!-- Bottom sheet con el resto de filtros (móvil) -->
+    <app-bottom-sheet
+      [abierto]="filtrosAbiertos()"
+      titulo="Filtrar mapa"
+      (cerrar)="filtrosAbiertos.set(false)"
+    >
+      <div class="ec-mapa__sheet-filtros">
+        <label class="ec-mapa__filtro ec-mapa__filtro--columna">
+          <span>Categoría</span>
+          <select [value]="filtroCategoria()" (change)="filtroCategoria.set($any($event.target).value)" aria-label="Filtrar por categoría">
+            <option value="">Todas las categorías</option>
+            @for (cat of categorias(); track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </label>
+        <label class="ec-mapa__filtro ec-mapa__filtro--columna">
+          <span>Región</span>
+          <select [value]="filtroRegion()" (change)="onRegion($any($event.target).value)" aria-label="Filtrar por región">
+            <option value="">Todas las regiones</option>
+            @for (r of regiones(); track r) {
+              <option [value]="r">{{ r }}</option>
+            }
+          </select>
+        </label>
+        <label class="ec-mapa__filtro ec-mapa__filtro--columna">
+          <span>Comuna</span>
+          <select [value]="filtroComuna()" (change)="filtroComuna.set($any($event.target).value)" aria-label="Filtrar por comuna">
+            <option value="">Todas las comunas</option>
+            @for (c of comunas(); track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+        </label>
+        <label class="ec-mapa__filtro ec-mapa__filtro--columna">
+          <span>Modalidad</span>
+          <select [value]="filtroModalidad()" (change)="filtroModalidad.set($any($event.target).value)" aria-label="Filtrar por modalidad">
+            <option value="">Todas las modalidades</option>
+            @for (m of modalidades(); track m) {
+              <option [value]="m">{{ m }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      <div sheetFooter class="ec-mapa__sheet-pie">
+        <button type="button" class="ec-btn ec-btn-outline" (click)="limpiarFiltros()">
+          Limpiar filtros
+        </button>
+        <button type="button" class="ec-btn" (click)="filtrosAbiertos.set(false)">
+          Aplicar
+        </button>
+      </div>
+    </app-bottom-sheet>
+
+    <!-- ================= Mapa interactivo (Leaflet + OSM) ================= -->
+    @if (cargando()) {
+      <!-- Skeleton del lienzo: conserva la geometría final -->
+      <div class="ec-mapa__lienzo ec-mapa__lienzo--skeleton" aria-hidden="true" [style.height.px]="420">
+        <span class="ec-mapa__sk-línea ec-mapa__sk-línea--uno"></span>
+        <span class="ec-mapa__sk-línea ec-mapa__sk-línea--dos"></span>
+        <span class="ec-mapa__sk-pin ec-mapa__sk-pin--uno"></span>
+        <span class="ec-mapa__sk-pin ec-mapa__sk-pin--dos"></span>
+        <span class="ec-mapa__sk-pin ec-mapa__sk-pin--tres"></span>
+      </div>
+    }
+
+    @if (!cargando()) {
+      <div class="ec-mapa__barra">
+        <button
+          type="button"
+          class="ec-mapa__btn-ubicacion"
+          (click)="pedirMiUbicacion()"
+          [disabled]="ubicacionEstado() === 'cargando'"
+          [attr.aria-label]="!posicionUsuario()
+            ? 'Centrar el mapa en mi ubicación'
+            : radioEsMaximo()
+              ? 'Quitar el filtro por ubicación'
+              : 'Ampliar radio de búsqueda a ' + radiosSiguienteEtiqueta()"
+        >
+          <!-- Lupa (SVG) que indica búsqueda por ubicación -->
+          <svg
+            class="ec-mapa__btn-lupa"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <line x1="21" y1="21" x2="16.3" y2="16.3" />
+          </svg>
+          @if (ubicacionEstado() === 'cargando') {
+            Buscando tu ubicación…
+          } @else if (posicionUsuario(); as pos) {
+            {{ radioKm() }} km a mi alrededor
+          } @else {
+            Mi ubicación
+          }
+        </button>
+        <span class="ec-mapa__resumen" role="status">
+          {{ pinesEnVista().length }} de {{ conUbicacion() }} en vista ({{ eventosFiltrados().length }} vigentes)
+        </span>
+      </div>
+
+      <!-- El popover vive DENTRO del wrap posicionado: antes era hermano del
+           lienzo sin ancestro posicionado y se anclaba al viewport,
+           solapando lista y tab bar en vez del mapa. -->
+      <div class="ec-mapa__wrap">
+        <div
+          #lienzoRef
+          class="ec-mapa__lienzo ec-mapa__lienzo--leaflet"
+          role="application"
+          [attr.aria-label]="'Mapa interactivo con ' + conUbicacion() + ' eventos ubicados. La lista accesible se encuentra bajo el mapa.'"
+        ></div>
+
+      @if (ubicacionEstado() === 'denegada') {
+        <p class="ec-mapa__nota" role="status">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+          No pudimos obtener tu ubicación: revisa los permisos del navegador
+          si quieres centrar el mapa en tu posición.
+        </p>
+      }
+
+        <!-- Mini-tarjeta del evento seleccionado desde pin o lista -->
+        @if (destacado(); as id) {
+          @for (ev of pines(); track ev.id) {
+            @if (ev.id === id) {
+              <div class="ec-mapa__popover" role="dialog" [attr.aria-label]="ev.titulo">
+                <button
+                  type="button"
+                  class="ec-mapa__popover-cerrar"
+                  aria-label="Cerrar tarjeta del evento"
+                  (click)="destacado.set(null)"
+                >
+                  <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+                </button>
+                <img [src]="ev.imagen" [alt]="''" aria-hidden="true" />
+                <div class="ec-mapa__popover-body">
+                  <p class="ec-mapa__popover-fecha">
+                    @if (ev.permanente) { Vigencia permanente } @else { {{ ev.fecha | date: 'd MMM' }}@if (ev.hora) { · {{ ev.hora }} } }
+                    · {{ ev.comuna }}
+                  </p>
+                  <h3 class="ec-mapa__popover-titulo">{{ ev.titulo }}</h3>
+                  <div class="ec-mapa__popover-acciones">
+                    <a class="ec-mapa__popover-link" [routerLink]="['/evento', ev.id]" (click)="registrarVerDetalle(ev.id)">
+                      Ver ficha
+                    </a>
+                  </div>
+                </div>
+              </div>
+            }
+          }
+        }
+      </div>
+    }
+
+    @if (pinesRecortados() > 0) {
+      <p class="ec-mapa__nota" role="status">
+        <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+        Por rendimiento se dibujan {{ pinesEnVista().length }} pines: acerca el
+        mapa o filtra para ver el resto ({{ pinesRecortados() }} fuera de vista).
+      </p>
+    }
+
+    <p class="ec-mapa__nota">
+      <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+      Mapa con datos © OpenStreetMap. Tu ubicación se usa solo al pulsar
+      «Mi ubicación» y no se guarda ni se comparte.
+    </p>
+
+    @if (sinCoordenadas() > 0) {
+      <p class="ec-mapa__nota ec-mapa__nota--discreta">
+        {{ sinCoordenadas() }}
+        {{ sinCoordenadas() === 1 ? 'evento sin' : 'eventos sin' }} ubicación
+        aproximada; sólo aparecen en la lista.
+      </p>
+    }
+
+    <!-- ================= Lista accesible ================= -->
+    <div class="ec-mapa__lista">
+      <h2>Eventos vigentes ({{ eventosEnRadio().length }})</h2>
+
+      @if (cargando()) {
+        <div class="ec-mapa__skeletons">
+          @for (s of [1, 2, 3]; track s) {
+            <app-evento-card-skeleton layout="lista"></app-evento-card-skeleton>
+          }
+        </div>
+      } @else if (error()) {
+        <div class="ec-empty" role="alert">
+          <div class="ec-empty__icon" aria-hidden="true">
+            <ion-icon name="cloud-offline-outline"></ion-icon>
+          </div>
+          <h3>No pudimos actualizar el mapa</h3>
+          <p>Revisa tu conexión e inténtalo de nuevo.</p>
+          <button type="button" class="ec-btn" (click)="onReintentar()">
+            <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
+            Reintentar
+          </button>
+        </div>
+      } @else if (eventosEnRadio().length > 0) {
+        <div class="ec-events-list">
+          @for (evento of eventosLista(); track evento.id) {
+            <app-evento-card
+              [evento]="evento"
+              layout="lista"
+              (mouseenter)="destacar(evento.id)"
+              (focus)="destacar(evento.id)"
+              (meInteresaCambiado)="onMeInteresa($event)"
+              (salidaTerminada)="onNoMeInteresa($event)"
+              (verSimilaresClick)="onVerSimilares($event)"
+            ></app-evento-card>
+          }
+        </div>
+
+        @if (hayMasLista()) {
+          <div class="ec-mapa__ver-mas">
+            <p class="ec-mapa__avance" role="status">
+              Mostrando {{ eventosLista().length }} de
+              {{ eventosEnRadio().length }} eventos
+            </p>
+            <button type="button" class="ec-btn ec-btn-outline" (click)="verMasLista()">
+              <ion-icon name="chevron-down-outline" aria-hidden="true"></ion-icon>
+              Ver más eventos
+            </button>
+          </div>
+        }
+      } @else {
+        <div class="ec-empty" role="status">
+          <div class="ec-empty__icon" aria-hidden="true">
+            <ion-icon name="map-outline"></ion-icon>
+          </div>
+          <h3>No hay eventos con estos filtros</h3>
+          <p>Prueba ampliando la fecha o quitando filtros.</p>
+          <button type="button" class="ec-btn ec-btn-outline" (click)="limpiarFiltros()">
+            <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+            Limpiar filtros
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</section>

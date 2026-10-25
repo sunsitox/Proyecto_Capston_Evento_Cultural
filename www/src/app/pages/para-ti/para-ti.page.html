@@ -1,0 +1,60 @@
+<section class="ec-page" aria-labelledby="ec-parati-title">
+  <div class="ec-container ec-page__inner">
+    <p class="ec-eyebrow">Para ti</p>
+    <h1 id="ec-parati-title">Eventos para ti</h1>
+    <p class="ec-page__sub">
+      Recomendaciones basadas en lo que exploras. Con sesión iniciada, tus
+      intereses se guardan en tu cuenta y te siguen en otros dispositivos.
+    </p>
+
+    @if (esOnboarding()) {
+      <app-recommendation-empty-state
+        variante="onboarding"
+        (guardarClick)="onGuardarOnboarding()"
+        (omitirClick)="onOmitirOnboarding()"
+      ></app-recommendation-empty-state>
+    } @else {
+      <p class="ec-parati__resumen">
+        <ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon>
+        {{ resumenPreferencias() }}
+      </p>
+
+      <div class="ec-events-grid">
+        @for (rec of recomendaciones(); track rec.evento.id) {
+          <app-evento-card
+            [evento]="rec.evento"
+            [motivo]="rec.motivo"
+            [etiquetaSimilares]="'Ver similares'"
+            (meInteresaCambiado)="onMeInteresa($event)"
+            (salidaTerminada)="onNoMeInteresa($event)"
+            (verSimilaresClick)="onVerSimilares($event)"
+          ></app-evento-card>
+        }
+      </div>
+
+      @if (recomendaciones().length === 0) {
+        <div class="ec-empty" role="status">
+          <div class="ec-empty__icon" aria-hidden="true">
+            <ion-icon name="sparkles-outline"></ion-icon>
+          </div>
+          <h3>Nada nuevo por ahora</h3>
+          <p>
+            Descartaste o exploraste todo lo recomendable de esta visita.
+            Vuelve al Descubrir para encontrar más eventos vigentes o reinicia
+            tus intereses temporales.
+          </p>
+          <div class="ec-parati__vacio-acciones">
+            <a class="ec-btn ec-btn-outline" routerLink="/home">
+              <ion-icon name="compass-outline" aria-hidden="true"></ion-icon>
+              Ir a Descubrir
+            </a>
+            <button type="button" class="ec-btn" (click)="reiniciarIntereses()">
+              <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
+              Reiniciar intereses
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</section>

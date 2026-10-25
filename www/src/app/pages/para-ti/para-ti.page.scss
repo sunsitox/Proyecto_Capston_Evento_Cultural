@@ -1,0 +1,56 @@
+/* ========================================
+   PARA TI — recomendaciones de la visita
+   ======================================== */
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.ec-parati__resumen {
+  margin: var(--ec-space-md, 16px) 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border: 1px dashed var(--ec-border, #e3d9ca);
+  border-radius: var(--ec-radius-full, 999px);
+  background: var(--ec-surface-2, #f6efe6);
+  color: var(--ec-text-muted, #5d564a);
+  font-size: 0.82rem;
+
+  ion-icon {
+    color: var(--ec-primary, #7a4f2e);
+    flex-shrink: 0;
+  }
+}
+
+.ec-events-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ec-space-lg, 24px);
+  margin-top: var(--ec-space-lg, 24px);
+
+  @media (max-width: 1199px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ec-empty {
+  margin-top: var(--ec-space-lg, 24px);
+  text-align: center;
+  padding: var(--ec-space-xl, 32px) var(--ec-space-md, 16px);
+}
+
+.ec-parati__vacio-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: var(--ec-space-md, 16px);
+}

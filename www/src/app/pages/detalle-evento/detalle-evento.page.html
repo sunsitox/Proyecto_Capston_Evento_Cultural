@@ -1,0 +1,342 @@
+@if (cargando()) {
+  <!-- Skeleton con la estructura final: evita saltos visuales -->
+  <app-evento-detail-skeleton></app-evento-detail-skeleton>
+} @else if (evento(); as ev) {
+  <!-- Evento vencido: los datos rotan; se ofrece alternativas vigentes -->
+  @if (noVigente()) {
+    <div class="ec-not-found ec-page">
+      <h2>Este evento ya no está vigente</h2>
+      <p>La información de eventos rota y vence: te mostramos alternativas con fechas actuales.</p>
+      <div class="ec-events-grid">
+        @for (alt of alternativasVigentes(); track alt.id) {
+          <app-evento-card
+            [evento]="alt"
+            (meInteresaCambiado)="onMeInteresa($event)"
+            (salidaTerminada)="onNoMeInteresa($event)"
+            (verSimilaresClick)="onVerSimilares($event)"
+          ></app-evento-card>
+        }
+      </div>
+      <ion-button routerLink="/home" color="primary">Volver al inicio</ion-button>
+    </div>
+  } @else {
+  <article class="ec-detail">
+    <div
+      class="ec-detail-hero"
+      [style.backgroundImage]="'url(' + ev.imagen + ')'"
+      role="img"
+      [attr.aria-label]="'Imagen del evento: ' + ev.titulo"
+    >
+      <div class="ec-detail-hero__overlay" aria-hidden="true"></div>
+
+      <ion-buttons class="ec-back-btn">
+        <ion-button routerLink="/home" fill="clear" aria-label="Volver al inicio">
+          <ion-icon name="arrow-back-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+
+      <span [class]="'ec-cat ec-cat--solid ec-detail-hero__cat ' + catClassOf(ev.categoria)">
+        {{ ev.categoria }}
+      </span>
+    </div>
+
+    <div class="ec-container ec-detail-body">
+      <!-- La información proviene de terceros: nunca se oculta -->
+      <aside class="ec-aviso-fuente" role="note">
+        <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+        <p>
+          <strong>Información compilada de terceros.</strong>
+          Fuente: {{ ev.fuente }} · Comprobada por última vez el
+          {{ ev.ultimaComprobacion | date: 'd MMMM y' }}. Confirma los datos en
+          la página oficial antes de asistir.
+        </p>
+        @if (enlaceDisponible(ev.paginaOficial)) {
+          <a [href]="ev.paginaOficial" target="_blank" rel="noopener" (click)="registrarFuente()">
+            Página oficial
+            <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+          </a>
+        } @else {
+          <span class="ec-aviso-sin-enlace">Enlace no disponible</span>
+        }
+      </aside>
+
+      <header class="ec-detail-header">
+        <div class="ec-detail-header__text">
+          <p class="ec-detail-fecha">
+            <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+            <span>
+              @if (ev.permanente) {
+                Vigencia permanente (museo o centro abierto todo el año)
+              } @else if (ev.fechaTermino) {
+                {{ ev.fecha | date: 'EEEE d MMMM y' }} – {{ ev.fechaTermino | date: 'EEEE d MMMM y' }}
+              } @else {
+                {{ ev.fecha | date: 'EEEE d MMMM y' }}
+              }
+              · @if (ev.hora) { {{ ev.hora }}@if (ev.horaTermino) { – {{ ev.horaTermino }} } hrs } @else if (ev.permanente) { Consulta horarios en la fuente } @else { Horario por confirmar }
+            </span>
+          </p>
+          <h1>{{ ev.titulo }}</h1>
+
+          <div class="ec-detail-chips">
+            <span [class]="'ec-detail-estado ec-detail-estado--' + ev.estado">
+              {{ estadoEtiqueta(ev.estado) }}
+            </span>
+            <span class="ec-detail-chip">
+              <ion-icon [name]="iconoDe(ev.modalidad)" aria-hidden="true"></ion-icon>
+              {{ ev.modalidad }}
+            </span>
+            @if (ev.gratuito) {
+              <span class="ec-detail-chip ec-detail-chip--gratis">Entrada gratuita</span>
+            } @else if (ev.precio) {
+              <span class="ec-detail-chip">{{ ev.precio }}</span>
+            }
+          </div>
+
+          <p class="ec-detail-lugar">
+            <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+            {{ ev.recinto }} — {{ ev.comuna }}, {{ ev.region }}
+          </p>
+        </div>
+
+        <app-event-interest-actions
+          class="ec-detail-actions"
+          [titulo]="ev.titulo"
+          [eventoId]="ev.id"
+          [activo]="meInteresaActivo()"
+          [etiquetaSimilares]="'Ver eventos similares'"
+          (meInteresaCambiado)="onMeInteresa($event)"
+          (noMeInteresaClick)="onNoMeInteresa($event)"
+          (verSimilaresClick)="onVerSimilares($event)"
+        ></app-event-interest-actions>
+
+      </header>
+
+      <div class="ec-detail-grid">
+        <div class="ec-detail-main">
+          <h2>Sobre este evento</h2>
+          <p class="ec-detail-descripcion">{{ ev.descripcion }}</p>
+
+          <dl class="ec-ficha">
+            <div class="ec-ficha__fila">
+              <dt>Categorías</dt>
+              <dd class="ec-ficha__chips">
+                @for (cat of ev.categorias; track cat) {
+                  <span [class]="'ec-cat ' + catClassOf(cat)">{{ cat }}</span>
+                }
+              </dd>
+            </div>
+
+            <div class="ec-ficha__fila">
+              <dt>Público recomendado</dt>
+              <dd>{{ ev.publico }}</dd>
+            </div>
+
+            <div class="ec-ficha__fila">
+              <dt>Precio o gratuidad</dt>
+              <dd>{{ ev.gratuito ? 'Entrada gratuita' : ev.precio || 'Con costo' }}</dd>
+            </div>
+
+            <div class="ec-ficha__fila">
+              <dt>Requisitos de inscripción o compra</dt>
+              <dd>{{ ev.inscripcion || 'No requiere inscripción previa.' }}</dd>
+            </div>
+
+            <div class="ec-ficha__fila">
+              <dt>Organizador</dt>
+              <dd>{{ ev.organizador }}</dd>
+            </div>
+
+            <div class="ec-ficha__fila">
+              <dt>Datos de accesibilidad</dt>
+              <dd>
+                @if (ev.accesibilidad) {
+                  {{ ev.accesibilidad }}
+                } @else {
+                  <span class="ec-ficha__sininfo">
+                    Sin información de accesibilidad reportada por la fuente.
+                  </span>
+                }
+              </dd>
+            </div>
+
+            <div class="ec-ficha__fila">
+              <dt>Fuente de la información</dt>
+              <dd>{{ ev.fuente }}</dd>
+            </div>
+
+            <div class="ec-ficha__fila">
+              <dt>Última comprobación</dt>
+              <dd>{{ ev.ultimaComprobacion | date: 'd MMMM y' }}</dd>
+            </div>
+          </dl>
+
+          @if (mapaEmbed(); as mapa) {
+            <section class="ec-map" aria-label="Mapa del evento">
+              <iframe
+                [src]="mapa"
+                title="Mapa del evento"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </section>
+          }
+        </div>
+
+        <aside class="ec-detail-side">
+          <div class="ec-info-card">
+            <h2 class="ec-info-card__title">Datos clave</h2>
+
+            <div class="ec-info-row">
+              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+              <div>
+                <span class="ec-info-label">Fecha</span>
+                <span class="ec-info-value">
+                  @if (ev.permanente) {
+                    Vigencia permanente
+                  } @else if (ev.fechaTermino) {
+                    {{ ev.fecha | date: 'd MMM y' }} – {{ ev.fechaTermino | date: 'd MMM y' }}
+                  } @else {
+                    {{ ev.fecha | date: 'd MMM y' }}
+                  }
+                </span>
+              </div>
+            </div>
+
+            <div class="ec-info-row">
+              <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+              <div>
+                <span class="ec-info-label">Horario</span>
+                <span class="ec-info-value">
+                  @if (ev.hora) { {{ ev.hora }}@if (ev.horaTermino) { – {{ ev.horaTermino }} } hrs } @else { Horario por confirmar }
+                </span>
+              </div>
+            </div>
+
+            <div class="ec-info-row">
+              <ion-icon name="business-outline" aria-hidden="true"></ion-icon>
+              <div>
+                <span class="ec-info-label">Recinto y dirección</span>
+                <span class="ec-info-value">{{ ev.recinto }}</span>
+                <span class="ec-info-value ec-info-value--muted">
+                  {{ ev.direccion }} · {{ ev.comuna }}, {{ ev.region }}
+                </span>
+              </div>
+            </div>
+
+            <div class="ec-info-row">
+              <ion-icon [name]="iconoDe(ev.modalidad)" aria-hidden="true"></ion-icon>
+              <div>
+                <span class="ec-info-label">Modalidad</span>
+                <span class="ec-info-value">{{ ev.modalidad }}</span>
+              </div>
+            </div>
+
+            <div class="ec-info-row">
+              <ion-icon name="ticket-outline" aria-hidden="true"></ion-icon>
+              <div>
+                <span class="ec-info-label">Entrada</span>
+                <span class="ec-info-value">
+                  {{ ev.gratuito ? 'Gratuita' : ev.precio || 'Con costo' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="ec-info-actions">
+              @if (enlaceDisponible(ev.enlaceInscripcion)) {
+                <a
+                  class="ec-btn-accent-link"
+                  [href]="ev.enlaceInscripcion"
+                  target="_blank"
+                  rel="noopener"
+                  (click)="registrarFuente()"
+                >
+                  <ion-icon name="ticket-outline" aria-hidden="true"></ion-icon>
+                  {{ ev.gratuito ? 'Inscribirme' : 'Ver fuente oficial' }}
+                </a>
+              } @else {
+                <span class="ec-btn-accent-link ec-btn-accent-link--mudo">
+                  <ion-icon name="ticket-outline" aria-hidden="true"></ion-icon>
+                  Inscripción: ver datos clave
+                </span>
+              }
+
+              <ion-button
+                expand="block"
+                fill="outline"
+                color="primary"
+                class="ec-share-btn"
+                (click)="compartir()"
+              >
+                <ion-icon slot="start" name="share-social-outline" aria-hidden="true"></ion-icon>
+                Compartir
+              </ion-button>
+
+              @if (ev.modalidad !== 'Virtual') {
+                <a
+                  class="ec-maps-link"
+                  [href]="mapsUrl()"
+                  target="_blank"
+                  rel="noopener"
+                  (click)="registrarUbicacion()"
+                >
+                  <ion-icon name="map-outline" aria-hidden="true"></ion-icon>
+                  Cómo llegar
+                </a>
+              } @else {
+                @if (enlaceDisponible(ev.paginaOficial)) {
+                  <a
+                    [href]="ev.paginaOficial"
+                    target="_blank"
+                    rel="noopener"
+                    class="ec-maps-link"
+                    (click)="registrarFuente()"
+                  >
+                    <ion-icon name="videocam-outline" aria-hidden="true"></ion-icon>
+                    Ingresar en línea
+                  </a>
+                } @else {
+                  <span class="ec-maps-link ec-maps-link--mudo">
+                    <ion-icon name="videocam-outline" aria-hidden="true"></ion-icon>
+                    Enlace no disponible
+                  </span>
+                }
+              }
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      @if (similares().length > 0) {
+        <section class="ec-detail-similares" aria-labelledby="ec-sim-title">
+          <h2 id="ec-sim-title">Eventos similares</h2>
+          <div class="ec-detail-similares__grid">
+            @for (sim of similares(); track sim.id) {
+              <app-evento-card
+                [evento]="sim"
+                (meInteresaCambiado)="onMeInteresa($event)"
+                (salidaTerminada)="onNoMeInteresa($event)"
+                (verSimilaresClick)="onVerSimilares($event)"
+              ></app-evento-card>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  </article>
+  }
+} @else {
+  <div class="ec-not-found ec-page">
+    <h2>No encontramos este evento</h2>
+    <p>Puede que ya no esté disponible.</p>
+    <ion-button routerLink="/home" color="primary">Volver al inicio</ion-button>
+  </div>
+}
+
+<ion-toast
+  [isOpen]="enlaceCopiado()"
+  message="Enlace copiado al portapapeles"
+  duration="2200"
+  position="bottom"
+  color="primary"
+  (didDismiss)="enlaceCopiado.set(false)"
+></ion-toast>

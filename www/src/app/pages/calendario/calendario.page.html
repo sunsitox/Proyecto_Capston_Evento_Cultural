@@ -1,0 +1,193 @@
+<section class="ec-page" aria-labelledby="ec-cal-title">
+  <div class="ec-container ec-page__inner">
+    <p class="ec-eyebrow">Calendario</p>
+    <h1 id="ec-cal-title">Agenda por fecha</h1>
+    <p class="ec-page__sub">
+      Elige un día para ver sus eventos, o dos fechas para ver el rango
+      completo que hay entre ellas.
+    </p>
+
+    <div class="ec-cal">
+      <!-- ================= Selector mensual ================= -->
+      <div class="ec-cal__panel" role="group" aria-label="Selector de mes">
+        <div class="ec-cal__header">
+          <button
+            type="button"
+            class="ec-cal__nav"
+            [disabled]="!puedeRetroceder()"
+            (click)="cambiarMes(-1)"
+            aria-label="Mes anterior"
+          >
+            <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+          </button>
+          <h2 class="ec-cal__mes">{{ mesTitulo() }}</h2>
+          <button
+            type="button"
+            class="ec-cal__nav"
+            [disabled]="!puedeAvanzar()"
+            (click)="cambiarMes(1)"
+            aria-label="Mes siguiente"
+          >
+            <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+          </button>
+        </div>
+
+        <div #gridRef class="ec-cal__grid" role="grid" aria-label="Días del mes">
+          <div class="ec-cal__fila-nombres" role="row">
+            @for (s of semanas; track s) {
+              <span class="ec-cal__dia-nombre" aria-hidden="true">{{ s }}</span>
+            }
+          </div>
+
+          @for (dia of dias(); track dia.iso) {
+            <button
+              type="button"
+              class="ec-cal__dia"
+              role="gridcell"
+              [class.ec-cal__dia--fuera]="!dia.enMes"
+              [class.ec-cal__dia--pasado]="dia.pasado"
+              [class.ec-cal__dia--hoy]="dia.iso === fechaSeleccionada() && !rango()?.hasta"
+              [class.ec-cal__dia--marcado]="dia.cantidad > 0 && !dia.pasado"
+              [class.ec-cal__dia--rango]="enRango(dia)"
+              [class.ec-cal__dia--rango-borde]="bordeRango(dia)"
+              [disabled]="dia.pasado"
+              [attr.aria-label]="
+                dia.cantidad > 0
+                  ? dia.numero + ': ' + dia.cantidad + ' eventos'
+                  : '' + dia.numero
+              "
+              [attr.aria-pressed]="rango()?.hasta ? enRango(dia) : dia.iso === fechaSeleccionada()"
+              (click)="seleccionarDia(dia)"
+            >
+              <span class="ec-cal__dia-num">{{ dia.numero }}</span>
+              @if (dia.cantidad > 0 && !dia.pasado) {
+                <span class="ec-cal__dia-punto" aria-hidden="true"></span>
+              }
+            </button>
+          }
+        </div>
+
+        <div class="ec-cal__acciones">
+          <button type="button" class="ec-cal__hoy" (click)="irAHoy()">
+            <ion-icon name="today-outline" aria-hidden="true"></ion-icon>
+            Ir a hoy
+          </button>
+          @if (rango()?.hasta) {
+            <button type="button" class="ec-cal__hoy" (click)="limpiarRango()">
+              <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+              Quitar rango
+            </button>
+          } @else if (rango()) {
+            <span class="ec-cal__pista">Elige la fecha final del rango…</span>
+          }
+        </div>
+      </div>
+
+      <!-- ================= Listado del día ================= -->
+      <div class="ec-cal__listado">
+        <div class="ec-cal__listado-header">
+          <h2>
+            {{ tituloListado() }}
+            <span class="ec-cal__contador">
+              {{ eventosDelDia().length === 1 ? '· 1 evento' : '· ' + eventosDelDia().length + ' eventos' }}
+            </span>
+          </h2>
+          @if (filtrosActivos()) {
+            <button type="button" class="ec-clear-chip" (click)="limpiarFiltros()">
+              <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+              Limpiar filtros
+            </button>
+          }
+        </div>
+
+        <!-- Filtros por región, comuna y categoría -->
+        <div class="ec-cal__filtros" role="group" aria-label="Filtrar el día">
+          <label class="ec-cal__filtro">
+            <span class="ec-sr-only">Región</span>
+            <select [(ngModel)]="filtroRegion" (change)="onRegion($any($event.target).value)" aria-label="Filtrar por región">
+              <option value="">Todas las regiones</option>
+              @for (r of regiones(); track r) {
+                <option [value]="r">{{ r }}</option>
+              }
+            </select>
+          </label>
+          <label class="ec-cal__filtro">
+            <span class="ec-sr-only">Comuna</span>
+            <select [(ngModel)]="filtroComuna" (change)="0" aria-label="Filtrar por comuna">
+              <option value="">Todas las comunas</option>
+              @for (c of comunas(); track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </select>
+          </label>
+          <label class="ec-cal__filtro">
+            <span class="ec-sr-only">Categoría</span>
+            <select [(ngModel)]="filtroCategoria" (change)="0" aria-label="Filtrar por categoría">
+              <option value="">Todas las categorías</option>
+              @for (cat of categorias(); track cat) {
+                <option [value]="cat">{{ cat }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <!-- Estados -->
+        @if (cargando()) {
+          <div class="ec-cal__skeletons">
+            @for (s of [1, 2, 3]; track s) {
+              <app-evento-card-skeleton layout="lista"></app-evento-card-skeleton>
+            }
+          </div>
+        } @else if (error()) {
+          <div class="ec-empty" role="alert">
+            <div class="ec-empty__icon" aria-hidden="true">
+              <ion-icon name="cloud-offline-outline"></ion-icon>
+            </div>
+            <h3>No pudimos actualizar la agenda</h3>
+            <p>Revisa tu conexión e inténtalo de nuevo.</p>
+            <button type="button" class="ec-btn" (click)="onReintentar()">
+              <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
+              Reintentar
+            </button>
+          </div>
+        } @else if (eventosDelDia().length > 0) {
+          <div class="ec-events-list">
+            @for (evento of eventosDelDiaVisibles(); track evento.id) {
+              <app-evento-card
+                [evento]="evento"
+                layout="lista"
+                (meInteresaCambiado)="onMeInteresa($event)"
+                (salidaTerminada)="onNoMeInteresa($event)"
+                (verSimilaresClick)="onVerSimilares($event)"
+              ></app-evento-card>
+            }
+          </div>
+          @if (hayMasDia()) {
+            <div class="ec-cal__ver-mas">
+              <p class="ec-cal__avance" role="status">
+                Mostrando {{ eventosDelDiaVisibles().length }} de
+                {{ eventosDelDia().length }} eventos
+              </p>
+              <button type="button" class="ec-btn ec-btn-outline" (click)="verMasDia()">
+                <ion-icon name="chevron-down-outline" aria-hidden="true"></ion-icon>
+                Ver más eventos
+              </button>
+            </div>
+          }
+        } @else {
+          <div class="ec-empty" role="status">
+            <div class="ec-empty__icon" aria-hidden="true">
+              <ion-icon name="calendar-clear-outline"></ion-icon>
+            </div>
+            <h3>Sin eventos ese día</h3>
+            <p>No hay eventos vigentes para esta fecha con los filtros actuales.</p>
+            <button type="button" class="ec-btn ec-btn-outline" (click)="irAHoy()">
+              <ion-icon name="today-outline" aria-hidden="true"></ion-icon>
+              Ver hoy
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

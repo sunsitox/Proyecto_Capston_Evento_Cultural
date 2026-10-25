@@ -1,0 +1,431 @@
+<!-- Aviso como overlay fijo: no desplaza ni deforma el contenido -->
+<div class="ec-publish-toaststack">
+  @if (errorServidor()) {
+    <div class="ec-api-error" role="alert">{{ errorServidor() }}</div>
+  }
+</div>
+<div class="ec-page ec-publish">
+  <a class="ec-skip-link" href="#ec-publish-form">Saltar al formulario</a>
+
+  <div class="ec-publish-header">
+    <span class="ec-eyebrow">Para organizadores y municipalidades</span>
+    <h1>Publica tu evento</h1>
+    <p class="ec-subtitle">
+      Completa la información y tu evento aparecerá en el descubrimiento. Cada
+      publicación pasa por validación para mantener la información confiable.
+    </p>
+  </div>
+
+  @if (!api.sesionLista()) {
+    <!-- La sesión se restaura de forma asíncrona: sin esto, una cuenta de
+         organizador vería el bloqueo de "inicia sesión" por un instante. -->
+    <div class="ec-publish-checking" role="status" aria-live="polite">
+      <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+      <span>Verificando tu cuenta…</span>
+    </div>
+  } @else if (!api.estaAutenticado()) {
+    <!-- Bloqueo para usuarios sin cuenta -->
+    <div class="ec-auth-gate">
+      <div class="ec-auth-gate__card">
+        <div class="ec-auth-gate__icon" aria-hidden="true">
+          <ion-icon name="lock-closed-outline"></ion-icon>
+        </div>
+        <h2>Acceso exclusivo para cuentas registradas</h2>
+        <p>
+          Para publicar y gestionar eventos oficiales en la plataforma, necesitas iniciar
+          sesión o crear una cuenta verificada como organizador o municipalidad.
+        </p>
+        <div class="ec-auth-gate__actions">
+          <ion-button routerLink="/login" class="ec-auth-gate__btn-login">
+            <ion-icon slot="start" name="log-in-outline" aria-hidden="true"></ion-icon>
+            Iniciar sesión o Registrarse
+          </ion-button>
+          <ion-button routerLink="/home" fill="clear" class="ec-auth-gate__btn-home">
+            Volver a Explorar eventos
+          </ion-button>
+        </div>
+      </div>
+    </div>
+  } @else if (!api.esOrganizador()) {
+    <!-- Cuenta ciudadana: el formulario no se renderiza. Sólo se ofrece
+         activar el perfil de organizador (autoservicio) o volver. -->
+    <div class="ec-auth-gate">
+      <div class="ec-auth-gate__card">
+        <div class="ec-auth-gate__icon" aria-hidden="true">
+          <ion-icon name="storefront-outline"></ion-icon>
+        </div>
+        <h2>Esta cuenta todavía no es de organizador</h2>
+        <p>
+          Para publicar eventos necesitas una cuenta de organizador o
+          municipalidad. Puedes activarla ahora mismo con la cuenta
+          <strong>{{ api.usuario()?.email }}</strong>.
+        </p>
+        <div class="ec-auth-gate__actions">
+          <ion-button
+            class="ec-auth-gate__btn-login"
+            [disabled]="activandoOrganizador()"
+            (click)="activarCuentaOrganizador()"
+          >
+            @if (activandoOrganizador()) {
+              <ion-spinner name="crescent" slot="start" aria-hidden="true"></ion-spinner>
+              Activando…
+            } @else {
+              <ion-icon slot="start" name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+              Activar mi cuenta
+            }
+          </ion-button>
+          <ion-button routerLink="/home" fill="clear" class="ec-auth-gate__btn-home">
+            Volver a explorar
+          </ion-button>
+        </div>
+      </div>
+    </div>
+  } @else if (enviado()) {
+    <div class="ec-success-card" role="status" aria-live="polite">
+      <div class="ec-success-card__icon" aria-hidden="true">
+        <ion-icon name="checkmark-outline"></ion-icon>
+      </div>
+      <h2>¡Tu evento fue enviado!</h2>
+      <p>Está en revisión. Te llevamos de vuelta al listado…</p>
+    </div>
+  } @else {
+    <form
+      id="ec-publish-form"
+      [formGroup]="formulario"
+      (ngSubmit)="publicar()"
+      class="ec-publish-form"
+      novalidate
+    >
+      <!-- 01 · Información -->
+      <fieldset class="ec-fieldset">
+        <legend class="ec-fieldset__legend"><span aria-hidden="true">01</span> Información del evento</legend>
+
+        <div class="ec-fieldset__body ec-form-grid">
+          <div class="ec-field ec-field--full">
+            <ion-item
+              class="ec-input"
+              [class.ec-input--invalid]="errorPara('titulo')"
+              lines="none"
+            >
+              <ion-input
+                label="Nombre del evento"
+                labelPlacement="stacked"
+                placeholder="Ej: Feria Costumbrista de Verano"
+                formControlName="titulo"
+                [attr.aria-invalid]="!!errorPara('titulo')"
+                aria-describedby="ec-pub-titulo-err"
+              ></ion-input>
+            </ion-item>
+            @if (errorPara('titulo'); as msg) {
+              <p class="ec-field-error" id="ec-pub-titulo-err" role="alert">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                {{ msg }}
+              </p>
+            }
+          </div>
+
+          <div class="ec-field ec-field--full">
+            <ion-item
+              class="ec-input"
+              [class.ec-input--invalid]="errorPara('descripcion')"
+              lines="none"
+            >
+              <ion-textarea
+                label="Descripción"
+                labelPlacement="stacked"
+                placeholder="Cuenta de qué se trata el evento, qué actividades habrá, etc."
+                [autoGrow]="true"
+                rows="4"
+                formControlName="descripcion"
+                [attr.aria-invalid]="!!errorPara('descripcion')"
+                aria-describedby="ec-pub-desc-err"
+              ></ion-textarea>
+            </ion-item>
+            @if (errorPara('descripcion'); as msg) {
+              <p class="ec-field-error" id="ec-pub-desc-err" role="alert">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                {{ msg }}
+              </p>
+            }
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 02 · Lugar y horario -->
+      <fieldset class="ec-fieldset">
+        <legend class="ec-fieldset__legend"><span aria-hidden="true">02</span> Lugar y horario</legend>
+
+        <div class="ec-fieldset__body ec-form-grid">
+          <div class="ec-field">
+            <ion-item
+              class="ec-input"
+              [class.ec-input--invalid]="errorPara('fecha')"
+              lines="none"
+            >
+              <ion-label>Fecha</ion-label>
+              <ion-datetime-button
+                datetime="fecha-picker"
+                slot="end"
+                [attr.aria-invalid]="!!errorPara('fecha')"
+                aria-describedby="ec-pub-fecha-err"
+              ></ion-datetime-button>
+            </ion-item>
+            <ion-modal [keepContentsMounted]="true">
+              <ng-template>
+                <ion-datetime
+                  id="fecha-picker"
+                  formControlName="fecha"
+                  presentation="date"
+                  [showDefaultButtons]="true"
+                ></ion-datetime>
+              </ng-template>
+            </ion-modal>
+            @if (errorPara('fecha'); as msg) {
+              <p class="ec-field-error" id="ec-pub-fecha-err" role="alert">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                {{ msg }}
+              </p>
+            }
+          </div>
+
+          <div class="ec-field">
+            <ion-item class="ec-input" lines="none">
+              <ion-input
+                label="Hora de inicio"
+                labelPlacement="stacked"
+                type="time"
+                formControlName="hora"
+              ></ion-input>
+            </ion-item>
+          </div>
+
+          <div class="ec-field">
+            <ion-item class="ec-input" lines="none">
+              <ion-input
+                label="Fecha de término — opcional (multi-día)"
+                labelPlacement="stacked"
+                type="date"
+                formControlName="fechaTermino"
+              ></ion-input>
+            </ion-item>
+          </div>
+
+          <div class="ec-field">
+            <ion-item
+              class="ec-input"
+              [class.ec-input--invalid]="errorPara('comuna')"
+              lines="none"
+            >
+              <ion-select
+                label="Comuna"
+                labelPlacement="stacked"
+                placeholder="Selecciona una comuna"
+                formControlName="comuna"
+                [attr.aria-invalid]="!!errorPara('comuna')"
+                aria-describedby="ec-pub-comuna-err"
+              >
+                @for (comuna of comunas; track comuna) {
+                  <ion-select-option [value]="comuna">{{ comuna }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+            @if (errorPara('comuna'); as msg) {
+              <p class="ec-field-error" id="ec-pub-comuna-err" role="alert">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                {{ msg }}
+              </p>
+            }
+          </div>
+
+          <div class="ec-field ec-field--full">
+            <ion-item
+              class="ec-input"
+              [class.ec-input--invalid]="errorPara('direccion')"
+              lines="none"
+            >
+              <ion-input
+                label="Dirección"
+                labelPlacement="stacked"
+                placeholder="Ej: Plaza de Armas"
+                formControlName="direccion"
+                [attr.aria-invalid]="!!errorPara('direccion')"
+                aria-describedby="ec-pub-dir-err"
+              ></ion-input>
+            </ion-item>
+            @if (errorPara('direccion'); as msg) {
+              <p class="ec-field-error" id="ec-pub-dir-err" role="alert">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                {{ msg }}
+              </p>
+            }
+          </div>
+
+          <div class="ec-field ec-field--full">
+            <ion-item class="ec-input" lines="none">
+              <ion-input
+                label="Imagen (URL) — opcional"
+                labelPlacement="stacked"
+                placeholder="Pega el enlace de una imagen"
+                formControlName="imagenUrl"
+                inputmode="url"
+                type="url"
+              ></ion-input>
+            </ion-item>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 03 · Categoría y entrada -->
+      <fieldset class="ec-fieldset">
+        <legend class="ec-fieldset__legend"><span aria-hidden="true">03</span> Categoría y entrada</legend>
+
+        <div class="ec-fieldset__body ec-form-grid">
+          <div class="ec-field">
+            <ion-item
+              class="ec-input"
+              [class.ec-input--invalid]="errorPara('categoria')"
+              lines="none"
+            >
+              <ion-select
+                label="Categoría"
+                labelPlacement="stacked"
+                placeholder="Selecciona una categoría"
+                formControlName="categoria"
+                [attr.aria-invalid]="!!errorPara('categoria')"
+                aria-describedby="ec-pub-cat-err"
+              >
+                @for (categoria of categorias; track categoria) {
+                  <ion-select-option [value]="categoria">{{ categoria }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+            @if (errorPara('categoria'); as msg) {
+              <p class="ec-field-error" id="ec-pub-cat-err" role="alert">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                {{ msg }}
+              </p>
+            }
+          </div>
+
+          <div class="ec-field">
+            <ion-item class="ec-input" lines="none">
+              <ion-select
+                label="Modalidad"
+                labelPlacement="stacked"
+                formControlName="modalidad"
+              >
+                @for (m of modalidades; track m) {
+                  <ion-select-option [value]="m">{{ m }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+          </div>
+
+          <div class="ec-field">
+            <ion-item class="ec-input" lines="none">
+              <ion-select
+                label="Público objetivo"
+                labelPlacement="stacked"
+                formControlName="publico"
+              >
+                @for (p of publicos; track p) {
+                  <ion-select-option [value]="p">{{ p }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+          </div>
+
+          <div class="ec-field">
+            <ion-item class="ec-input" lines="none">
+              <ion-input
+                label="Precio — si tiene costo"
+                labelPlacement="stacked"
+                placeholder="Ej: Entrada $3.000"
+                formControlName="precio"
+              ></ion-input>
+            </ion-item>
+          </div>
+
+          <div class="ec-field">
+            <ion-item class="ec-input" lines="none">
+              <ion-input
+                label="Enlace de inscripción o compra — opcional"
+                labelPlacement="stacked"
+                placeholder="Enlace de venta o registro"
+                formControlName="enlaceInscripcion"
+                type="url"
+                inputmode="url"
+              ></ion-input>
+            </ion-item>
+          </div>
+
+          <div class="ec-field ec-field--full">
+            <ion-item class="ec-input" lines="none">
+              <ion-textarea
+                label="Datos de accesibilidad — si los hay"
+                labelPlacement="stacked"
+                placeholder="Ej: rampas, intérprete de lengua de señas, audiodescripción…"
+                [autoGrow]="true"
+                rows="2"
+                formControlName="accesibilidad"
+              ></ion-textarea>
+            </ion-item>
+          </div>
+
+          <div class="ec-field ec-field--full">
+            <ion-item class="ec-input" lines="none">
+              <ion-textarea
+                label="Requisitos de inscripción o compra"
+                labelPlacement="stacked"
+                placeholder="Ej: registro previo online, cupos limitados, entrada en boletería"
+                [autoGrow]="true"
+                rows="2"
+                formControlName="inscripcion"
+              ></ion-textarea>
+            </ion-item>
+          </div>
+
+          <div class="ec-field">
+            <ion-item class="ec-input" lines="none">
+              <ion-input
+                label="Página oficial — opcional"
+                labelPlacement="stacked"
+                placeholder="Enlace del evento"
+                formControlName="paginaOficial"
+                type="url"
+                inputmode="url"
+              ></ion-input>
+            </ion-item>
+          </div>
+
+          <div class="ec-field ec-field--full">
+            <ion-item class="ec-input ec-input--check" lines="none">
+              <ion-checkbox slot="start" formControlName="gratuito"></ion-checkbox>
+              <ion-label>Este evento es gratuito</ion-label>
+            </ion-item>
+          </div>
+        </div>
+      </fieldset>
+
+      <ion-button
+        expand="block"
+        type="submit"
+        class="ec-publish-submit"
+        [disabled]="cargando()"
+      >
+        @if (cargando()) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          Publicando…
+        } @else {
+          <ion-icon slot="start" name="megaphone-outline" aria-hidden="true"></ion-icon>
+          Enviar a validación
+        }
+      </ion-button>
+
+      <p class="ec-publish-note">
+        La información pasa por revisión antes de publicarse: así quienes buscan
+        encuentran datos confiables de municipalidades y organizadores.
+      </p>
+    </form>
+  }
+</div>

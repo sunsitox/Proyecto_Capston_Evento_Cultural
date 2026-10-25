@@ -1,0 +1,203 @@
+<!-- ============================================
+     SHELL WEB (>= 992px)
+     Presencia controlada por esEscritorio() (matchMedia) para que
+     exista UN solo <router-outlet> primario a la vez:
+     - En descubrimiento (/home, /buscar) se muestra la página Descubrir.
+     - En el resto de rutas el router-outlet recibe la página.
+     ============================================ -->
+@if (esEscritorio()) {
+  <div class="ec-web-layout">
+    <ion-header class="ec-header" mode="md">
+      <ion-toolbar class="ec-header__toolbar">
+        <div class="ec-header__inner ec-container">
+          <a routerLink="/home" class="ec-header__logo" aria-label="Evento Cultural — Inicio">
+            <img
+              class="ec-header__logo-icon"
+              src="assets/icon/icon.svg"
+              alt=""
+              width="44"
+              height="44"
+              decoding="async"
+            />
+            <span class="ec-header__logo-text">Evento Cultural</span>
+          </a>
+
+          <nav class="ec-header__nav" aria-label="Navegación principal">
+            <a
+              routerLink="/home"
+              routerLinkActive="ec-header__nav-link--active"
+              class="ec-header__nav-link"
+            >
+              <ion-icon name="compass-outline" aria-hidden="true"></ion-icon>
+              <span>Descubrir</span>
+            </a>
+            <a
+              routerLink="/calendario"
+              routerLinkActive="ec-header__nav-link--active"
+              class="ec-header__nav-link"
+            >
+              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+              <span>Calendario</span>
+            </a>
+            <a
+              routerLink="/mapa"
+              routerLinkActive="ec-header__nav-link--active"
+              class="ec-header__nav-link"
+            >
+              <ion-icon name="map-outline" aria-hidden="true"></ion-icon>
+              <span>Mapa</span>
+            </a>
+            <a
+              routerLink="/para-ti"
+              routerLinkActive="ec-header__nav-link--active"
+              class="ec-header__nav-link"
+            >
+              <ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon>
+              <span>Para ti</span>
+            </a>
+          </nav>
+
+          <div class="ec-header__actions">
+            @if (api.estaAutenticado()) {
+              <a routerLink="/perfil" class="ec-header__user-pill" [title]="api.usuario()?.email">
+                <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+                <span class="ec-header__user-pill-text">
+                  <span class="ec-header__user-pill-name">{{ api.usuario()?.nombre }}</span>
+                  @if (api.usuario()?.email; as correo) {
+                    <span class="ec-header__user-pill-mail">{{ correo }}</span>
+                  }
+                </span>
+              </a>
+              @if (esEscritorio() && api.esOrganizador()) {
+                <ion-button
+                  routerLink="/publicar"
+                  color="primary"
+                  size="default"
+                  class="ec-header__cta"
+                >
+                  <ion-icon slot="start" name="add-circle-outline" aria-hidden="true"></ion-icon>
+                  <span class="ec-header__cta-label">Publicar evento</span>
+                </ion-button>
+              }
+            } @else {
+              <a routerLink="/login" class="ec-header__login">Ingresar</a>
+              <ion-button
+                routerLink="/login"
+                fill="outline"
+                size="small"
+                class="ec-header__register-btn"
+              >
+                Registrarse
+              </ion-button>
+            }
+          </div>
+        </div>
+      </ion-toolbar>
+    </ion-header>
+
+    <div class="ec-web-content">
+      <main
+        id="ec-main-content"
+        tabindex="-1"
+        class="ec-main"
+        [class.ec-vt-detalle]="esFichaActiva()"
+      >
+        @if (esVistaDescubrir()) {
+          <app-discover-layout></app-discover-layout>
+        } @else {
+          <router-outlet></router-outlet>
+        }
+      </main>
+
+      <footer class="ec-footer">
+        <div class="ec-container ec-footer__grid">
+          <div class="ec-footer__brand">
+            <a routerLink="/home" class="ec-header__logo" aria-label="Evento Cultural — Inicio">
+              <img
+                class="ec-header__logo-icon"
+                src="assets/icon/icon.svg"
+                alt=""
+                width="40"
+                height="40"
+                decoding="async"
+              />
+              <span class="ec-header__logo-text">Evento Cultural</span>
+            </a>
+            <p>
+              El punto de referencia para descubrir eventos culturales, comerciales y
+              municipales en Chile. Un solo lugar, información validada de
+              municipalidades y organizadores.
+            </p>
+          </div>
+
+          <nav class="ec-footer__col" aria-label="Descubrir">
+            <h3>Descubrir</h3>
+            <a routerLink="/home">Todos los eventos</a>
+            <a routerLink="/buscar">Buscar</a>
+            <a routerLink="/calendario">Calendario</a>
+            <a routerLink="/mapa">Mapa</a>
+            <a routerLink="/para-ti">Para ti</a>
+          </nav>
+
+          <nav class="ec-footer__col" aria-label="Organizadores">
+            <h3>¿Organizas eventos?</h3>
+            <a routerLink="/publicar">Publica tu evento</a>
+            <a routerLink="/perfil">Cuenta de organizador</a>
+            <span class="ec-footer__note">
+              Municipalidades y productores independientes: un solo canal para llegar
+              a más gente.
+            </span>
+          </nav>
+
+          <nav class="ec-footer__col" aria-label="Plataforma">
+            <h3>Plataforma</h3>
+            <a routerLink="/perfil">Mi perfil</a>
+            <a routerLink="/login">Ingresar o registrarse</a>
+            <span class="ec-footer__note ec-footer__note--demo">Piloto · datos de referencia</span>
+          </nav>
+        </div>
+
+        <div class="ec-container ec-footer__legal">
+          <p>© 2026 Evento Cultural — Programa piloto. Datos de referencia.</p>
+        </div>
+      </footer>
+    </div>
+  </div>
+} @else {
+  <!-- ============================================
+       SHELL MÓVIL (< 992px) - Tab bar
+       ============================================ -->
+  <div class="ec-mobile-layout">
+    <ion-content [fullscreen]="true" class="ec-mobile-content">
+      <main class="ec-main" [class.ec-vt-detalle]="esFichaActiva()">
+        <router-outlet></router-outlet>
+      </main>
+    </ion-content>
+
+    <ion-tab-bar slot="bottom" #tabbarRef class="ec-mobile-tabbar">
+      <ion-tab-button tab="home" routerLink="/home" routerLinkActive="tab-selected">
+        <ion-icon name="compass-outline" aria-hidden="true"></ion-icon>
+        <ion-label>Descubrir</ion-label>
+      </ion-tab-button>
+      <ion-tab-button tab="calendario" routerLink="/calendario" routerLinkActive="tab-selected">
+        <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+        <ion-label>Calendario</ion-label>
+      </ion-tab-button>
+      <ion-tab-button tab="mapa" routerLink="/mapa" routerLinkActive="tab-selected">
+        <ion-icon name="map-outline" aria-hidden="true"></ion-icon>
+        <ion-label>Mapa</ion-label>
+      </ion-tab-button>
+      <ion-tab-button tab="para-ti" routerLink="/para-ti" routerLinkActive="tab-selected">
+        <ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon>
+        <ion-label>Para ti</ion-label>
+      </ion-tab-button>
+      <!-- Acceso a la cuenta en móvil: el shell móvil no tiene píldora de
+           usuario (esa vive en el header web), así que la tab de Perfil es
+           la única entrada a /perfil. -->
+      <ion-tab-button tab="perfil" routerLink="/perfil" routerLinkActive="tab-selected">
+        <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+        <ion-label>Perfil</ion-label>
+      </ion-tab-button>
+    </ion-tab-bar>
+  </div>
+}
