@@ -3,6 +3,15 @@
    Grid: vertical · Lista: horizontal
    ======================================== */
 
+/* El custom element queda display:inline por defecto: en páginas que
+   usan la tarjeta directamente dentro de un grid (Para ti), el 1fr se
+   calcula sobre un ancho shrink-to-fit: columnas desiguales y desborde
+   horizontal en teléfono (mismo fix que hace event-list en su :host). */
+:host {
+  display: block;
+  min-width: 0;
+}
+
 .ec-card {
   position: relative;
   display: flex;

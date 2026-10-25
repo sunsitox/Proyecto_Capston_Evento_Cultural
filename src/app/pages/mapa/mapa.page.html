@@ -209,6 +209,13 @@
           No pudimos obtener tu ubicación: revisa los permisos del navegador
           si quieres centrar el mapa en tu posición.
         </p>
+      } @else if (ubicacionEstado() === 'indisponible') {
+        <p class="ec-mapa__nota" role="status">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+          Tu ubicación no está disponible ahora: activa el GPS/ubicación del
+          teléfono y vuelve a intentarlo (puede tardar unos segundos en
+          área abierta).
+        </p>
       }
 
         <!-- Mini-tarjeta del evento seleccionado desde pin o lista -->

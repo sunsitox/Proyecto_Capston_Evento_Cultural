@@ -265,6 +265,12 @@ import {
       max-width: 720px;
       margin: 0 auto;
       animation: ec-toast-in var(--ec-duration-slow) var(--ec-ease-out) both;
+
+      /* En la shell de escritorio (> = 992px) el header sticky ocupa la franja
+         superior: el toast fixed con top 12px lo tapaba (DEF-ERR-NAV). */
+      @media (min-width: 992px) {
+        top: calc(var(--ec-header-h) + var(--ec-space-md));
+      }
     }
     @keyframes ec-toast-in {
       from { opacity: 0; transform: translateY(-8px); }

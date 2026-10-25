@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Evento Cultural</string>
+    <string name="title_activity_main">Evento Cultural</string>
+    <string name="package_name">cl.eventocultural.app</string>
+    <string name="custom_url_scheme">cl.eventocultural.app</string>
+</resources>

@@ -1,6 +1,18 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../../environments/environment';
+import { Capacitor } from '@capacitor/core';
+import { App, type URLOpenListenerEvent } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
+
+/**
+ * Deep link que la APK escucha para recibir el regreso del OAuth (Google):
+ * el flujo se completa en el navegador del sistema y Supabase redirige aquí.
+ * DEBE estar registrado en Supabase → Authentication → URL Configuration →
+ * Redirect URLs, o el token caerá en el Site URL y la app no lo recibirá.
+ */
+const DEEP_LINK_CALLBACK = 'cl.eventocultural.app://auth/callback';
 
 /** Usuario en sesión (contrato equivalente al del backend Python anterior). */
 export interface UsuarioSesion {
@@ -55,6 +67,7 @@ export interface CommuneRaw {
  */
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
+  private readonly router = inject(Router);
   /**
    * Cliente único compartido (maneja refresh de tokens automáticamente).
    * Es público para que los servicios de dominio (p. ej. la persistencia de
@@ -81,8 +94,18 @@ export class SupabaseService {
   private readonly _usuario = signal<UsuarioSesion | null>(null);
   private readonly _sesionLista = signal(false);
 
+  /** Evita procesar dos veces el mismo token si Android entega el intent duplicado. */
+  private ultimoTokenProcesado = '';
+
   constructor() {
     void this.restaurarSesion();
+    // APK: cuando el navegador externo vuelve al deep link con el token,
+    // instalamos la sesión aquí (en web lo hace /auth/callback).
+    if (Capacitor.isNativePlatform()) {
+      void App.addListener('appUrlOpen', (evento: URLOpenListenerEvent) => {
+        void this.procesarDeepLinkOAuth(evento.url);
+      });
+    }
   }
 
   readonly usuario = this._usuario.asReadonly();
@@ -188,11 +211,51 @@ export class SupabaseService {
 
   /** Inicia el flujo OAuth (proveedor: google, etc.). Supabase redirige de vuelta a redirectTo. */
   async iniciarOAuth(proveedor: 'google' | 'azure' | 'github' = 'google'): Promise<void> {
+    if (Capacitor.isNativePlatform()) {
+      // APK: pedimos la URL de autorización SIN navegar (el WebView de la app
+      // no puede ejecutar el login de Google), la abrimos en el navegador del
+      // sistema (Custom Tabs) y el regreso llega por el deep link.
+      const { data, error } = await this.cliente.auth.signInWithOAuth({
+        provider: proveedor,
+        options: { redirectTo: DEEP_LINK_CALLBACK, skipBrowserRedirect: true }
+      });
+      if (error) throw error;
+      if (!data.url) throw new Error('No se pudo iniciar el flujo con el proveedor.');
+      await Browser.open({ url: data.url });
+      return;
+    }
     const { error } = await this.cliente.auth.signInWithOAuth({
       provider: proveedor,
       options: { redirectTo: `${location.origin}/auth/callback` }
     });
     if (error) throw error;
+  }
+
+  /**
+   * APK: procesa el deep link cl.eventocultural.app://auth/callback#access_token=...
+   * instalando la sesión y cerrando el navegador externo. Se ignora si la URL no
+   * es el callback, si no trae token o si Android entega el intent duplicado.
+   */
+  private async procesarDeepLinkOAuth(url: string): Promise<void> {
+    if (!url.startsWith(DEEP_LINK_CALLBACK)) return;
+    const cuerpo = url.slice(DEEP_LINK_CALLBACK.length);
+    const parametros = new URLSearchParams(cuerpo.startsWith('#') ? cuerpo.slice(1) : cuerpo);
+    const accessToken = parametros.get('access_token') ?? '';
+    const refreshToken = parametros.get('refresh_token') ?? '';
+    if (!accessToken || accessToken === this.ultimoTokenProcesado) return;
+    this.ultimoTokenProcesado = accessToken;
+    void Browser.close().catch(() => undefined);
+    try {
+      const { error } = await this.cliente.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      });
+      if (error) throw error;
+      // onAuthStateChange ya actualiza el usuario; solo falta saltar a /home.
+      void this.router.navigate(['/home']);
+    } catch (error) {
+      console.error('OAuth: no se pudo instalar la sesión del deep link', error);
+    }
   }
 
   /**

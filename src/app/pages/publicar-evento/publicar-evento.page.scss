@@ -165,6 +165,12 @@
   gap: var(--ec-space-sm);
   pointer-events: none;
 
+  /* En la shell de escritorio (> = 992px) el header sticky ocupa la franja
+     superior: el toast fixed con top 12px lo tapaba (DEF-ERR-NAV). */
+  @media (min-width: 992px) {
+    top: calc(var(--ec-header-h) + var(--ec-space-md));
+  }
+
   &:empty {
     display: none;
   }

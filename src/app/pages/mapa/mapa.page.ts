@@ -12,11 +12,14 @@ import {
   viewChild
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 import { Router, RouterLink } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
 import * as L from 'leaflet';
 import { EventosService } from '../../core/services/eventos.service';
 import { RecomendacionService } from '../../core/services/recomendacion.service';
+import { GeocodificacionService } from '../../core/services/geocodificacion.service';
 import { EventoCardComponent } from '../../shared/components/evento-card/evento-card.component';
 import { EventoCardSkeletonComponent } from '../../shared/components/evento-card-skeleton/evento-card-skeleton.component';
 import { Evento } from '../../core/models/evento.model';
@@ -59,6 +62,7 @@ type ModoPin = 'canvas' | 'marker';
 export class MapaPage implements AfterViewInit, OnDestroy {
   private readonly eventosService = inject(EventosService);
   private readonly recomendacion = inject(RecomendacionService);
+  private readonly geocodificacion = inject(GeocodificacionService);
   private readonly router = inject(Router);
 
   /**
@@ -127,9 +131,21 @@ export class MapaPage implements AfterViewInit, OnDestroy {
   });
 
   /**
-   * Lista accesible: se pinta por bloques (el catálogo real tiene más de
-   * mil eventos) y vuelve al primer bloque cuando cambian los filtros.
+   * Versión de la caché de geocodificación: se incrementa cuando llega una
+   * coordenada de respaldo y refresca los computed que dependen de ella.
    */
+  private readonly geoVersion = signal(0);
+
+  /** intl: los pines definidos por coordenada aproximada (respaldo). */
+  readonly aproximados = computed(() => {
+    this.geoVersion();
+    const ids = new Set<string>();
+    for (const ev of this.eventosFiltrados()) {
+      if (!ev.coordenadas && this.geocodificacion.yaResuelta(ev)) ids.add(ev.id);
+    }
+    return ids;
+  });
+
   /**
    * Ubicación del usuario y radio de búsqueda alrededor de ella. Al pedir
    * «Mi ubicación» de nuevo se amplía el radio (10 → 25 → 50 → 100 km),
@@ -170,9 +186,27 @@ export class MapaPage implements AfterViewInit, OnDestroy {
     );
   });
 
-  readonly pines = computed<Evento[]>(() =>
-    this.eventosEnRadio().filter((e) => !!e.coordenadas)
-  );
+  /** Pines del mapa: coordenadas exactas de la BD y, además, coordenadas
+   *  geocodificadas por respaldo (aproximadas) para eventos sin lat/lng.
+   *  Las copias con coordenada de respaldo son clones del evento: la
+   *  marca "aproximada" vive en `aproximados`, no en el modelo. */
+  readonly pines = computed<Evento[]>(() => {
+    this.geoVersion();
+    const pos = this.posicionUsuario();
+    const radio = this.radioKm();
+    const salida: Evento[] = [];
+    for (const ev of this.eventosFiltrados()) {
+      let c = ev.coordenadas;
+      if (!c) {
+        const resuelta = this.geocodificacion.yaResuelta(ev);
+        if (!resuelta) continue;
+        c = resuelta;
+      }
+      if (pos && this.distanciaKm(pos, c) > radio) continue;
+      salida.push(c === ev.coordenadas ? ev : { ...ev, coordenadas: c });
+    }
+    return salida;
+  });
 
   /** Eventos ya dibujados en el mapa (para el badge del resumen). */
   readonly conUbicacion = computed(() => this.pines().length);
@@ -205,15 +239,16 @@ export class MapaPage implements AfterViewInit, OnDestroy {
   );
 
   /**
-   * Sin coordenadas reales (independiente del radio: antes, con ubicación
-   * activa, los fuera de radio se contaban erróneamente como "sin ubicación").
+   * Filtrados sin ninguna ubicación (ni exacta ni aproximada) (independiente
+   * del radio: antes, con ubicación activa, los fuera de radio se contaban
+   * erróneamente como "sin ubicación").
    */
   readonly sinCoordenadas = computed(
-    () => this.eventosFiltrados().length - this.conCoordenadasBase().length
+    () => this.eventosFiltrados().length - this.pines().length
   );
 
   /** Estado de la geolocalización del usuario. */
-  readonly ubicacionEstado = signal<'inactiva' | 'cargando' | 'lista' | 'denegada'>('inactiva');
+  readonly ubicacionEstado = signal<'inactiva' | 'cargando' | 'lista' | 'denegada' | 'indisponible'>('inactiva');
 
   ngAfterViewInit(): void {
     // El monta se hace vía effect cuando el lienzo existe en el DOM.
@@ -308,11 +343,14 @@ export class MapaPage implements AfterViewInit, OnDestroy {
 
   /** HTML del popup de un evento (se genera solo al abrir, no por pin). */
   private popupHtml(evento: Evento): string {
+    const aproximado = this.aproximados().has(evento.id)
+      ? ` · <em>ubicación aproximada</em>`
+      : '';
     return (
       `<div class="ec-mapa__popup-card">` +
       `<img src="${this.escapar(evento.imagen)}" alt="" />` +
       `<div class="ec-mapa__popup-info">` +
-      `<p class="ec-mapa__popup-meta">${this.escapar(evento.comuna)}</p>` +
+      `<p class="ec-mapa__popup-meta">${this.escapar(evento.comuna)}${aproximado}</p>` +
       `<h3>${this.escapar(evento.titulo)}</h3>` +
       `<p class="ec-mapa__popup-fecha">${this.escapar(
         evento.permanente
@@ -447,12 +485,12 @@ export class MapaPage implements AfterViewInit, OnDestroy {
   /** Solicita la ubicación actual del usuario (opt-in) y dibuja su marca.
    *  Con ubicación activa, cada pulsación amplía el radio (10 → 25 → 50 →
    *  100 km); en el máximo, la siguiente pulsación quita el filtro — antes
-   *  no había forma de desactivarlo y el mapa ni se reencuadraba. */
-  pedirMiUbicacion(): void {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      this.ubicacionEstado.set('denegada');
-      return;
-    }
+   *  no había forma de desactivarlo y el mapa ni se reencuadraba.
+   *
+   *  En la APK Android se usa el plugin @capacitor/geolocation: sin él, el
+   *  WebView no muestra el diálogo de permiso y la posición daba "denegada".
+   *  En navegador se usa navigator.geolocation con el mismo resultado. */
+  async pedirMiUbicacion(): Promise<void> {
     if (this.posicionUsuario()) {
       if (this.radioEsMaximo()) {
         this.limpiarUbicacion();
@@ -467,20 +505,71 @@ export class MapaPage implements AfterViewInit, OnDestroy {
       return;
     }
     this.ubicacionEstado.set('cargando');
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        this.zona.run(() => {
-          const { latitude, longitude } = pos.coords;
-          this.posicionUsuario.set({ lat: latitude, lng: longitude });
-          this.radioKm.set(this.radiosDisponibles[0]);
-          this.mapa?.setView([latitude, longitude], 11);
-          this.dibujarUsuario(latitude, longitude);
-          this.ubicacionEstado.set('lista');
+    let coords: { latitude: number; longitude: number } | null = null;
+    let fallo: 'denegado' | 'indisponible' | 'tiempo_agotado' = 'indisponible';
+    try {
+      // En APK el plugin pide el permiso nativo (diálogo del sistema); en
+      // web nativoPlugins es false y cae a la API del navegador.
+      if (Capacitor.isNativePlatform()) {
+        const perm = await Geolocation.checkPermissions();
+        if (perm.location === 'denied' || perm.coarseLocation === 'denied') {
+          const pedida = await Geolocation.requestPermissions();
+          if (pedida.location !== 'granted' && pedida.coarseLocation !== 'granted') {
+            fallo = 'denegado';
+            throw new Error('permiso-negado');
+          }
+        }
+        const pos = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: false,
+          timeout: 15000
         });
-      },
-      () => this.zona.run(() => this.ubicacionEstado.set('denegada')),
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 }
-    );
+        coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+      } else if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        coords = await new Promise<{ latitude: number; longitude: number }>(
+          (resolver, rechazar) => {
+            navigator.geolocation.getCurrentPosition(
+              (p) => resolver({ latitude: p.coords.latitude, longitude: p.coords.longitude }),
+              (err) => {
+                if (err.code === GeolocationPositionError.PERMISSION_DENIED) {
+                  fallo = 'denegado';
+                } else if (err.code === GeolocationPositionError.POSITION_UNAVAILABLE) {
+                  fallo = 'indisponible';
+                } else {
+                  fallo = 'tiempo_agotado';
+                }
+                rechazar(err);
+              },
+              { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 }
+            );
+          }
+        );
+      } else {
+        fallo = 'indisponible';
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
+      if (fallo !== 'denegado' && msg !== 'permiso-negado') {
+        // Problemas del GPS mismo (timeout / sin señal): distinguibles en UI.
+        this.zona.run(() =>
+          this.ubicacionEstado.set(
+            msg === 'permiso-negado' ? 'denegada' : 'indisponible'
+          )
+        );
+        return;
+      }
+    }
+    if (!coords) {
+      this.zona.run(() => this.ubicacionEstado.set(fallo === 'denegado' ? 'denegada' : 'indisponible'));
+      return;
+    }
+    this.zona.run(() => {
+      const { latitude, longitude } = coords!;
+      this.posicionUsuario.set({ lat: latitude, lng: longitude });
+      this.radioKm.set(this.radiosDisponibles[0]);
+      this.mapa?.setView([latitude, longitude], 11);
+      this.dibujarUsuario(latitude, longitude);
+      this.ubicacionEstado.set('lista');
+    });
   }
 
   private actualizarRadioCirculo(): void {
@@ -594,6 +683,20 @@ export class MapaPage implements AfterViewInit, OnDestroy {
     const lista = this.pinesEnVista();
     if (this.mapa) {
       this.dibujarPines(lista);
+    }
+  });
+
+  /**
+   * Respaldo de ubicación: para cada evento filtrado sin coordenadas, pide
+   * al geocodificador (Nominatim, 1 consulta/seg, deduplicada por recinto,
+   * con caché persistente). Al llegar cada resultado, geoVersion refresca
+   * los pines sin reconstruir nada más.
+   */
+  private readonly encolarGeocodificacion = effect(() => {
+    this.eventosFiltrados();
+    this.geoVersion();
+    for (const ev of this.eventosFiltrados()) {
+      if (!ev.coordenadas) void this.geocodificacion.coordenadaDe(ev);
     }
   });
 

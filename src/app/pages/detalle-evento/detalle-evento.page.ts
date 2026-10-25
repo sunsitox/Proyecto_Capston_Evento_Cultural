@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -11,6 +11,8 @@ import {
 } from '@ionic/angular';
 import { EventosService } from '../../core/services/eventos.service';
 import { RecomendacionService } from '../../core/services/recomendacion.service';
+import { GeocodificacionService } from '../../core/services/geocodificacion.service';
+import { Coordenadas } from '../../core/models/evento.model';
 import { EventoCardComponent } from '../../shared/components/evento-card/evento-card.component';
 import {
   EventInterestActionsComponent
@@ -50,6 +52,7 @@ export class DetalleEventoPage {
   private readonly route = inject(ActivatedRoute);
   private readonly eventosService = inject(EventosService);
   private readonly recomendacion = inject(RecomendacionService);
+  private readonly geocodificacion = inject(GeocodificacionService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly router = inject(Router);
 
@@ -60,10 +63,24 @@ export class DetalleEventoPage {
 
   private readonly eventoId = this.route.snapshot.paramMap.get('id') ?? '';
 
+  /** Ubicación resuelta por respaldo (Nominatim) para eventos sin
+   *  coordenadas en la base de datos: mejora el mapa embebido y «Cómo
+   *  llegar» sin escribir en Supabase. */
+  readonly coordsResueltas = signal<Coordenadas | null>(null);
+
   constructor() {
-    // Simula la latencia de traer la ficha (sin backend): activa el
-    // skeleton de detalle exactamente como el listado.
+    // Al entrar a la ficha se pide el catálogo (skeleton como en listado).
     this.eventosService.cargarEventos();
+
+    // Con catálogo listo y evento sin coordenadas, resuelve por respaldo.
+    effect(() => {
+      const ev = this.evento();
+      if (!ev) return;
+      if (ev.coordenadas) return;
+      void this.geocodificacion.coordenadaDe(ev).then((c) => {
+        if (c) this.coordsResueltas.set(c);
+      });
+    });
   }
 
   readonly evento = computed(() =>
@@ -170,20 +187,44 @@ export class DetalleEventoPage {
     return 'ec-cat--' + (this.CAT_CLASS[categoria] ?? 'musica');
   }
 
-  /** Mapa embebido (Google Maps, sin API key) solo si hay lugar físico */
+  /** Ubicación efectiva a mostrar: coordenadas de la BD o, en su defecto,
+   *  las geocodificadas por respaldo (aproximadas). */
+  private readonly ubicacionEfectiva = computed<Coordenadas | null>(() => {
+    const ev = this.evento();
+    if (!ev) return null;
+    if (ev.coordenadas) return ev.coordenadas;
+    return this.coordsResueltas() ?? null;
+  });
+
+  /** Mapa embebido (Google Maps, sin API key) solo si hay lugar físico.
+   *  Con coordenadas (propias o geocodificadas) se marca el punto exacto
+   *  (q=lat,lng); sin ellas, la búsqueda por texto da el centrado
+   *  aproximado de la comuna. */
   readonly mapaEmbed = computed(() => {
     const ev = this.evento();
     if (!ev || ev.modalidad === 'Virtual') return null;
-    const q = encodeURIComponent(`${ev.direccion}, ${ev.comuna}, ${ev.region}, Chile`);
+    const ubi = this.ubicacionEfectiva();
+    const q = ubi
+      ? `${ubi.lat},${ubi.lng}`
+      : encodeURIComponent(`${ev.direccion || ev.recinto}, ${ev.comuna}, ${ev.region}, Chile`);
     return this.sanitizer.bypassSecurityTrustResourceUrl(
       `https://www.google.com/maps?q=${q}&output=embed`
     );
   });
 
-  /** Enlace a Google Maps con dirección + comuna + región */
+  /** Enlace a Google Maps para trazar la ruta («Cómo llegar»).
+   *
+   *  Con coordenadas del evento (de la BD o geocodificadas) se usa un
+   *  deep link de dirección (destination=lat,lng): abre la ruta exacta
+   *  desde donde esté el usuario. Sin coordenadas cae a la búsqueda por
+   *  texto (dirección, comuna y región), que es aproximada. */
   mapsUrl(): string {
     const ev = this.evento();
     if (!ev) return 'https://maps.google.com';
+    const ubi = this.ubicacionEfectiva();
+    if (ubi) {
+      return `https://www.google.com/maps/dir/?api=1&destination=${ubi.lat},${ubi.lng}`;
+    }
     const query = encodeURIComponent(`${ev.direccion}, ${ev.comuna}, ${ev.region}, Chile`);
     return `https://www.google.com/maps/search/?api=1&query=${query}`;
   }
