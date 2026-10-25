@@ -63,6 +63,14 @@ export const routes: Routes = [
           import('./pages/auth-callback/auth-callback.page').then(
             (m) => m.AuthCallbackPage
           )
+      },
+      {
+        // Fijar contraseña nueva tras el enlace de recuperación         // (/auth/callback?type=recovery routea aquí).
+        path: 'restablecer-contrasena',
+        loadComponent: () =>
+          import('./pages/restablecer-contrasena/restablecer-contrasena.page').then(
+            (m) => m.RestablecerContrasenaPage
+          )
       }
     ]
   },

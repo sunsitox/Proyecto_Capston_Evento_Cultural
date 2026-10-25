@@ -318,6 +318,113 @@
   }
 }
 
+// ---------- Avisos del servidor (error / éxito) ----------
+// Overlay fijo: los avisos NO desplazan ni deforman el contenido de la página.
+.ec-auth-toaststack {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  inset-inline: var(--ec-space-md);
+  z-index: var(--ec-z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ec-space-sm);
+  pointer-events: none;
+}
+
+.ec-api-error,
+.ec-api-aviso {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--ec-radius-md);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  box-shadow: var(--ec-shadow-lg);
+  animation: ec-toast-in var(--ec-duration-slow) var(--ec-ease-out) both;
+}
+
+@keyframes ec-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ec-api-error {
+  border: 1px solid rgba(198, 40, 40, 0.35);
+  background: rgba(198, 40, 40, 0.08);
+  color: var(--ec-danger, #b3261e);
+}
+
+.ec-api-aviso {
+  border: 1px solid rgba(46, 125, 50, 0.35);
+  background: rgba(46, 125, 50, 0.08);
+  color: var(--ec-success, #2e7d32);
+}
+
+// ---------- Recuperación de contraseña ----------
+
+.ec-auth-recuperar-abrir {
+  background: none;
+  border: none;
+  padding: 0;
+  align-self: flex-end;
+  width: fit-content;
+  color: var(--ec-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--ec-primary-dark);
+  }
+}
+
+.ec-auth-recuperar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ec-space-md);
+  padding: var(--ec-space-md);
+  border: 1px dashed var(--ec-border);
+  border-radius: var(--ec-radius-lg);
+  background: var(--ec-surface-2);
+  text-align: left;
+  margin-top: var(--ec-space-md);
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--ec-text-muted);
+    line-height: 1.5;
+  }
+
+  &__volver {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--ec-text-muted);
+    font-size: 0.82rem;
+    cursor: pointer;
+    text-decoration: underline;
+
+    &:hover {
+      color: var(--ec-text);
+    }
+  }
+}
+
 // ---------- Formulario ----------
 
 .ec-auth-form {
@@ -376,11 +483,15 @@
 }
 
 // ---------- Validación (WCAG 3.3.1) ----------
-
+// El error es un chip superpuesto en una línea reservada bajo el campo:
+// aparecer/desaparecer no mueve el resto del formulario ni tapa otro campo.
 .ec-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  position: relative;
+  /* espacio reservado para la línea de error */
+  padding-bottom: 22px;
 }
 
 .ec-auth-input--invalid {
@@ -395,14 +506,20 @@
 }
 
 .ec-field-error {
+  position: absolute;
+  bottom: 0;
+  inset-inline: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 6px;
   margin: 0;
-  padding: 0 4px;
+  padding: 0 8px;
   font-size: 0.82rem;
   font-weight: 500;
   color: var(--ec-danger);
+  background: var(--ec-glass, rgba(255, 253, 249, 0.9));
+  border-radius: var(--ec-radius-sm);
 
   ion-icon {
     font-size: 1rem;

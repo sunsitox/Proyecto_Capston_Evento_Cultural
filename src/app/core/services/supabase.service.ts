@@ -51,7 +51,7 @@ export interface CommuneRaw {
  * navegador habla directamente con Supabase vía `@supabase/supabase-js` con la
  * clave pública. Las únicas dos operaciones que exigían la clave de servicio
  * (eliminar cuenta, registro ya confirmado) se delegan a una Edge Function
- * `admin-account` desplegada en Supabase (ver `supabase/edgeFunctions/`).
+ * `admin-account` desplegada en Supabase (ver `supabase/functions/`).
  */
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
@@ -109,7 +109,12 @@ export class SupabaseService {
     user_metadata?: Record<string, unknown>;
   }): UsuarioSesion {
     const meta = user.user_metadata ?? {};
+    // OAuth (Google) escribe `full_name`/`name` y manda; si el usuario ya
+    // tenía `nombre`/`nombre_display` de un registro previo, eso es un dato
+    // viejo del metadata y no debe tapar lo que viene del proveedor.
     const nombre =
+      (typeof meta['full_name'] === 'string' && meta['full_name']) ||
+      (typeof meta['name'] === 'string' && meta['name']) ||
       (typeof meta['nombre'] === 'string' && meta['nombre']) ||
       (typeof meta['nombre_display'] === 'string' && meta['nombre_display']) ||
       (user.email ?? '').split('@')[0];
@@ -188,6 +193,52 @@ export class SupabaseService {
       options: { redirectTo: `${location.origin}/auth/callback` }
     });
     if (error) throw error;
+  }
+
+  /**
+   * Pide el enlace de recuperación de contraseña (flujo desacoplado):
+   * una Edge Function FARMA PROPRIA genera un JWT temporal ("cookie" con exp
+   * en base64) y una segunda lo envía por el motor de correo externo
+   * (Resend HTTP API). Supabase Auth no envía nada aquí.
+   * La respuesta es genérica a propósito (no revela si la cuenta existe).
+   */
+  async recuperarContrasena(email: string): Promise<void> {
+    const respuesta = await fetch(environment.resetRequestEdgeFunctionUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim() })
+    });
+    if (!respuesta.ok) {
+      const texto = await respuesta.text().catch(() => '');
+      throw new Error(texto || 'No se pudo iniciar la recuperación. Intenta de nuevo.');
+    }
+  }
+
+  /**
+   * Confirma el cambio de contraseña con el token temporal del enlace:
+   * la Edge Function revalida firma + exp + un solo uso y escribe la
+   * contraseña nueva en la base de datos (Admin API). Devuelve el correo
+   * para que la app inicie sesión automáticamente con la nueva clave.
+   */
+  async confirmarResetContrasena(token: string, password: string): Promise<{ email: string }> {
+    const respuesta = await fetch(environment.resetConfirmEdgeFunctionUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password })
+    });
+    const datos = await respuesta.json().catch(() => null) as { error?: string; email?: string } | null;
+    if (!respuesta.ok || !datos) {
+      throw new Error(datos?.error || 'El enlace es inválido o expiró. Solicita una nueva recuperación.');
+    }
+    if (!datos.email) throw new Error('Respuesta incompleta de la confirmación.');
+    return { email: datos.email };
+  }
+
+  /** Cambia la contraseña del usuario en sesión (tras el enlace de recuperación). */
+  async actualizarContrasena(nueva: string): Promise<void> {
+    const { data, error } = await this.cliente.auth.updateUser({ password: nueva });
+    if (error) throw error;
+    if (data.user) this._usuario.set(this.aSesion(data.user));
   }
 
   /**

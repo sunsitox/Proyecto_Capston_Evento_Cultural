@@ -1,4 +1,9 @@
-<div class="ec-api-error" role="alert">@if (errorServidor()) { {{ errorServidor() }} }</div>
+<!-- Aviso como overlay fijo: no desplaza ni deforma el contenido -->
+<div class="ec-publish-toaststack">
+  @if (errorServidor()) {
+    <div class="ec-api-error" role="alert">{{ errorServidor() }}</div>
+  }
+</div>
 <div class="ec-page ec-publish">
   <a class="ec-skip-link" href="#ec-publish-form">Saltar al formulario</a>
 

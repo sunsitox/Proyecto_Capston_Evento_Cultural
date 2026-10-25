@@ -43,12 +43,12 @@ supabase functions deploy admin-account --project-ref ngwkehuewmjykiiujqic
 
 ## Qué contiene esta carpeta
 
-- `supabase/edgeFunctions/admin-account/index.ts` — la función (Deno):
+- `supabase/functions/admin-account/index.ts` — la función (Deno):
   - `eliminar_cuenta`: exige JWT de sesión válido y borra el usuario con
     `auth.admin.deleteUser` (la identidad viene del token, no del cuerpo).
   - `registrar_confirmado`: crea cuentas ya confirmadas; **apagado por defecto**
     (403 salvo `ALLOW_ADMIN_SIGNUP=true`).
-- `supabase/edgeFunctions/config.toml` — instrucciones de despliegue y secretos.
+- `supabase/config.toml` — instrucciones de despliegue y secretos.
 
 ## Seguridad del nuevo diseño
 

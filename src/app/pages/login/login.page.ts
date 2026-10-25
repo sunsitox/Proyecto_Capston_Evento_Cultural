@@ -47,6 +47,12 @@ export class LoginPage {
   readonly modo = signal<'ingresar' | 'registrarse'>('ingresar');
   readonly cargando = signal(false);
   readonly errorServidor = signal<string | null>(null);
+  /** Aviso de éxito (p. ej. "te enviamos el correo de recuperación"). */
+  readonly avisoInfo = signal<string | null>(null);
+  /** Panel desplegable de "¿Olvidaste tu contraseña?" (solo modo ingresar). */
+  readonly panelRecuperacion = signal(false);
+  readonly recuperando = signal(false);
+
   private readonly api = inject(ApiService);
 
   private readonly fb = inject(FormBuilder);
@@ -65,6 +71,11 @@ export class LoginPage {
     { validators: PasswordRulesValidator.coincide('password', 'confirmar') }
   );
 
+  /** Correo para la solicitud de recuperación (formulario independiente). */
+  readonly solicitudRecuperacion = this.fb.nonNullable.group({
+    email: ['', { validators: [Validators.required, Validators.email] }]
+  });
+
   /**
    * La página arranca en modo 'ingresar': deshabilita los controles de
    * registro para que no bloqueen la validación del login (bug: el form
@@ -77,6 +88,8 @@ export class LoginPage {
   cambiarModo(valor: string | number | undefined): void {
     this.modo.set(valor === 'registrarse' ? 'registrarse' : 'ingresar');
     this.errorServidor.set(null);
+    this.avisoInfo.set(null);
+    this.panelRecuperacion.set(false);
     // En modo ingresar solo email+password aplican: los demás controles se
     // deshabilitan para que sus validadores no bloqueen el envío del login.
     if (this.modo() === 'ingresar') {
@@ -173,7 +186,9 @@ export class LoginPage {
         }
       }
       const usuario = await this.api.ingresar(email!, password!);
-      await this.router.navigateByUrl(usuario.rol === 'organizador' ? '/publicar' : '/home');
+      // Siempre a Home: el rol aparece en Perfil y «Publicar» sigue accesible
+      // desde el nav; el login no debe llevar al organizador a una pantalla de trabajo.
+      await this.router.navigateByUrl('/home');
     } catch (e: unknown) {
       const err = e as { message?: string; error_description?: string };
       const mensaje = err.error_description || err.message || '';
@@ -187,7 +202,7 @@ export class LoginPage {
         this.errorServidor.set('Este correo ya está registrado. Inicia sesión.');
       } else {
         this.errorServidor.set(
-          mensaje || 'No fue posible conectar con Supabase. Verifica tu conexión e intenta de nuevo.'
+          'No fue posible conectar con el servidor. Verifica tu conexión e intenta de nuevo.'
         );
       }
     } finally {
@@ -196,13 +211,67 @@ export class LoginPage {
   }
 
   /**
-   * Inicia sesión con proveedor externo (OAuth). PREPARADO: requiere que el
-   * proveedor esté activado en Supabase Auth y que la URL de redirección
-   * (http://localhost:4200/auth/callback) esté registrada en Redirect URLs.
+   * Inicia sesión con Google (OAuth): Supabase redirige a `/auth/callback`
+   * para completar el flujo.
    */
   ingresarConOAuth(): void {
     this.errorServidor.set(null);
     this.api.iniciarOAuth('google');
+  }
+
+  // ------------------------------------------------------------------
+  // Recuperación de contraseña (correo vía el SMTP de Supabase)
+  // ------------------------------------------------------------------
+
+  abrirPanelRecuperacion(): void {
+    this.errorServidor.set(null);
+    this.avisoInfo.set(null);
+    // Pre-llenar con el correo del login si ya es válido.
+    const email = this.formulario.getRawValue().email.trim();
+    this.solicitudRecuperacion.setValue({ email });
+    if (this.formulario.get('email')?.valid) {
+      this.solicitudRecuperacion.get('email')?.markAsTouched();
+    }
+    this.panelRecuperacion.set(true);
+  }
+
+  cerrarPanelRecuperacion(): void {
+    this.panelRecuperacion.set(false);
+    this.solicitudRecuperacion.reset({ email: '' });
+  }
+
+  /** Mensaje de error del correo del panel, null si es válido y tocado/ignorado. */
+  errorSolicitudRecuperacion(): string | null {
+    const ctrl = this.solicitudRecuperacion.get('email');
+    if (!ctrl || !(ctrl.dirty || ctrl.touched)) return null;
+    if (ctrl.errors?.['required']) return 'Ingresa el correo con el que te registraste.';
+    if (ctrl.errors?.['email']) return 'El formato del correo no es válido.';
+    return null;
+  }
+
+  async solicitarRecuperacion(): Promise<void> {
+    const ctrl = this.solicitudRecuperacion.get('email');
+    if (ctrl?.invalid) {
+      ctrl.markAsTouched();
+      return;
+    }
+    this.recuperando.set(true);
+    this.errorServidor.set(null);
+    this.avisoInfo.set(null);
+    try {
+      await this.api.recuperarContrasena(String(ctrl?.value ?? ''));
+      // Mensaje genérico a propósito: no revela si la cuenta existe.
+      this.avisoInfo.set(
+        'Si esta cuenta existe, te enviamos un correo con un enlace temporal (vence en 30 minutos) ' +
+        'para crear una contraseña nueva. Revísalo (y la carpeta de spam).'
+      );
+      this.panelRecuperacion.set(false);
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      this.errorServidor.set(err.message || 'No se pudo enviar el correo de recuperación. Intenta de nuevo.');
+    } finally {
+      this.recuperando.set(false);
+    }
   }
 }
 

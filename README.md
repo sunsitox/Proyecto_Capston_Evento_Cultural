@@ -11,7 +11,7 @@ Plataforma para descubrir y publicar eventos culturales, comerciales y municipal
 - **Backend en TypeScript (misma arquitectura que el frontend):** `@supabase/supabase-js` desde el navegador con la clave pública; Row Level Security gobierna todo el acceso
   - Catálogo: tabla `events` paginada + `communes` + `event_categories` (`SupabaseService.catalogo()`)
   - Auth: `signInWithPassword` / `signUp` / `signInWithOAuth` (regreso PKCE en `/auth/callback`)
-  - Operación con clave secreta: **Edge Function `admin-account`** (eliminar cuenta, registro pre-confirmado en desarrollo) — `supabase/edgeFunctions/`
+  - Operación con clave secreta: **Edge Function `admin-account`** (eliminar cuenta, registro pre-confirmado en desarrollo) — `supabase/functions/`
   - Publicación: INSERT directo con el JWT del usuario (pendiente la política RLS INSERT: los errores 403 se explican en la UI)
 - **Datos de respaldo:** `src/app/data/mock-eventos.ts` — solo se usan si la API no responde (la app no se rompe sin backend)
 - Pruebas con Vitest (`npm test`)
@@ -54,7 +54,7 @@ evento-cultural/
 ├── package.json
 ├── angular.json
 ├── ionic.config.json
-├── supabase/edgeFunctions/     # Edge Function admin-account (Deno/TS)
+├── supabase/functions/         # Edge Functions (admin-account, reset-password-*), Deno/TS
 ├── .env                        # Referencia de credenciales (no compartido)
 └── src/
     ├── main.ts                 # Bootstrap + supresión de rechazos benignos de View Transitions

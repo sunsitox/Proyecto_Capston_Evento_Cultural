@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { IonIcon } from '@ionic/angular';
+import { SupabaseService } from '../../../core/services/supabase.service';
+import { SolicitaSesionService } from '../../../core/services/solicita-sesion.service';
 
 /**
  * Acciones de interés por evento (reemplazan al botón de favoritos).
@@ -136,6 +138,8 @@ import { IonIcon } from '@ionic/angular';
   `
 })
 export class EventInterestActionsComponent {
+  private readonly sesion = inject(SupabaseService);
+  private readonly solicitaSesion = inject(SolicitaSesionService);
   /** Título del evento (para aria-labels descriptivos). */
   readonly titulo = input.required<string>();
 
@@ -174,6 +178,12 @@ export class EventInterestActionsComponent {
     // Evita que el click burbujee al enlace de la tarjeta (navegaría).
     event.preventDefault();
     event.stopPropagation();
+    // Sin cuenta no se puede guardar interés: se invita a registrarse.
+    // (El apagado sólo ocurre con sesión activa, y ahí se permite.)
+    if (!this.activo() && !this.sesion.estaAutenticado()) {
+      void this.solicitaSesion.avisoParaGuardarInteres();
+      return;
+    }
     this.meInteresaCambiado.emit({
       eventoId: this.eventoId(),
       activo: !this.activo()

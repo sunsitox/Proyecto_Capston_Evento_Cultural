@@ -152,6 +152,55 @@
   }
 }
 
+// ---------- Toast del servidor (overlay, no desplaza contenido) ----------
+
+.ec-publish-toaststack {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  inset-inline: var(--ec-space-md);
+  z-index: var(--ec-z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ec-space-sm);
+  pointer-events: none;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.ec-publish-toaststack .ec-api-error {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 720px;
+  border: 1px solid rgba(198, 40, 40, 0.35);
+  background: rgba(198, 40, 40, 0.08);
+  color: var(--ec-danger, #b3261e);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--ec-radius-md);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  box-shadow: var(--ec-shadow-lg);
+  animation: ec-toast-in var(--ec-duration-slow) var(--ec-ease-out) both;
+}
+
+@keyframes ec-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 // ---------- Campos ----------
 
 .ec-field {
@@ -159,6 +208,9 @@
   flex-direction: column;
   gap: 6px;
   min-width: 0;
+  position: relative;
+  /* espacio reservado para la línea de error */
+  padding-bottom: 22px;
 
   &--full {
     grid-column: 1 / -1;
@@ -198,14 +250,20 @@
 }
 
 .ec-field-error {
+  position: absolute;
+  bottom: 0;
+  inset-inline: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 6px;
   margin: 0;
-  padding: 0 4px;
+  padding: 0 8px;
   font-size: 0.82rem;
   font-weight: 500;
   color: var(--ec-danger);
+  background: var(--ec-glass, rgba(255, 253, 249, 0.9));
+  border-radius: var(--ec-radius-sm);
 
   ion-icon {
     font-size: 1rem;

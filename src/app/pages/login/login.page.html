@@ -1,4 +1,12 @@
-<div class="ec-api-error" role="alert">@if (errorServidor()) { {{ errorServidor() }} }</div>
+<!-- Avisos como overlay fijo: no desplazan ni deforman el contenido -->
+<div class="ec-auth-toaststack">
+  @if (errorServidor(); as msg) {
+    <div class="ec-api-error" role="alert">{{ msg }}</div>
+  }
+  @if (avisoInfo(); as msg) {
+    <div class="ec-api-aviso" role="status">{{ msg }}</div>
+  }
+</div>
 <div class="ec-auth">
   <!-- Panel de propuesta de valor (solo escritorio) -->
   <aside class="ec-auth-panel">
@@ -204,6 +212,12 @@
           </div>
         }
 
+        @if (modo() === 'ingresar') {
+          <button type="button" class="ec-auth-recuperar-abrir" (click)="abrirPanelRecuperacion()">
+            ¿Olvidaste tu contraseña?
+          </button>
+        }
+
         @if (modo() === 'registrarse') {
           <div class="ec-auth-register-box">
             <ion-item class="ec-auth-checkbox" lines="none">
@@ -233,6 +247,59 @@
         </ion-button>
       </form>
 
+      <!-- Recuperación de contraseña: envía el enlace vía el SMTP de Supabase.
+           El correo devuelve a /auth/callback?type=recovery y de ahí
+           a /restablecer-contrasena para fijar la contraseña nueva. -->
+      @if (modo() === 'ingresar' && panelRecuperacion()) {
+        <div [formGroup]="solicitudRecuperacion" class="ec-auth-recuperar" role="group" aria-label="Recuperar contraseña">
+          <p>Te enviaremos un correo con un enlace para crear una contraseña nueva.</p>
+          <div class="ec-field">
+            <ion-item
+              class="ec-auth-input"
+              [class.ec-auth-input--invalid]="errorSolicitudRecuperacion()"
+              lines="none"
+            >
+              <ion-icon slot="start" name="mail-outline" aria-hidden="true"></ion-icon>
+              <ion-input
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                placeholder="correo@ejemplo.cl"
+                label="Correo electrónico"
+                labelPlacement="floating"
+                formControlName="email"
+                [attr.aria-invalid]="!!errorSolicitudRecuperacion()"
+                aria-describedby="ec-auth-solicitud-err"
+              ></ion-input>
+            </ion-item>
+            @if (errorSolicitudRecuperacion(); as msg) {
+              <p class="ec-field-error" id="ec-auth-solicitud-err" role="alert">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                {{ msg }}
+              </p>
+            }
+          </div>
+          <ion-button
+            expand="block"
+            type="button"
+            class="ec-auth-submit"
+            [disabled]="recuperando()"
+            (click)="solicitarRecuperacion()"
+          >
+            @if (recuperando()) {
+              <ion-spinner name="crescent" slot="start"></ion-spinner>
+              Enviando…
+            } @else {
+              <ion-icon slot="start" name="mail-outline" aria-hidden="true"></ion-icon>
+              Enviar correo de recuperación
+            }
+          </ion-button>
+          <button type="button" class="ec-auth-recuperar__volver" (click)="cerrarPanelRecuperacion()">
+            Volver al inicio de sesión
+          </button>
+        </div>
+      }
+
       <!-- Alternador de modo con texto explicativo -->
       <div class="ec-auth-switch-mode">
         @if (modo() === 'ingresar') {
@@ -248,8 +315,7 @@
         }
       </div>
 
-      <!-- Login con proveedor externo (OAuth). PREPARADO: requiere activar
-           el proveedor en Supabase Auth y registrar la URL de callback. -->
+      <!-- Login con proveedor externo (OAuth) -->
       <div class="ec-auth-oauth">
         <div class="ec-auth-oauth__divider" aria-hidden="true"><span>o</span></div>
         <ion-button
@@ -262,10 +328,6 @@
           <ion-icon slot="start" name="globe-outline" aria-hidden="true"></ion-icon>
           {{ modo() === 'ingresar' ? 'Continuar con Google' : 'Registrarse con Google' }}
         </ion-button>
-        <p class="ec-auth-oauth__note">
-          El acceso con Google requiere activar el proveedor en Supabase y registrar
-          http://localhost:4200/auth/callback como URL de redirección.
-        </p>
       </div>
 
       <p class="ec-auth-footer">

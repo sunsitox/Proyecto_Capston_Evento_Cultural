@@ -45,6 +45,19 @@ export class ApiService {
       .catch((err: unknown) => console.error('OAuth: no se pudo iniciar el flujo', err));
   }
 
+  recuperarContrasena(email: string): Promise<void> {
+    return this.supabase.recuperarContrasena(email);
+  }
+
+  actualizarContrasena(nueva: string): Promise<void> {
+    return this.supabase.actualizarContrasena(nueva);
+  }
+
+  /** Confirma el cambio de contraseña con el token temporal (flujo desacoplado). */
+  confirmarResetContrasena(token: string, password: string): Promise<{ email: string }> {
+    return this.supabase.confirmarResetContrasena(token, password);
+  }
+
   procesarCallbackOAuth(): Promise<UsuarioSesion | null> {
     return this.supabase.procesarCallbackOAuth();
   }
