@@ -1,10 +1,37 @@
-<!-- Avisos como overlay fijo: no desplazan ni deforman el contenido -->
+<!-- Avisos como overlay fijo: no desplazan ni deforman el contenido.
+     · role="alert" (errores): se anuncia de inmediato por lectores de pantalla.
+     · role="status" (exito/aviso): se anuncia en pausa, sin interrumpir.
+     · El icono dá el significado, no solo el color (WCAG 1.4.1);
+     · el aviso es persistente (no desaparece solo, WCAG 2.2.1) y se puede
+       cerrar con un boton de 44px y nombre accesible (WCAG 2.5.8). -->
 <div class="ec-auth-toaststack">
   @if (errorServidor(); as msg) {
-    <div class="ec-api-error" role="alert">{{ msg }}</div>
+    <div class="ec-api-alert ec-api-alert--error" role="alert">
+      <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+      <p>{{ msg }}</p>
+      <button
+        type="button"
+        class="ec-api-alert__cerrar"
+        aria-label="Cerrar aviso de error"
+        (click)="errorServidor.set(null)"
+      >
+        <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+      </button>
+    </div>
   }
   @if (avisoInfo(); as msg) {
-    <div class="ec-api-aviso" role="status">{{ msg }}</div>
+    <div class="ec-api-alert ec-api-alert--exito" role="status">
+      <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+      <p>{{ msg }}</p>
+      <button
+        type="button"
+        class="ec-api-alert__cerrar"
+        aria-label="Cerrar aviso"
+        (click)="avisoInfo.set(null)"
+      >
+        <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+      </button>
+    </div>
   }
 </div>
 <div class="ec-auth">
@@ -333,6 +360,8 @@
       <p class="ec-auth-footer">
         <a routerLink="/home">Continuar explorando sin iniciar sesión</a>
       </p>
+
+      <!-- Sin enlaces internos: el panel se accede sólo por su URL ofuscada /v00/admin. -->
     </div>
   </div>
 </div>

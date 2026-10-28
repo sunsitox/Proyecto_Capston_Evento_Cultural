@@ -1,6 +1,12 @@
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
+import { adminGuard } from './pages/admin/admin.guard';
 
+/**
+ * RUTA OFUSCADA DEL PANEL: el ingreso vive en /v00/admin y el dashboard en
+ * /v00/admin/panel. No hay enlaces en la interfaz pública: la única forma de
+ * llegar es tecleando la URL (requisito del equipo para el acceso interno).
+ */
 export const routes: Routes = [
   {
     path: '',
@@ -73,6 +79,41 @@ export const routes: Routes = [
           )
       }
     ]
+  },
+  {
+    // Ingreso del panel: ruta poco intuitiva, sin enlaces públicos.
+    path: 'v00/admin',
+    loadComponent: () =>
+      import('./pages/admin/admin-login.page').then((m) => m.AdminLoginPage)
+  },
+  {
+    path: 'v00/admin/panel',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/admin-dashboard.page').then((m) => m.AdminDashboardPage)
+  },
+  {
+    // Gestión de páginas de extracción (ocultar fuentes).
+    path: 'v00/admin/paginas',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/admin-paginas.page').then((m) => m.AdminPaginasPage)
+  },
+  {
+    // Explorador del catálogo cargado (vigentes y vencidos).
+    path: 'v00/admin/eventos',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/admin-eventos.page').then((m) => m.AdminEventosPage)
+  },
+  {
+    // Entidades organizadoras agregadas desde el catálogo.
+    path: 'v00/admin/organizadores',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/admin-organizadores.page').then(
+        (m) => m.AdminOrganizadoresPage
+      )
   },
   { path: '**', redirectTo: 'home' }
 ];

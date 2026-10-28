@@ -1,0 +1,73 @@
+<div class="ec-admin-dash">
+  <!-- Ventana lateral compartida -->
+  <app-admin-sidebar activo="organizadores"></app-admin-sidebar>
+
+  <!-- Contenido -->
+  <div class="ec-admin-dash__cuerpo">
+    <header class="ec-admin-dash__barra">
+      <div class="ec-admin-dash__barra-izq">
+        <button
+          type="button"
+          class="hamburguesa"
+          (click)="ui.lateralAbierto.set(!ui.lateralAbierto())"
+          aria-label="Mostrar u ocultar el menú"
+        >
+          ☰
+        </button>
+        <div>
+          <h1>Organizadores</h1>
+          <p>
+            Entidades detrás de la oferta · {{ totalOrganizadores() }} organizadores ·
+            {{ totalEventosUnicos() | number }} títulos vigentes
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <article class="ec-admin-dash__tarjeta">
+      <div class="ec-admin-org__cabecera">
+        <h2>Organizadores detectados en el catálogo</h2>
+        <input
+          type="search"
+          class="ec-admin-org__busqueda"
+          placeholder="Buscar organizador o comuna…"
+          aria-label="Buscar organizador por nombre o comuna"
+          [value]="busqueda()"
+          (input)="busqueda.set($any($event.target).value)"
+        />
+      </div>
+      <p class="ec-admin-dash__nota-interna">
+        Lectura pura: los organizadores vienen de las páginas de extracción y se
+        agregan solos al recargarse el catálogo.
+      </p>
+
+      @for (f of organizadores(); track f.nombre) {
+        <div class="ec-admin-org__fila">
+          <span class="datos">
+            <strong>{{ f.nombre }}</strong>
+            <small>
+              {{ f.eventos.size }} títulos únicos
+              · {{ f.comunas.size }} {{ f.comunas.size === 1 ? 'comuna' : 'comunas' }}
+              · {{ f.gratuitos }} gratuitos
+            </small>
+          </span>
+          <span class="barra__pista ec-admin-org__pista" aria-hidden="true">
+            <span
+              class="barra__lleno"
+              [style.width.%]="pct(f.vigentes, maximo())"
+            ></span>
+          </span>
+          <strong class="conteo">{{ f.vigentes | number }}</strong>
+        </div>
+      } @empty {
+        <p class="vacio">
+          @if (busqueda()) {
+            Sin resultados para “{{ busqueda() }}”.
+          } @else {
+            Aún no hay organizadores en el catálogo cargado.
+          }
+        </p>
+      }
+    </article>
+  </div>
+</div>

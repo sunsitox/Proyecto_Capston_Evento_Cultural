@@ -1,0 +1,61 @@
+.ec-admin-login {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(1200px 500px at 85% -10%, rgba(190, 82, 26, 0.14), transparent 60%),
+    radial-gradient(900px 420px at 8% 110%, rgba(73, 146, 105, 0.14), transparent 60%),
+    var(--ec-bg, #faf7f2);
+}
+
+.ec-admin-login__panel {
+  width: min(400px, 100%);
+  background: var(--ec-surface, #fffdf9);
+  border: 1px solid rgba(90, 77, 66, 0.14);
+  border-radius: 18px;
+  padding: 28px 26px 20px;
+  box-shadow: 0 18px 44px rgba(60, 44, 30, 0.12);
+}
+
+.ec-admin-login__marca {
+  text-align: center;
+  margin-bottom: 20px;
+
+  h1 {
+    margin: 0 0 6px;
+    font-size: 1.3rem;
+    letter-spacing: -0.01em;
+    color: var(--ec-text, #3b332b);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.86rem;
+    color: var(--ec-text-muted, #5d564a);
+  }
+}
+
+.ec-admin-login__form {
+  display: grid;
+  gap: 14px;
+
+  ion-input {
+    --background: #fff;
+  }
+
+  ion-button {
+    margin-top: 6px;
+  }
+}
+
+.ec-admin-login__error {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #b42318;
+  background: rgba(180, 35, 24, 0.08);
+  border: 1px solid rgba(180, 35, 24, 0.18);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+

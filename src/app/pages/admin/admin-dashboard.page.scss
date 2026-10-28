@@ -1,0 +1,179 @@
+// Estilos propios del Dashboard: el shell, los KPIs, las barras de
+// distribución y el mapa de calor. Lo compartido entre páginas del panel
+// (encabezado, tarjetas, agenda, etc.) vive en admin-panel.shared.scss, y la
+// ventana lateral en admin-sidebar.component.scss.
+
+.ec-admin-dash {
+  display: block;
+  min-height: 100dvh;
+  background:
+    radial-gradient(1000px 400px at 90% -5%, rgba(190, 82, 26, 0.08), transparent 60%),
+    var(--ec-bg, #faf7f2);
+}
+
+// ---- Distribución compacta con scroll (categorías) -------------------------
+
+.ec-admin-dash__lista-scroll {
+  max-height: 236px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90, 77, 66, 0.35) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(90, 77, 66, 0.35);
+    border-radius: 999px;
+  }
+
+  .barra {
+    padding-left: 2px;
+    padding-right: 2px;
+
+    &:hover {
+      background: rgba(90, 77, 66, 0.05);
+      border-radius: 6px;
+    }
+  }
+}
+
+// ---- KPIs -----------------------------------------------------------------
+
+.ec-admin-dash__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ec-admin-dash__kpi {
+  background: var(--ec-surface, #fffdf9);
+  border: 1px solid rgba(90, 77, 66, 0.14);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 2px;
+
+  .rotulo {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ec-text-muted, #5d564a);
+  }
+
+  strong {
+    font-size: 1.6rem;
+    line-height: 1.15;
+    color: var(--ec-text, #3b332b);
+  }
+
+  small {
+    color: var(--ec-text-muted, #5d564a);
+    font-size: 0.76rem;
+  }
+}
+
+// ---- Distribuciones --------------------------------------------------------
+
+.ec-admin-dash__fila {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.barra {
+  display: grid;
+  grid-template-columns: minmax(110px, 34%) 1fr 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+
+  &__etiqueta {
+    font-size: 0.84rem;
+    color: var(--ec-text, #3b332b);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &--sm {
+      font-size: 0.8rem;
+    }
+  }
+
+  &__pista {
+    display: block;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(90, 77, 66, 0.1);
+    overflow: hidden;
+  }
+
+  &__lleno {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: #d95f2b;
+    min-width: 6px;
+    transition: width 0.35s ease;
+
+    &--verde {
+      background: #499269;
+    }
+
+    &--ambar {
+      background: #d99b2b;
+    }
+  }
+
+  &__valor {
+    font-size: 0.84rem;
+    font-weight: 600;
+    text-align: right;
+    color: var(--ec-text, #3b332b);
+  }
+}
+
+// ---- Mapa de calor ---------------------------------------------------------
+
+.ec-admin-dash__mapa-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.leyenda {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.76rem;
+  color: var(--ec-text-muted, #5d564a);
+
+  i {
+    width: 18px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+}
+
+.ec-admin-dash__mapa {
+  height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(90, 77, 66, 0.14);
+  background: #eee;
+}
+
+@media (max-width: 640px) {
+  .ec-admin-dash__mapa {
+    height: 280px;
+  }
+}

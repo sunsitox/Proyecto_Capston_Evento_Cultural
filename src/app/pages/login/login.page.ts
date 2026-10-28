@@ -176,7 +176,9 @@ export class LoginPage {
         if (correoAConfirmar) {
           // Supabase con "Confirm email" activado: el usuario existe, falta
           // verificar el buzón; no intentamos login todavía.
-          this.errorServidor.set(
+          // Aviso de ÉXITO (verde, role=status): el registro funcionó; pintarlo
+          // como error (rojo, role=alert) confundía el significado (WCAG 3.3.1).
+          this.avisoInfo.set(
             'Cuenta creada. Te enviamos un correo de confirmación: ' +
             'revísalo (y la carpeta de spam) e inicia sesión después de confirmar.'
           );

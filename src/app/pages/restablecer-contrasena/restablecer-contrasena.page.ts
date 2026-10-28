@@ -248,12 +248,14 @@ import {
       text-transform: none; letter-spacing: 0;
     }
     .ec-reset-error {
-      border: 1px solid rgba(198, 40, 40, 0.35);
-      background: rgba(198, 40, 40, 0.08);
-      color: var(--ec-danger, #b3261e);
+      border: 1.5px solid var(--ec-danger);
+      background: var(--ec-danger-bg);
+      color: var(--ec-text-dark);
+      font-weight: 500;
       border-radius: var(--ec-radius-md);
-      padding: 10px 14px; font-size: 0.88rem; line-height: 1.5;
+      padding: 12px 16px; font-size: 0.95rem; line-height: 1.5;
       margin-bottom: var(--ec-space-md);
+      box-shadow: var(--ec-shadow-sm);
     }
     /* Toast fijo: el error del servidor no desplaza el contenido de la tarjeta.
        El estado "enlace inválido" (sin --toast) sí es contenido de la vista. */
@@ -276,13 +278,18 @@ import {
       from { opacity: 0; transform: translateY(-8px); }
       to { opacity: 1; transform: none; }
     }
+    @media (prefers-reduced-motion: reduce) {
+      .ec-reset-error--toast { animation: none; }
+    }
     .ec-reset-ok {
-      border: 1px solid rgba(46, 125, 50, 0.35);
-      background: rgba(46, 125, 50, 0.08);
-      color: var(--ec-success, #2e7d32);
+      border: 1.5px solid var(--ec-green);
+      background: var(--ec-green-bg);
+      color: var(--ec-text-dark);
+      font-weight: 500;
       border-radius: var(--ec-radius-md);
-      padding: 10px 14px; font-size: 0.88rem; line-height: 1.5;
+      padding: 12px 16px; font-size: 0.95rem; line-height: 1.5;
       margin-bottom: var(--ec-space-md);
+      box-shadow: var(--ec-shadow-sm);
     }
     .ec-reset-verificando {
       display: flex; align-items: center; justify-content: center; gap: var(--ec-space-sm);

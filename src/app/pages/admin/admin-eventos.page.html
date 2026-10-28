@@ -1,0 +1,286 @@
+<div class="ec-admin-dash">
+  <!-- Ventana lateral compartida -->
+  <app-admin-sidebar activo="eventos"></app-admin-sidebar>
+
+  <!-- Contenido -->
+  <div class="ec-admin-dash__cuerpo">
+    <header class="ec-admin-dash__barra">
+      <div class="ec-admin-dash__barra-izq">
+        <button
+          type="button"
+          class="hamburguesa"
+          (click)="ui.lateralAbierto.set(!ui.lateralAbierto())"
+          aria-label="Mostrar u ocultar el menú"
+        >
+          ☰
+        </button>
+        <div>
+          <h1>Eventos</h1>
+          <p>
+            Catálogo real en Supabase · {{ conteos().validados | number }} validados ·
+            {{ conteos().enValidacion | number }} en validación ·
+            {{ conteos().ocultos | number }} desactivados
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Cantidades del catálogo real en Supabase -->
+    <section class="ec-admin-ev__kpis" aria-label="Cantidades de eventos">
+      <article class="kpi">
+        <span class="kpi__etiqueta">Total en base</span>
+        <strong class="kpi__valor">{{ conteos().total | number }}</strong>
+        <small class="kpi__detalle">validados + en validación</small>
+      </article>
+      <article class="kpi">
+        <span class="kpi__etiqueta">Validados</span>
+        <strong class="kpi__valor">{{ conteos().validados | number }}</strong>
+        <small class="kpi__detalle">publicados al sistema</small>
+      </article>
+      <article class="kpi kpi--validacion">
+        <span class="kpi__etiqueta">En validación</span>
+        <strong class="kpi__valor">{{ conteos().enValidacion | number }}</strong>
+        <small class="kpi__detalle">esperando revisión</small>
+      </article>
+      <article class="kpi kpi--ocultos">
+        <span class="kpi__etiqueta">Desactivados</span>
+        <strong class="kpi__valor">{{ conteos().ocultos | number }}</strong>
+        <small class="kpi__detalle">ocultos al público</small>
+      </article>
+    </section>
+
+    <article class="ec-admin-dash__tarjeta">
+      <!-- Pestañas de grupos -->
+      <div class="ec-admin-ev__pestanas" role="tablist" aria-label="Grupos de eventos">
+        <button
+          type="button"
+          role="tab"
+          class="pestaña"
+          [class.activa]="pestana() === 'validados'"
+          [attr.aria-selected]="pestana() === 'validados'"
+          (click)="cambiarPestana('validados')"
+        >
+          Validados ({{ conteos().validados | number }})
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="pestaña"
+          [class.activa]="pestana() === 'en_validacion'"
+          [attr.aria-selected]="pestana() === 'en_validacion'"
+          (click)="cambiarPestana('en_validacion')"
+        >
+          En validación ({{ conteos().enValidacion | number }})
+        </button>
+      </div>
+
+      <div class="ec-admin-ev__cabecera">
+        <input
+          type="search"
+          class="ec-admin-ev__busqueda"
+          placeholder="Buscar por título, comuna, recinto u origen…"
+          aria-label="Buscar eventos"
+          [value]="busqueda()"
+          (input)="alEscribirBusqueda($any($event.target).value)"
+        />
+        <label class="ec-admin-ev__por-pagina">
+          Mostrar
+          <select
+            (change)="alCambiarPorPagina($any($event.target).value)"
+            aria-label="Eventos por página"
+          >
+            @for (o of opcionesPagina; track o) {
+              <option [value]="o" [selected]="tamanoPagina() === o">{{ o }}</option>
+            }
+          </select>
+          por página
+        </label>
+      </div>
+
+      <!-- Cambio masivo de visibilidad -->
+      <div class="ec-admin-ev__masivo" aria-label="Acciones masivas de visibilidad">
+        <label class="masivo__alcance">
+          Aplicar a
+          <select
+            (change)="cambiarAlcanceMasivo($any($event.target).value === 'todos' ? 'todos' : 'grupo')"
+            [disabled]="masivaEnMarcha()"
+            aria-label="Alcance del cambio masivo"
+          >
+            <option value="grupo" [selected]="alcanceMasivo() === 'grupo'">
+              solo {{ pestana() === 'validados' ? 'los validados' : 'los en validación' }}
+            </option>
+            <option value="todos" [selected]="alcanceMasivo() === 'todos'">todos los eventos</option>
+          </select>
+        </label>
+        <button
+          type="button"
+          class="masivo__btn masivo__btn--apagar"
+          [disabled]="masivaEnMarcha() || cantidadSegunAlcance() === 0"
+          (click)="visibilidadMasiva(false)"
+        >
+          Desactivar todos
+        </button>
+        <button
+          type="button"
+          class="masivo__btn masivo__btn--prender"
+          [disabled]="masivaEnMarcha() || cantidadSegunAlcance() === 0"
+          (click)="visibilidadMasiva(true)"
+        >
+          Activar todos
+        </button>
+        @if (masivaEnMarcha()) {
+          <span role="status" class="masivo__aviso">Aplicando cambios masivos…</span>
+        } @else if (avisoMasivo(); as aviso) {
+          <span role="status" class="masivo__aviso">{{ aviso }}</span>
+        }
+      </div>
+
+      <!-- Estados de carga y error -->
+      @if (cargando()) {
+        <p class="vacio" role="status">Cargando catálogo…</p>
+      } @else if (error()) {
+        <p class="vacio error" role="alert">{{ error() }} La función admin-eventos debe estar desplegada y con ALLOW_DEMO_ADMIN=true.</p>
+        <button type="button" class="ec-admin-ev__mas" (click)="reintentar()">
+          Reintentar
+        </button>
+      } @else {
+
+      <div class="ec-admin-ev__tabla" role="table" aria-label="Listado de eventos por grupo">
+        <div class="fila fila--cabecera" role="row">
+          @for (col of columnasOrdenables; track col.campo) {
+            <span role="columnheader" [attr.aria-sort]="ariaSort(col.campo)">
+              <button
+                type="button"
+                class="orden"
+                [class.activa]="ordenCampo() === col.campo"
+                (click)="ordenarPor(col.campo)"
+                [attr.aria-label]="'Ordenar por ' + col.etiqueta"
+              >
+                {{ col.etiqueta }}
+                @if (ordenCampo() === col.campo) {
+                  <span aria-hidden="true">{{ ordenDesc() ? '▼' : '▲' }}</span>
+                }
+              </button>
+            </span>
+          }
+          @if (pestana() === 'en_validacion') {
+            <span role="columnheader">Acciones</span>
+          } @else {
+            <span role="columnheader">Visible públicamente</span>
+          }
+        </div>
+
+        @for (f of filasPagina(); track f.id) {
+          <div class="fila" [class.oculta]="!f.visible" role="row">
+            <span class="titulo" role="cell">
+              <strong>{{ f.titulo }}</strong>
+              <small>{{ f.recinto || 'Sin recinto informado' }} · creado {{ f.creado | date: 'dd MMM yy' }}</small>
+            </span>
+            <span class="fecha" role="cell">
+              @if (f.fecha) {
+                {{ f.fecha | date: 'dd MMM yy' }}
+              } @else {
+                Sin fecha
+              }
+            </span>
+            <span class="comuna" role="cell">{{ f.comuna || 'Sin comuna' }}</span>
+            <span class="fuente" role="cell" [title]="f.metodo || f.origen">{{ f.origen }}</span>
+            <span role="cell">
+              <span class="chip" [class]="'chip--' + claseEstado(f.estado)">
+                {{ etiquetaEstado(f.estado) }}
+              </span>
+            </span>
+
+            @if (pestana() === 'en_validacion') {
+              <span class="acciones" role="cell">
+                <button
+                  type="button"
+                  class="btn-validar"
+                  [disabled]="cambiando(f.id)"
+                  (click)="validar(f)"
+                >
+                  Publicar (validar)
+                </button>
+                <label class="ec-admin-ev__switch" [class.sin-visibilidad]="!f.visible">
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    [checked]="f.visible"
+                    [disabled]="cambiando(f.id)"
+                    (change)="cambiarVisibilidad(f, $any($event.target).checked)"
+                    [attr.aria-label]="'Visibilidad pública de ' + f.titulo"
+                  />
+                  <span aria-hidden="true"></span>
+                  <em>{{ f.visible ? 'Activo' : 'Desactivado' }}</em>
+                </label>
+              </span>
+            } @else {
+              <span role="cell">
+                <label class="ec-admin-ev__switch" [class.sin-visibilidad]="!f.visible">
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    [checked]="f.visible"
+                    [disabled]="cambiando(f.id)"
+                    (change)="cambiarVisibilidad(f, $any($event.target).checked)"
+                    [attr.aria-label]="'Visibilidad pública de ' + f.titulo"
+                  />
+                  <span aria-hidden="true"></span>
+                  <em>{{ f.visible ? 'Activo' : 'Desactivado' }}</em>
+                </label>
+              </span>
+            }
+          </div>
+        } @empty {
+          <p class="vacio">
+            @if (busqueda()) {
+              Sin resultados para “{{ busqueda() }}”.
+            } @else if (pestana() === 'en_validacion') {
+              No hay eventos esperando validación: las publicaciones de
+              organizadores aparecen aquí al enviarse.
+            } @else {
+              El grupo está vacío: sin eventos validados en Supabase.
+            }
+          </p>
+        }
+      </div>
+
+      <!-- Paginación de la tabla -->
+      @if (rango().total > 0) {
+        <nav class="ec-admin-ev__paginacion" aria-label="Paginación del listado">
+          <button
+            type="button"
+            class="paginacion__btn"
+            [disabled]="paginaValida() === 0"
+            (click)="cambiarPagina(-1)"
+          >
+            ‹ Anterior
+          </button>
+          <span class="paginacion__info" role="status">
+            Página {{ paginaValida() + 1 }} de {{ totalPaginas() }}
+            ({{ rango().inicio }}–{{ rango().fin }} de {{ rango().total | number }})
+          </span>
+          <button
+            type="button"
+            class="paginacion__btn"
+            [disabled]="(paginaValida() === totalPaginas() - 1 && !hayMas()) || cargandoMas()"
+            (click)="cambiarPagina(1)"
+          >
+            @if (cargandoMas()) {
+              Cargando…
+            } @else {
+              Siguiente ›
+            }
+          </button>
+        </nav>
+      }
+
+      }
+      <p class="ec-admin-dash__nota-interna">
+        Mostrando {{ rango().inicio }}–{{ rango().fin }} de {{ rango().total | number }} eventos descargados{{ hayMas() ? ' (hay más en el servidor)' : ' (grupo completo)' }} ·
+        {{ conteos().ocultos | number }} desactivados ·
+        la visibilidad apagada oculta el evento del catálogo público al recargar datos.
+      </p>
+    </article>
+  </div>
+</div>

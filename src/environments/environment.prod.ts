@@ -16,6 +16,12 @@ export const environment = {
 
   adminEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/admin-account',
 
+  // Moderación de eventos desde el panel (ver environment.ts).
+  adminEventosEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/admin-eventos',
+
+  // Publicación de eventos vía Edge Function (ver environment.ts).
+  publicarEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/publicar-evento',
+
   // Recuperación desacoplada (ver environment.ts).
   resetRequestEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/reset-password-request',
   resetConfirmEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/reset-password-confirm'

@@ -207,6 +207,9 @@ export class PublicarEventoPage {
         price_text: nuevoEvento.precio || null,
         image_url: nuevoEvento.imagen,
         audience: nuevoEvento.publico,
+        comuna: nuevoEvento.comuna,
+        modalidad: nuevoEvento.modalidad,
+        official_url: valores.paginaOficial?.trim() ? valores.paginaOficial!.trim() : undefined,
         categories: [nuevoEvento.categoria]
       });
       await this.eventosService.cargarEventos();
@@ -214,14 +217,9 @@ export class PublicarEventoPage {
       setTimeout(() => this.router.navigateByUrl('/home'), 1800);
     } catch (e: unknown) {
       const err = e as { message?: string; code?: string };
-      if (err.code === '42501' || /row-level security|permission denied/i.test(err.message ?? '')) {
-        this.errorServidor.set(
-          'Publicación aún no habilitada: falta la política RLS INSERT para organizadores '
-          + '(segunda entrega). El evento no se guardó.'
-        );
-      } else {
-        this.errorServidor.set(err.message || 'No se pudo publicar. Inicia sesión e inténtalo de nuevo.');
-      }
+      this.errorServidor.set(
+        err.message || 'No se pudo publicar. Revisa tu conexión e inténtalo de nuevo.'
+      );
     } finally {
       this.cargando.set(false);
     }

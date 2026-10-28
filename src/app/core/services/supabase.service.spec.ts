@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 
 // createClient se mockea para poder inspeccionar lo que se envía a GoTrue sin
 // tocar la red. Los espías viven en `vi.hoisted` porque `vi.mock` se eleva
@@ -25,6 +27,17 @@ vi.mock('@supabase/supabase-js', () => ({
 }));
 
 import { SupabaseService } from './supabase.service';
+
+/**
+ * Instancia el servicio dentro del contexto de inyección de Angular: el
+ * constructor usa `inject()` (Router), que falla fuera de TestBed.
+ */
+function crearServicio(): SupabaseService {
+  TestBed.configureTestingModule({
+    providers: [{ provide: Router, useValue: { navigateByUrl: vi.fn() } }]
+  });
+  return TestBed.inject(SupabaseService);
+}
 
 /** Usuario crudo de GoTrue, tal como lo recibe `aSesion`. */
 function usuarioCrudo(rol: 'usuario' | 'organizador') {
@@ -59,7 +72,7 @@ describe('SupabaseService · rol de la cuenta', () => {
 
   it('persiste el rol de organizador en user_metadata al registrar', async () => {
     mocks.signUp.mockResolvedValue({ error: null });
-    const servicio = new SupabaseService();
+    const servicio = crearServicio();
 
     await servicio.registrar('org@demo.cl', 'Secreta1!', 'Org Demo', 'organizador');
 
@@ -72,7 +85,7 @@ describe('SupabaseService · rol de la cuenta', () => {
 
   it('sin rol explícito la cuenta nace como usuario', async () => {
     mocks.signUp.mockResolvedValue({ error: null });
-    const servicio = new SupabaseService();
+    const servicio = crearServicio();
 
     await servicio.registrar('persona@demo.cl', 'Secreta1!', 'Persona Demo');
 
@@ -82,7 +95,7 @@ describe('SupabaseService · rol de la cuenta', () => {
 
   it('convertirEnOrganizador actualiza la cuenta y la sesión reactiva', async () => {
     mocks.updateUser.mockResolvedValue({ data: { user: usuarioCrudo('organizador') }, error: null });
-    const servicio = new SupabaseService();
+    const servicio = crearServicio();
 
     expect(servicio.esOrganizador()).toBe(false);
     const usuario = await servicio.convertirEnOrganizador();
@@ -93,7 +106,7 @@ describe('SupabaseService · rol de la cuenta', () => {
 
   it('una cuenta de usuario no puede publicar (no llega al INSERT)', async () => {
     mocks.getSession.mockResolvedValue({ data: { session: { user: usuarioCrudo('usuario') } } });
-    const servicio = new SupabaseService();
+    const servicio = crearServicio();
 
     await expect(servicio.publicarEvento(borrador)).rejects.toThrow(/organizador/i);
     expect(mocks.insert).not.toHaveBeenCalled();

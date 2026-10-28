@@ -377,10 +377,18 @@ export class SupabaseService {
   // ------------------------------------------------------------------
 
   /**
-   * Obtiene todos los eventos publicados paginando en bloques de 1000, y las
-   * comunas + categorías. Equivalente exacto al GET /api/eventos del Python.
+   * Obtiene los eventos publicados POR LOTES (progressive loading) y las
+   * comunas + categorías. Cada lote (~150 filas) llega en una petición
+   * propia; alLote() se invoca al recibirlo para que la interfaz pinte
+   * progresivamente sin esperar el catálogo completo.
    */
-  async catalogo(): Promise<{
+  async catalogo(
+    alLote?: (lote: (EventoRaw & { categorias: string[] })[]) => void,
+    // Entrega el mapa de comunas en cuanto se carga (antes del primer lote):
+    // el callback de lotes lo necesita ya poblado, no puede leer la variable
+    // del return (aún no existe cuando corre).
+    onComunas?: (comunas: Map<string, CommuneRaw>) => void
+  ): Promise<{
     eventos: (EventoRaw & { categorias: string[] })[];
     comunas: Map<string, CommuneRaw>;
     total: number;
@@ -392,6 +400,7 @@ export class SupabaseService {
         .from('communes')
         .select('id,name,region');
       for (const fila of (data ?? []) as CommuneRaw[]) comunas.set(fila.id, fila);
+      onComunas?.(comunas);
     } catch {
       /* el catálogo sigue funcionando sin nombres de comuna */
     }
@@ -418,9 +427,9 @@ export class SupabaseService {
       /* sin categorías, la ficha muestra "Otros" */
     }
 
-    // --- eventos publicados, paginando de a 1000 ---
+    // --- eventos publicados, por lotes (el lote entrega su callback) ---
     const eventos: (EventoRaw & { categorias: string[] })[] = [];
-    const TAM = 1000;
+    const TAM = 150;
     for (let offset = 0; ; offset += TAM) {
       const { data, error } = await this.cliente
         .from('events')
@@ -431,8 +440,16 @@ export class SupabaseService {
         .range(offset, offset + TAM - 1);
       if (error) break;
       const filas = (data ?? []) as EventoRaw[];
-      for (const fila of filas)
-        eventos.push({ ...fila, categorias: categoriasPorEvento.get(fila.id) ?? [] });
+      const lote = filas.map((fila) => ({
+        ...fila,
+        categorias: categoriasPorEvento.get(fila.id) ?? []
+      }));
+      eventos.push(...lote);
+      try {
+        alLote?.(lote);
+      } catch {
+        /* un callback que falla no corta el resto del catálogo */
+      }
       if (filas.length < TAM) break;
     }
 
@@ -440,9 +457,14 @@ export class SupabaseService {
   }
 
   /**
-   * INSERT de publicación con el token del usuario (RLS gobierna la escritura).
-   * Si aún no existe la política INSERT, PostgREST responde 403 (code 42501)
-   * y el error se propaga con su mensaje.
+   * Publicación de eventos vía Edge Function `publicar-evento`.
+   *
+   * Antes era un INSERT cliente con el JWT (RLS), pero nunca iba a funcionar:
+   * `events` exige `external_key` NOT NULL + único y `source_id` NOT NULL
+   * (FK a `sources`), y el constraint de `status` no admite 'pending_review'.
+   * La función (supabase/functions/publicar-evento) hace el INSERT con
+   * service_role generando esos campos, revalida el JWT con Admin API y
+   * rechaza cuentas sin rol organizador.
    */
   async publicarEvento(draft: {
     title: string;
@@ -455,56 +477,52 @@ export class SupabaseService {
     price_text: string | null;
     image_url: string;
     audience: string;
+    comuna?: string;
+    modalidad?: string;
+    official_url?: string;
     categories: (string | null)[];
   }): Promise<void> {
     const { data: sesion } = await this.cliente.auth.getSession();
     if (!sesion.session?.user) {
       throw new Error('Se requiere sesión de organizador para publicar.');
     }
-    // Defensa en profundidad: la UI ya oculta el formulario a cuentas de
-    // usuario, pero el INSERT tampoco debe salir desde una cuenta ciudadana.
+    // Defensa en profundidad (y compat con la spec): la UI ya oculta el
+    // formulario a cuentas de usuario, pero la llamada tampoco debe salir
+    // desde una cuenta ciudadana.
     if (this.aSesion(sesion.session.user).rol !== 'organizador') {
       throw new Error(
         'Tu cuenta es de usuario. Activa el perfil de organizador para publicar eventos.'
       );
     }
 
-    const category = draft.categories.find((c): c is string => !!c) ?? 'Otros';
-    const insert = {
-      title: draft.title,
-      description: draft.description,
-      start_at: draft.start_at,
-      end_at: draft.end_at,
-      address: draft.address,
-      venue: draft.venue,
-      is_free: draft.is_free,
-      price_text: draft.price_text,
-      image_url: draft.image_url,
-      audience: draft.audience,
-      source_url: null,
-      status: 'pending_review',
-      city: null as string | null,
-      region: null as string | null
-    };
-
-    const { error } = await this.cliente.from('events').insert(insert);
-    if (error) throw error;
-
-    // La categoría va por la tabla N:M `event_categories` (etiqueta).
-    try {
-      const { data: cat } = await this.cliente
-        .from('categories')
-        .select('id, name')
-        .eq('name', category)
-        .maybeSingle();
-      if (cat) {
-        await this.cliente.from('event_categories').insert({
-          event_id: (insert as unknown as { id?: string }).id ?? undefined,
-          category_id: cat.id
-        });
-      }
-    } catch {
-      /* la categoría es opcional; el evento ya se insertó */
+    const respuesta = await fetch(environment.publicarEdgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sesion.session.access_token}`
+      },
+      body: JSON.stringify({
+        titulo: draft.title,
+        descripcion: draft.description,
+        start_at: draft.start_at,
+        end_at: draft.end_at,
+        venue: draft.venue,
+        address: draft.address,
+        comuna: draft.comuna ?? null,
+        modalidad: draft.modalidad ?? null,
+        is_free: draft.is_free,
+        price_text: draft.price_text,
+        image_url: draft.image_url,
+        official_url: draft.official_url ?? null,
+        audience: draft.audience,
+        categories: draft.categories
+      })
+    });
+    const datos = (await respuesta.json().catch(() => null)) as
+      | { error?: string; mensaje?: string }
+      | null;
+    if (!respuesta.ok || !datos) {
+      throw new Error(datos?.error || 'No se pudo guardar el evento. Intenta de nuevo.');
     }
   }
 }

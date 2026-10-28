@@ -1,0 +1,551 @@
+// Estilos de la página Eventos: buscador + tabla compacta.
+
+// ---------------------------------------------------------------------------
+// Cantidades (total, validados, en validación, desactivados)
+// ---------------------------------------------------------------------------
+
+.ec-admin-ev__kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ec-admin-ev__kpis .kpi {
+  background: var(--ec-surface, #fffdf9);
+  border: 1px solid rgba(90, 77, 66, 0.14);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 2px;
+
+  .kpi__etiqueta {
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ec-text-muted, #5d564a);
+  }
+
+  .kpi__valor {
+    font-size: 1.5rem;
+    line-height: 1.15;
+    color: var(--ec-text, #3b332b);
+  }
+
+  .kpi__detalle {
+    font-size: 0.74rem;
+    color: var(--ec-text-muted, #5d564a);
+  }
+
+  &.kpi--validacion .kpi__valor {
+    color: #8a5f10;
+  }
+
+  &.kpi--ocultos .kpi__valor {
+    color: #a32014;
+  }
+}
+
+.ec-admin-ev__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.ec-admin-ev__busqueda {
+  flex: 1 1 260px;
+  border: 1px solid rgba(90, 77, 66, 0.25);
+  border-radius: 10px;
+  background: var(--ec-surface, #fffdf9);
+  color: var(--ec-text, #3b332b);
+  padding: 8px 12px;
+  font-size: 0.86rem;
+
+  &:focus-visible {
+    outline: 2px solid rgba(217, 95, 43, 0.55);
+    outline-offset: 1px;
+  }
+}
+
+.ec-admin-ev__por-pagina {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.84rem;
+  color: var(--ec-text-muted, #5d564a);
+  white-space: nowrap;
+
+  select {
+    border: 1px solid rgba(90, 77, 66, 0.25);
+    border-radius: 8px;
+    background: var(--ec-surface, #fffdf9);
+    color: var(--ec-text, #3b332b);
+    padding: 6px 8px;
+    font: inherit;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid rgba(217, 95, 43, 0.55);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.ec-admin-ev__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: var(--ec-text-muted, #5d564a);
+  cursor: pointer;
+
+  input {
+    accent-color: #d95f2b;
+  }
+}
+
+.ec-admin-ev__tabla {
+  margin-top: 8px;
+}
+
+// Cabecera ordenable: botón discreto que se nota al pasar el mouse.
+.ec-admin-ev__tabla .orden {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  margin: -2px -6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(217, 95, 43, 0.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(217, 95, 43, 0.55);
+    outline-offset: 1px;
+  }
+
+  &.activa {
+    color: #b04a1f;
+
+    span {
+      font-size: 0.66rem;
+    }
+  }
+}
+
+// Barra de paginación bajo la tabla.
+.ec-admin-ev__paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+
+  .paginacion__btn {
+    padding: 7px 14px;
+    border: 1px solid rgba(90, 77, 66, 0.25);
+    border-radius: 8px;
+    background: var(--ec-surface, #fffdf9);
+    color: var(--ec-text, #3b332b);
+    font-size: 0.82rem;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: rgba(217, 95, 43, 0.07);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(217, 95, 43, 0.55);
+      outline-offset: 1px;
+    }
+  }
+
+  .paginacion__info {
+    font-size: 0.8rem;
+    color: var(--ec-text-muted, #5d564a);
+  }
+}
+
+.ec-admin-ev__tabla .fila {
+  display: grid;
+  grid-template-columns: minmax(200px, 2fr) 100px 110px minmax(110px, 1fr) 84px minmax(120px, auto);
+  gap: 10px;
+  align-items: center;
+  padding: 8px 4px;
+  border-bottom: 1px dashed rgba(90, 77, 66, 0.15);
+  font-size: 0.84rem;
+
+  &--cabecera {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--ec-text-muted, #5d564a);
+    border-bottom: 1px solid rgba(90, 77, 66, 0.22);
+  }
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.ec-admin-ev__tabla .titulo {
+  display: grid;
+  min-width: 0;
+
+  strong {
+    color: var(--ec-text, #3b332b);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    font-size: 0.74rem;
+    color: var(--ec-text-muted, #5d564a);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.ec-admin-ev__tabla .comuna,
+.ec-admin-ev__tabla .fuente {
+  color: var(--ec-text-muted, #5d564a);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ec-admin-ev__tabla .fecha {
+  color: var(--ec-text, #3b332b);
+  text-transform: capitalize;
+
+  em {
+    font-style: normal;
+    font-size: 0.78rem;
+    color: var(--ec-text-muted, #5d564a);
+  }
+}
+
+// Chips de estado (severidad visual)
+
+.chip {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.5;
+
+  &--proximo {
+    background: rgba(217, 95, 43, 0.12);
+    color: #b04a1f;
+  }
+
+  &--activo {
+    background: rgba(73, 146, 105, 0.15);
+    color: #2f6d4c;
+  }
+
+  &--ampar {
+    background: rgba(217, 155, 43, 0.16);
+    color: #8a5f10;
+  }
+
+  &--peligro {
+    background: rgba(179, 38, 30, 0.12);
+    color: #a32014;
+  }
+}
+
+.ec-admin-ev__mas {
+  margin-top: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid rgba(90, 77, 66, 0.25);
+  border-radius: 10px;
+  background: var(--ec-surface, #fffdf9);
+  color: var(--ec-text, #3b332b);
+  font-size: 0.84rem;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(217, 95, 43, 0.07);
+  }
+}
+
+@media (max-width: 900px) {
+  .ec-admin-ev__kpis {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .ec-admin-ev__tabla .fila {
+    grid-template-columns: 1fr auto;
+  }
+
+  .ec-admin-ev__tabla .fila .comuna,
+  .ec-admin-ev__tabla .fila .fuente {
+    display: none;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pestañas de grupos (Validados / En validación)
+// ---------------------------------------------------------------------------
+
+.ec-admin-ev__pestanas {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ec-admin-ev__pestanas .pestaña {
+  padding: 7px 14px;
+  border: 1px solid rgba(90, 77, 66, 0.25);
+  border-radius: 999px;
+  background: var(--ec-surface, #fffdf9);
+  color: var(--ec-text-muted, #5d564a);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(217, 95, 43, 0.07);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(217, 95, 43, 0.55);
+    outline-offset: 1px;
+  }
+
+  &.activa {
+    background: #d95f2b;
+    border-color: #b04a1f;
+    color: #fffdf9;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Interruptor de visibilidad (accesible con teclado, etiqueta en el input)
+// ---------------------------------------------------------------------------
+
+.ec-admin-ev__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0.01;
+    overflow: hidden;
+  }
+
+  span {
+    position: relative;
+    width: 34px;
+    height: 18px;
+    border-radius: 999px;
+    background: rgba(90, 77, 66, 0.35);
+    transition: background 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  span::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fffdf9;
+    transition: transform 0.15s ease;
+  }
+
+  em {
+    font-style: normal;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #2f6d4c;
+    min-width: 74px;
+  }
+
+  &.sin-visibilidad em {
+    color: #a32014;
+  }
+
+  input:checked + span {
+    background: #498a65;
+  }
+
+  input:checked + span::before {
+    transform: translateX(16px);
+  }
+
+  input:focus-visible + span {
+    outline: 2px solid rgba(217, 95, 43, 0.55);
+    outline-offset: 2px;
+  }
+
+  input:disabled + span {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Botón validar (bandeja "En validación") y fila oculta
+// ---------------------------------------------------------------------------
+
+.ec-admin-ev__tabla .acciones {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ec-admin-ev__tabla .btn-validar {
+  padding: 5px 10px;
+  border: 1px solid #2f6d4c;
+  border-radius: 8px;
+  background: rgba(73, 146, 105, 0.15);
+  color: #2f6d4c;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(73, 146, 105, 0.28);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(73, 146, 105, 0.6);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.ec-admin-ev__tabla .fila.oculta .titulo,
+.ec-admin-ev__tabla .fila.oculta .fecha,
+.ec-admin-ev__tabla .fila.oculta .comuna,
+.ec-admin-ev__tabla .fila.oculta .fuente {
+  opacity: 0.5;
+}
+
+.ec-admin-ev__tabla .fila.oculta .titulo::after {
+  content: ' · oculto';
+  color: #8a5f10;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+// ---------------------------------------------------------------------------
+// Acciones masivas de visibilidad
+// ---------------------------------------------------------------------------
+
+.ec-admin-ev__masivo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(90, 77, 66, 0.3);
+  border-radius: 10px;
+  background: rgba(90, 77, 66, 0.04);
+
+  .masivo__alcance {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--ec-text-muted, #5d564a);
+
+    select {
+      border: 1px solid rgba(90, 77, 66, 0.25);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 0.82rem;
+      background: var(--ec-surface, #fffdf9);
+      color: var(--ec-text, #3b332b);
+      cursor: pointer;
+
+      &:focus-visible {
+        outline: 2px solid rgba(217, 95, 43, 0.55);
+        outline-offset: 1px;
+      }
+    }
+  }
+
+  .masivo__btn {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &--apagar {
+      border: 1px solid #a13d3d;
+      background: rgba(161, 61, 61, 0.08);
+      color: #a13d3d;
+
+      &:hover:not(:disabled) {
+        background: rgba(161, 61, 61, 0.18);
+      }
+    }
+
+    &--prender {
+      border: 1px solid #2f6d4c;
+      background: rgba(73, 146, 105, 0.08);
+      color: #2f6d4c;
+
+      &:hover:not(:disabled) {
+        background: rgba(73, 146, 105, 0.18);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(217, 95, 43, 0.55);
+      outline-offset: 1px;
+    }
+  }
+
+  .masivo__aviso {
+    font-size: 0.8rem;
+    color: var(--ec-text-muted, #5d564a);
+  }
+}

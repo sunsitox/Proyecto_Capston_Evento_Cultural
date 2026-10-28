@@ -113,6 +113,11 @@
 }
 
 .ec-fieldset__legend {
+  /* float:left anula la muesca que el fieldset nativo recorta en su borde
+     superior para la caja de la leyenda; ocupando todo el ancho el borde
+     corre completo por detrás. */
+  float: left;
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -138,6 +143,7 @@
 }
 
 .ec-fieldset__body {
+  clear: both;
   padding: var(--ec-space-md) var(--ec-space-lg) var(--ec-space-lg);
   min-width: 0;
 }
@@ -176,23 +182,65 @@
   }
 }
 
-.ec-publish-toaststack .ec-api-error {
+.ec-publish-toaststack .ec-api-alert {
   pointer-events: auto;
   width: 100%;
   max-width: 720px;
-  border: 1px solid rgba(198, 40, 40, 0.35);
-  background: rgba(198, 40, 40, 0.08);
-  color: var(--ec-danger, #b3261e);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin: 0;
-  padding: 10px 14px;
+  padding: 12px 12px 12px 16px;
+  border: 1.5px solid var(--ec-danger);
+  background: var(--ec-danger-bg);
   border-radius: var(--ec-radius-md);
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   line-height: 1.5;
   box-shadow: var(--ec-shadow-lg);
   animation: ec-toast-in var(--ec-duration-slow) var(--ec-ease-out) both;
+
+  > p {
+    flex: 1;
+    margin: 0;
+    color: var(--ec-text-dark);
+    font-weight: 500;
+  }
+
+  > ion-icon {
+    font-size: 1.35rem;
+    color: var(--ec-danger);
+    flex-shrink: 0;
+  }
+}
+
+/* Cierre explicito: objetivo táctil 44px (WCAG 2.5.8), focus visible. */
+.ec-publish-toaststack .ec-api-alert__cerrar {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: -8px -4px -8px 0;
+  border: none;
+  background: none;
+  border-radius: var(--ec-radius-sm);
+  color: var(--ec-text-muted);
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 1.3rem;
+  }
+
+  &:hover {
+    color: var(--ec-text-dark);
+    background: var(--ec-surface-hover);
+  }
+
+  &:focus-visible {
+    outline: var(--ec-focus-ring-width) solid var(--ec-focus);
+    outline-offset: -3px;
+  }
 }
 
 @keyframes ec-toast-in {
@@ -204,6 +252,13 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Respeta la preferencia de menos movimiento (WCAG 2.3.3). */
+@media (prefers-reduced-motion: reduce) {
+  .ec-publish-toaststack .ec-api-alert {
+    animation: none;
   }
 }
 
@@ -239,8 +294,33 @@
   border-radius: var(--ec-radius-md);
   transition: border-color var(--ec-duration-fast) var(--ec-ease);
 
+  /* Chromium pinta el fondo UA (Field, blanco) sobre el control nativo de
+     type date/time/number y el button del ion-select: sobre el tinte del
+     ion-item genera un velo grisáceo desigual entre campos. El control
+     interior queda transparente; el fondo es siempre el del ion-item. */
+  ::ng-deep input,
+  ::ng-deep textarea,
+  ::ng-deep button {
+    background: transparent !important;
+  }
+
   &:focus-within {
     border-color: var(--ec-primary);
+  }
+}
+
+/* El campo "Fecha" es una etiqueta plana + botón de datetime: alineada con
+   los labels apilados del resto y sin la píldora blanca por defecto. */
+.ec-input--boton {
+  ::ng-deep ion-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ec-text-light);
+    margin: 0;
+  }
+
+  ::ng-deep ion-datetime-button::part(native) {
+    background: transparent;
   }
 }
 

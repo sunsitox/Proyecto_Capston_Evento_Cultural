@@ -16,6 +16,15 @@ export const environment = {
 
   adminEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/admin-account',
 
+  // Moderación de eventos desde el panel (validados / en validación y
+  // visibilidad pública con service_role; ver admin-eventos.service.ts).
+  adminEventosEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/admin-eventos',
+
+  // Publicación de eventos (INSERT lo hace la Edge Function con service role:
+  // la tabla exige external_key/source_id que el cliente no puede generar y
+  // el constraint de status no admite 'pending_review'; ver la función).
+  publicarEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/publicar-evento',
+
   // Recuperación de contraseña desacoplada: la generación del enlace temporal
   // y el envío del correo viven en Edge Functions propias (el correo sale por
   // el motor externo configurado ahí; Supabase Auth no envía nada).

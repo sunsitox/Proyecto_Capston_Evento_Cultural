@@ -1,0 +1,42 @@
+<div class="ec-admin-login">
+  <main class="ec-admin-login__panel">
+    <header class="ec-admin-login__marca">
+      <h1>Panel de administración</h1>
+      <p>Evento Cultural · acceso interno</p>
+    </header>
+
+    <form class="ec-admin-login__form" (ngSubmit)="ingresar()">
+      <ion-input
+        label="Usuario"
+        labelPlacement="stacked"
+        fill="outline"
+        autocomplete="username"
+        spellcheck="false"
+        autocapitalize="none"
+        [value]="usuario()"
+        (ionInput)="usuario.set($any($event.detail).value ?? '')"
+      ></ion-input>
+
+      <ion-input
+        label="Contraseña"
+        labelPlacement="stacked"
+        fill="outline"
+        type="password"
+        autocomplete="current-password"
+        [value]="clave()"
+        (ionInput)="clave.set($any($event.detail).value ?? '')"
+      ></ion-input>
+
+      @if (error()) {
+        <p class="ec-admin-login__error" role="alert">{{ error() }}</p>
+      }
+
+      <ion-button type="submit" expand="block" [disabled]="cargando()">
+        {{ cargando() ? 'Verificando…' : 'Ingresar' }}
+      </ion-button>
+    </form>
+
+    <!-- Acceso interno: sin referencia de vuelta que revele la existencia
+         de esta URL a curiosos que entren directamente aquí. -->
+  </main>
+</div>

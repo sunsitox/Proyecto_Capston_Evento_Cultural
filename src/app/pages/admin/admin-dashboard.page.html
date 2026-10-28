@@ -1,0 +1,153 @@
+<div class="ec-admin-dash">
+  <!-- Ventana lateral compartida por todas las páginas del panel -->
+  <app-admin-sidebar activo="dashboard"></app-admin-sidebar>
+
+  <!-- Contenido -->
+  <div class="ec-admin-dash__cuerpo">
+    <header class="ec-admin-dash__barra">
+      <div class="ec-admin-dash__barra-izq">
+        <button
+          type="button"
+          class="hamburguesa"
+          (click)="ui.lateralAbierto.set(!ui.lateralAbierto())"
+          aria-label="Mostrar u ocultar el menú"
+        >
+          ☰
+        </button>
+        <div>
+          <h1>Panel de administración</h1>
+          <p>
+            Datos generales del catálogo · generado
+            <span class="ec-admin-dash__fecha">
+              {{ generado() | date: 'dd MMM yyyy, HH:mm' }}
+            </span>
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <!-- 1 · Resumen: vigencia y oferta temporal -->
+    <section class="ec-admin-dash__kpis" aria-label="Indicadores generales">
+      <article class="ec-admin-dash__kpi">
+        <span class="rotulo">Eventos vigentes</span>
+        <strong>{{ totalEventos() | number }}</strong>
+        <small>publicados y sin vencer</small>
+      </article>
+      <article class="ec-admin-dash__kpi">
+        <span class="rotulo">Próximos 7 días</span>
+        <strong>{{ proximos7() | number }}</strong>
+        <small>con fecha en la semana</small>
+      </article>
+      <article class="ec-admin-dash__kpi">
+        <span class="rotulo">Próximos 30 días</span>
+        <strong>{{ proximos30() | number }}</strong>
+        <small>horizonte del mes</small>
+      </article>
+      <article class="ec-admin-dash__kpi">
+        <span class="rotulo">Gratuitos</span>
+        <strong>{{ gratuitos() | number }}</strong>
+        <small>
+          {{
+            totalEventos()
+              ? (((gratuitos() * 1000) / totalEventos()) / 10 | number: '1.1-1')
+              : 0
+          }}% del catálogo
+        </small>
+      </article>
+      <article class="ec-admin-dash__kpi">
+        <span class="rotulo">Con ubicación</span>
+        <strong>{{ conUbicacion() | number }}</strong>
+        <small>con pin exacto (lat/lng)</small>
+      </article>
+      <article class="ec-admin-dash__kpi">
+        <span class="rotulo">Permanentes</span>
+        <strong>{{ permanentes() | number }}</strong>
+        <small>espacios sin fecha (museos, etc.)</small>
+      </article>
+    </section>
+
+    <!-- 2 · Catálogo: con qué oferta interactúan los usuarios -->
+    <h2 class="ec-admin-dash__titulo-seccion">Catálogo</h2>
+    <section class="ec-admin-dash__fila">
+      <article class="ec-admin-dash__tarjeta">
+        <h2>Categorías con más eventos</h2>
+        <div class="ec-admin-dash__lista-scroll">
+          @for (d of porCategoria(); track d.etiqueta) {
+            <div class="barra">
+              <span class="barra__etiqueta">{{ d.etiqueta }}</span>
+              <span class="barra__pista">
+                <span
+                  class="barra__lleno"
+                  [style.width.%]="pct(d.cantidad, maxDe(porCategoria()))"
+                ></span>
+              </span>
+              <span class="barra__valor">{{ d.cantidad }}</span>
+            </div>
+          } @empty {
+            <p class="vacio">Sin datos todavía.</p>
+          }
+        </div>
+      </article>
+
+      <article class="ec-admin-dash__tarjeta">
+        <h2>Modalidad</h2>
+        @for (d of porModalidad(); track d.etiqueta) {
+          <div class="barra">
+            <span class="barra__etiqueta">{{ d.etiqueta }}</span>
+            <span class="barra__pista">
+              <span
+                class="barra__lleno barra__lleno--verde"
+                [style.width.%]="pct(d.cantidad, maxDe(porModalidad()))"
+              ></span>
+            </span>
+            <span class="barra__valor">{{ d.cantidad }}</span>
+          </div>
+        } @empty {
+          <p class="vacio">Sin datos todavía.</p>
+        }
+        <h2 class="mt">Público objetivo (top 6)</h2>
+        @for (d of porPublico(); track d.etiqueta) {
+          <div class="barra">
+            <span class="barra__etiqueta barra__etiqueta--sm">{{ d.etiqueta }}</span>
+            <span class="barra__pista">
+              <span
+                class="barra__lleno barra__lleno--ambar"
+                [style.width.%]="pct(d.cantidad, maxDe(porPublico()))"
+              ></span>
+            </span>
+            <span class="barra__valor">{{ d.cantidad }}</span>
+          </div>
+        }
+      </article>
+    </section>
+
+    <!-- 3 · Mapa de calor -->
+    <section class="ec-admin-dash__tarjeta">
+      <div class="ec-admin-dash__mapa-cabecera">
+        <h2>Mapa de calor — densidad de eventos</h2>
+        <div class="leyenda" aria-label="Escala de intensidad">
+          <span>menos</span>
+          @for (c of paletaCalor; track c.color) {
+            <i [style.background]="c.color"></i>
+          }
+          <span>más</span>
+        </div>
+      </div>
+      <div #lienzo class="ec-admin-dash__mapa"></div>
+    </section>
+
+    <!-- Nota sobre datos personales (RLS) -->
+    <article class="ec-admin-dash__tarjeta ec-admin-dash__nota">
+      <h2>Preferencias declaradas de los usuarios</h2>
+      <p>
+        Las preferencias guardadas en cuenta y las señales de interés viven en
+        Supabase con RLS (cada usuario ve solo las suyas), así que este panel no
+        puede leerlas con la clave pública. Para verlas agregadas se necesita una
+        <strong>función Edge con service_role</strong> que sumarice
+        <code>user_metadata.recomendaciones</code> y
+        <code>user_event_interactions</code>. Mientras tanto, las secciones de
+        arriba describen la oferta con la que esas preferencias interactúan.
+      </p>
+    </article>
+  </div>
+</div>

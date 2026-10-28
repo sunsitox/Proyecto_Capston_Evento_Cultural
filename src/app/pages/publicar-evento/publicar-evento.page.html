@@ -1,7 +1,21 @@
-<!-- Aviso como overlay fijo: no desplaza ni deforma el contenido -->
+<!-- Aviso como overlay fijo: no desplaza ni deforma el contenido.
+     role="alert" lo anuncia de inmediato; el icono dá el significado más
+     allá del color (WCAG 1.4.1) y el cierre es un botón de 44px con nombre
+     accesible (WCAG 2.5.8); el aviso no desaparece solo (WCAG 2.2.1). -->
 <div class="ec-publish-toaststack">
-  @if (errorServidor()) {
-    <div class="ec-api-error" role="alert">{{ errorServidor() }}</div>
+  @if (errorServidor(); as msg) {
+    <div class="ec-api-alert" role="alert">
+      <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+      <p>{{ msg }}</p>
+      <button
+        type="button"
+        class="ec-api-alert__cerrar"
+        aria-label="Cerrar aviso de error"
+        (click)="errorServidor.set(null)"
+      >
+        <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+      </button>
+    </div>
   }
 </div>
 <div class="ec-page ec-publish">
@@ -158,7 +172,7 @@
         <div class="ec-fieldset__body ec-form-grid">
           <div class="ec-field">
             <ion-item
-              class="ec-input"
+              class="ec-input ec-input--boton"
               [class.ec-input--invalid]="errorPara('fecha')"
               lines="none"
             >

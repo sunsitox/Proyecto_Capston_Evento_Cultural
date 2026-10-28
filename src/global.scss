@@ -580,3 +580,14 @@ a {
   box-shadow: 0 0 0 4px rgba(47, 111, 179, 0.25);
 }
 
+
+// ---------------------------------------------------------------------------
+// Panel de administración: riel contraído del sidebar. La clase la establece
+// AdminSidebarComponent en el <body> (efecto) porque la re-encoladura del
+// contenido (margin-left) sale del encapsulado de componentes.
+// ---------------------------------------------------------------------------
+@media (min-width: 901px) {
+  body.ec-admin-contraido .ec-admin-dash__cuerpo {
+    margin-left: 72px;
+  }
+}

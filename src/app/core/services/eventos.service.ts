@@ -48,6 +48,9 @@ export const FILTROS_INICIALES: FiltrosEventos = {
   accesible: false
 };
 
+/** Llave en localStorage con las páginas/fuentes ocultas desde el panel. */
+const EVENTOS_FUENTES_OCULTAS = 'ec_fuentes_ocultas_v1';
+
 /** Opción de filtro con la cantidad de eventos que quedarían al elegirla. */
 export interface OpcionFiltro {
   valor: string;
@@ -84,6 +87,8 @@ export class EventosService {
   private readonly _ordenPor = signal<OrdenEventos>('fecha');
   private readonly _cargando = signal<boolean>(false);
   private readonly _error = signal<string | null>(null);
+  /** Promesa de la carga en curso (evita descargas simultáneas entre páginas). */
+  private cargaEnCurso?: Promise<void>;
 
   constructor() {
     // DEF-QA-011: sin resolver, Perfil siempre veía 0 intereses aunque
@@ -116,12 +121,75 @@ export class EventosService {
    */
   readonly eventosVigentes = computed(() => {
     const hoy = EventosService.hoyISO();
-    return this._eventos().filter((e) => {
-      if (e.permanente) return true;
-      if (!e.fechaTermino) return !e.fecha || e.fecha >= hoy;
-      return e.fechaTermino >= hoy;
-    });
+    return this._eventos()
+      .filter((e) => {
+        if (e.permanente) return true;
+        if (!e.fechaTermino) return !e.fecha || e.fecha >= hoy;
+        return e.fechaTermino >= hoy;
+      })
+      // Páginas ocultas desde el panel de administración: sus eventos
+      // desaparecen de TODO el catálogo (sitio público incluido).
+      .filter((e) => !this._fuentesOcultas().has(e.fuente));
   });
+
+  /** Catálogo SIN filtrar (todo lo cargado), para administración/paneles. */
+  readonly catalogoCompleto = computed(() => this._eventos());
+
+  /**
+   * Páginas (fuentes de extracción) ocultas por el administrador.
+   *
+   * Se guardan en localStorage del navegador donde se administran: la
+   * ocultación ya es efectiva para todo el catálogo en ese entorno. Para
+   * aplicarla a todos los visitantes conviene una tabla en Supabase con Edge
+   * Function (service_role), igual que las preferencias agregadas.
+   */
+  private readonly _fuentesOcultas = signal<Set<string>>(EventosService.leerFuentesOcultas());
+
+  /** Nombres de fuente excluidos del catálogo. */
+  readonly fuentesOcultas = this._fuentesOcultas.asReadonly();
+
+  /** Oculta o vuelve a mostrar una página/fuente en todo el catálogo. */
+  ocultarFuente(fuente: string, ocultar: boolean): void {
+    if (!fuente || !fuente.trim()) return;
+    const lista = new Set(this._fuentesOcultas());
+    if (ocultar) lista.add(fuente);
+    else lista.delete(fuente);
+    this._fuentesOcultas.set(lista);
+    try {
+      localStorage.setItem(EVENTOS_FUENTES_OCULTAS, JSON.stringify([...lista]));
+    } catch {
+      /* sin almacenamiento disponible, el ajuste vive solo en memoria */
+    }
+  }
+
+  /**
+   * Reemplaza la nómina COMPLETA de páginas ocultas de una vez (acción de
+   * lote "activar todo / desactivar todo"): una sola escritura persistente.
+   */
+  definirFuentesOcultas(fuentes: readonly string[]): void {
+    const lista = new Set(fuentes.filter((f) => f && f.trim()));
+    this._fuentesOcultas.set(lista);
+    try {
+      localStorage.setItem(EVENTOS_FUENTES_OCULTAS, JSON.stringify([...lista]));
+    } catch {
+      /* sin almacenamiento disponible, el ajuste vive solo en memoria */
+    }
+  }
+
+  private static leerFuentesOcultas(): Set<string> {
+    try {
+      const guardadas: unknown = JSON.parse(
+        localStorage.getItem(EVENTOS_FUENTES_OCULTAS) ?? '[]'
+      );
+      return new Set(
+        Array.isArray(guardadas)
+          ? guardadas.filter((x): x is string => typeof x === 'string')
+          : []
+      );
+    } catch {
+      return new Set();
+    }
+  }
 
   readonly eventosFiltrados = computed(() => {
     const f = this._filtros();
@@ -404,8 +472,9 @@ export class EventosService {
   }
 
   /**
-   * INSERT de publicación en Supabase con el JWT del usuario (RLS gobierna).
-   * Lanza el error de PostgREST si la política INSERT no existe todavía.
+   * Publica el evento vía la Edge Function `publicar-evento` (ver
+   * SupabaseService.publicarEvento: INSERT con service_role tras revalidar
+   * el JWT y el rol organizador).
    */
   async publicarSupabase(draft: {
     title: string;
@@ -418,6 +487,9 @@ export class EventosService {
     price_text: string | null;
     image_url: string;
     audience: string;
+    comuna?: string;
+    modalidad?: string;
+    official_url?: string;
     categories: (string | null)[];
   }): Promise<void> {
     await this.supabase.publicarEvento(draft);
@@ -469,21 +541,61 @@ export class EventosService {
   }
 
   /**
-   * Carga el catálogo completo desde Supabase (vía supabase-js, clave pública).
-   * Si falla, se conservan los eventos de demostración y se avisa en la interfaz.
+   * Carga el catálogo desde Supabase EN LOTES (progressive loading): el
+   * primer lote (~150 eventos) pinta de inmediato y libera el spinner;
+   * el resto llega solicitar-bloque-solicitar en segundo plano y se va
+   * concatenando, así ninguna lista espera los 900+ de una vez.
+   * Si falla, se conservan los eventos de demostración y se avisa.
    */
   async cargarEventos(): Promise<void> {
+    // Un solo catálogo en vuelo: si otra página pide recarga mientras la
+    // progresiva corre, comparten la misma promesa (y no se intercalan lotes).
+    if (this.cargaEnCurso) return this.cargaEnCurso;
+    this.cargaEnCurso = this.descargarCatalogo().finally(() => {
+      this.cargaEnCurso = undefined;
+    });
+    return this.cargaEnCurso;
+  }
+
+  private async descargarCatalogo(): Promise<void> {
     this._cargando.set(true);
     this._error.set(null);
+    const acumulados: Evento[] = [];
+    let hayPrimerLote = false;
     try {
-      const { eventos, comunas } = await this.supabase.catalogo();
+      // El mapa de comunas llega por su propio callback ANTES del primer
+      // lote: el callback de lotes corre mientras `catalogo()` aún no
+      // resuelve, así no puede leer valores del return.
+      let comunas: Map<string, { id: string; name: string; region: string | null }> =
+        new Map();
+      const { eventos } = await this.supabase.catalogo((lote) => {
+        if (lote.length === 0) return;
+        const mapeados = lote.map((raw) => this.desdeApi(raw, comunas));
+        acumulados.push(...mapeados);
+        if (!hayPrimerLote) {
+          hayPrimerLote = true;
+          // Primer bloque: reemplaza los mocks y apaga el spinner para que
+          // el listado pinte ya, mientras el resto descarga en segundo plano.
+          this._cargando.set(false);
+          this._eventos.set(mapeados);
+        } else {
+          this._eventos.update((actuales) => [...actuales, ...mapeados]);
+        }
+      }, (mapa) => {
+        comunas = mapa;
+      });
       if (eventos.length === 0) {
         this._error.set('Supabase respondió sin eventos. Se muestran eventos de demostración.');
         return;
       }
-      this._eventos.set(eventos.map((raw) => this.desdeApi(raw, comunas)));
+      // Estado final coherente: la lista completa en el orden del servidor.
+      this._eventos.set(acumulados);
     } catch {
-      this._error.set('No se pudo conectar con Supabase. Se muestran eventos de demostración.');
+      this._error.set(
+        hayPrimerLote
+          ? 'La carga se interrumpió a mitad del catálogo (se muestran los eventos que llegaron).'
+          : 'No se pudo conectar con Supabase. Se muestran eventos de demostración.'
+      );
     } finally {
       this._cargando.set(false);
     }

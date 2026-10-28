@@ -1,0 +1,105 @@
+<aside
+  class="ec-admin-dash__lateral"
+  [class.abierto]="ui.lateralAbierto()"
+  [class.contraido]="ui.lateralContraido()"
+>
+  <!-- Botón de contraer / desplegar (pantallas anchas) -->
+  <button
+    type="button"
+    class="ec-admin-dash__lateral-toggle"
+    (click)="
+      cerrarMenu();
+      ui.alternarLateralContraido()
+    "
+    [attr.aria-expanded]="!ui.lateralContraido()"
+    [attr.aria-label]="
+      ui.lateralContraido() ? 'Desplegar el panel de navegación' : 'Contraer el panel de navegación'
+    "
+    [title]="ui.lateralContraido() ? 'Desplegar panel' : 'Contraer panel'"
+  >
+    <span aria-hidden="true">{{ ui.lateralContraido() ? '»' : '«' }}</span>
+  </button>
+
+  <div class="ec-admin-dash__lateral-marca">
+    <strong>Evento Cultural</strong>
+    <span>Panel interno</span>
+  </div>
+
+  <!-- Opciones de la parte de arriba -->
+  <nav class="ec-admin-dash__lateral-nav" aria-label="Secciones del panel">
+    <a
+      routerLink="/v00/admin/panel"
+      [class.activo]="activo === 'dashboard'"
+      [attr.aria-current]="activo === 'dashboard' ? 'page' : null"
+      title="Dashboard"
+      >Dashboard</a
+    >
+    <a
+      routerLink="/v00/admin/eventos"
+      [class.activo]="activo === 'eventos'"
+      [attr.aria-current]="activo === 'eventos' ? 'page' : null"
+      title="Eventos"
+      >Eventos</a
+    >
+    <a
+      routerLink="/v00/admin/paginas"
+      [class.activo]="activo === 'paginas'"
+      [attr.aria-current]="activo === 'paginas' ? 'page' : null"
+      title="Páginas"
+      >Páginas</a
+    >
+    <a
+      routerLink="/v00/admin/organizadores"
+      [class.activo]="activo === 'organizadores'"
+      [attr.aria-current]="activo === 'organizadores' ? 'page' : null"
+      title="Organizadores"
+      >Organizadores</a
+    >
+  </nav>
+
+  <!-- Apartado inferior: usuario con su rol + menú de opciones -->
+  <div class="ec-admin-dash__lateral-pie">
+    @if (menuAbierto()) {
+      <div
+        class="ec-admin-dash__menu-cortina"
+        role="button"
+        tabindex="-1"
+        aria-label="Cerrar menú de opciones"
+        (click)="cerrarMenu()"
+      ></div>
+    }
+
+    @if (sesion(); as s) {
+      <div class="ec-admin-dash__usuario" [class.abierto]="menuAbierto()">
+        <button
+          type="button"
+          class="ec-admin-dash__usuario-btn"
+          (click)="abrirMenu()"
+          [attr.aria-expanded]="menuAbierto()"
+          [title]="s.usuario"
+          aria-haspopup="true"
+        >
+          <span class="avatar" aria-hidden="true">{{
+            (s.usuario[0] ?? 'A').toUpperCase()
+          }}</span>
+          <span class="identidad">
+            <strong>{{ s.usuario }}</strong>
+            <small>{{ s.rol }}</small>
+          </span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </button>
+
+        @if (menuAbierto()) {
+          <div class="ec-admin-dash__menu" role="menu">
+            <button type="button" role="menuitem" (click)="irAlSitio()">
+              Ver el sitio público
+            </button>
+            <button type="button" role="menuitem" class="peligro" (click)="salir()">
+              Cerrar sesión
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</aside>
