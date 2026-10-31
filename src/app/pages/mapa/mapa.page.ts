@@ -1,5 +1,5 @@
 import {
-  AfterViewInit,
+
   ChangeDetectionStrategy,
   Component,
   ElementRef,
@@ -16,7 +16,24 @@ import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { Router, RouterLink } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
-import * as L from 'leaflet';
+import type * as L from 'leaflet';
+
+/**
+ * O3 (auditoría): Leaflet es CommonJS (~140 kB) y estaba en el bundle
+ * crítico del arranque aunque el mapa no sea la primera vista. Ahora se
+ * baja con import() dinámico la primera vez que la página del mapa monta
+ * el lienzo; el namespace `L` queda sólo como tipo.
+ */
+let moduloLeaflet: typeof L | null = null;
+async function cargarLeaflet(): Promise<typeof L | null> {
+  if (moduloLeaflet) return moduloLeaflet;
+  try {
+    moduloLeaflet = (await import('leaflet')) as typeof L;
+    return moduloLeaflet;
+  } catch {
+    return null; // sin red/chunk: la página renderiza sin mapa
+  }
+}
 import { EventosService } from '../../core/services/eventos.service';
 import { RecomendacionService } from '../../core/services/recomendacion.service';
 import { GeocodificacionService } from '../../core/services/geocodificacion.service';
@@ -26,11 +43,6 @@ import { Evento } from '../../core/models/evento.model';
 import {
   BottomSheetComponent
 } from '../../shared/components/bottom-sheet/bottom-sheet.component';
-
-interface PinMapa {
-  evento: Evento;
-  marcador: L.Marker;
-}
 
 /**
  * Representación de un pin según zoom:
@@ -59,7 +71,7 @@ type ModoPin = 'canvas' | 'marker';
   styleUrl: './mapa.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MapaPage implements AfterViewInit, OnDestroy {
+export class MapaPage implements OnDestroy {
   private readonly eventosService = inject(EventosService);
   private readonly recomendacion = inject(RecomendacionService);
   private readonly geocodificacion = inject(GeocodificacionService);
@@ -250,9 +262,6 @@ export class MapaPage implements AfterViewInit, OnDestroy {
   /** Estado de la geolocalización del usuario. */
   readonly ubicacionEstado = signal<'inactiva' | 'cargando' | 'lista' | 'denegada' | 'indisponible'>('inactiva');
 
-  ngAfterViewInit(): void {
-    // El monta se hace vía effect cuando el lienzo existe en el DOM.
-  }
 
   ngOnDestroy(): void {
     if (typeof window !== 'undefined' && this.onVentanaResize) {
@@ -276,12 +285,14 @@ export class MapaPage implements AfterViewInit, OnDestroy {
     window.setTimeout(() => mapa.invalidateSize(false), 400);
   }
 
-  private inicializarMapa(): void {
+  private async inicializarMapa(): Promise<void> {
     const contenedor = this.lienzoRef()?.nativeElement;
     if (!contenedor || this.mapa) return;
 
+    const libr = await cargarLeaflet();
+    if (!libr) return;
     this.zona.runOutsideAngular(() => {
-      const mapa = L.map(contenedor, {
+      const mapa = libr.map(contenedor, {
         center: [-35.5, -71.0], // Chile continental
         zoom: 4.5,
         zoomControl: true,
@@ -292,7 +303,7 @@ export class MapaPage implements AfterViewInit, OnDestroy {
         inertiaMaxSpeed: 1200
       });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      libr.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: this.atribucion,
         maxZoom: 19,
         // No pedir mosaicos a cada pixel de paneo: espera a soltar.
@@ -301,7 +312,23 @@ export class MapaPage implements AfterViewInit, OnDestroy {
         updateInterval: 200
       }).addTo(mapa);
 
-      this.capaPines = L.layerGroup().addTo(mapa);
+      this.capaPines = libr.layerGroup().addTo(mapa);
+
+      /** Icono de pin del design system: gota dibujada DIRECTAMENTE en el
+       *  sistema 30×42 (antes se estiraba un 24×24 y salía deformada/planas).
+       *  Estructura: cabeza circular (r 13.5 en cy 13.5) + curvas a la punta
+       *  en (15, 41) con borde crema de 1.5; la punta queda en el iconAnchor
+       *  [15, 42] → toca exactamente la coordenada del evento. */
+      MapaPage.pinIcon = libr.divIcon({
+        className: 'ec-mapa__pin',
+        html:
+          '<svg viewBox="0 0 30 42" width="30" height="42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+          '<path d="M15 41 C 6.5 28.5, 1.5 20, 1.5 13.5 A 13.5 13.5 0 1 1 28.5 13.5 C 28.5 20, 23.5 28.5, 15 41 Z" fill="#7a4f2e" stroke="#fffdf9" stroke-width="1.5" stroke-linejoin="round"/>' +
+          '<circle cx="15" cy="13.5" r="5.5" fill="#fffdf9"/></svg>',
+        iconSize: [30, 42],
+        iconAnchor: [15, 42],
+        popupAnchor: [0, -42]
+      });
       this.mapa = mapa;
       this.initialised.set(true);
       const publicarEncuadre = (): void => {
@@ -323,23 +350,8 @@ export class MapaPage implements AfterViewInit, OnDestroy {
     this.dibujarPines(this.pinesEnVista());
   }
 
-  /**
-   * Icono de pin del design system: gota dibujada DIRECTAMENTE en el
-   * sistema 30×42 (antes se estiraba un 24×24 y salía deformada/planas).
-   * Estructura: cabeza circular (r 13.5 en cy 13.5) + curvas a la punta
-   * en (15, 41) con borde crema de 1.5; la punta queda en el iconAnchor
-   * [15, 42] → toca exactamente la coordenada del evento.
-   */
-  private static readonly pinIcon = L.divIcon({
-    className: 'ec-mapa__pin',
-    html:
-      '<svg viewBox="0 0 30 42" width="30" height="42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-      '<path d="M15 41 C 6.5 28.5, 1.5 20, 1.5 13.5 A 13.5 13.5 0 1 1 28.5 13.5 C 28.5 20, 23.5 28.5, 15 41 Z" fill="#7a4f2e" stroke="#fffdf9" stroke-width="1.5" stroke-linejoin="round"/>' +
-      '<circle cx="15" cy="13.5" r="5.5" fill="#fffdf9"/></svg>',
-    iconSize: [30, 42],
-    iconAnchor: [15, 42],
-    popupAnchor: [0, -42]
-  });
+  /** Icono del pin; se construye al cargar Leaflet (ver inicializarMapa). */
+  private static pinIcon: L.DivIcon | null = null;
 
   /** HTML del popup de un evento (se genera solo al abrir, no por pin). */
   private popupHtml(evento: Evento): string {
@@ -366,9 +378,10 @@ export class MapaPage implements AfterViewInit, OnDestroy {
 
   /** Abre el popup de un evento en su posición (perezoso). */
   private abrirPopup(evento: Evento): void {
-    if (!this.mapa) return;
+    const libr = moduloLeaflet;
+    if (!this.mapa || !libr) return;
     const c = evento.coordenadas!;
-    L.popup({
+    libr.popup({
       className: 'ec-mapa__popup',
       maxWidth: 264,
       minWidth: 240,
@@ -398,7 +411,9 @@ export class MapaPage implements AfterViewInit, OnDestroy {
 
   private dibujarPines(lista: Evento[]): void {
     const mapa = this.mapa;
-    if (!mapa || !this.capaPines) return;
+    const libr = moduloLeaflet;
+    const icono = MapaPage.pinIcon;
+    if (!mapa || !this.capaPines || !libr || !icono) return;
 
     const modo: ModoPin =
       (mapa.getZoom() ?? 0) < MapaPage.UMBRAL_ARTES ? 'canvas' : 'marker';
@@ -427,13 +442,13 @@ export class MapaPage implements AfterViewInit, OnDestroy {
         const c = evento.coordenadas!;
         const capa: L.Marker | L.CircleMarker =
           modo === 'marker'
-            ? L.marker([c.lat, c.lng], {
-                icon: MapaPage.pinIcon,
+            ? libr.marker([c.lat, c.lng], {
+                icon: icono,
                 title: evento.titulo,
                 keyboard: false,
                 riseOnHover: true
               })
-            : L.circleMarker([c.lat, c.lng], {
+            : libr.circleMarker([c.lat, c.lng], {
                 radius: 7,
                 color: '#fffdf9',
                 weight: 2,
@@ -605,23 +620,24 @@ export class MapaPage implements AfterViewInit, OnDestroy {
   });
 
   private dibujarUsuario(lat: number, lng: number): void {
-    if (!this.mapa) return;
+    const libr = moduloLeaflet;
+    if (!this.mapa || !libr) return;
     this.zona.runOutsideAngular(() => {
       this.marcadorUsuario?.remove();
-      const icono = L.divIcon({
+      const icono = libr.divIcon({
         className: 'ec-mapa__usuario',
         html: '<span class="ec-mapa__usuario-punto"></span>',
         iconSize: [18, 18],
         iconAnchor: [9, 9]
       });
-      this.marcadorUsuario = L.marker([lat, lng], {
+      this.marcadorUsuario = libr.marker([lat, lng], {
         icon: icono,
         title: 'Mi ubicación',
         keyboard: false,
         zIndexOffset: 1000
       }).addTo(this.mapa!);
       this.circuloUsuario?.remove();
-      this.circuloUsuario = L.circle([lat, lng], {
+      this.circuloUsuario = libr.circle([lat, lng], {
         radius: this.radioKm() * 1000,
         color: '#7a4f2e',
         fillColor: '#7a4f2e',
@@ -673,7 +689,7 @@ export class MapaPage implements AfterViewInit, OnDestroy {
   // Los effects viven como field initializer (injection context válido).
   private readonly montarMapa = effect(() => {
     if (this.lienzoRef() && !this.mapa) {
-      this.inicializarMapa();
+      void this.inicializarMapa();
     }
   });
 

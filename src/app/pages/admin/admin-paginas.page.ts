@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { AdminSidebarComponent } from './admin-sidebar.component';
 import { AdminUiService } from './admin-ui.service';
 import { EventosService } from '../../core/services/eventos.service';
@@ -28,7 +27,7 @@ interface FuenteInfo {
 @Component({
   selector: 'app-admin-paginas',
   standalone: true,
-  imports: [DecimalPipe, AdminSidebarComponent],
+  imports: [AdminSidebarComponent],
   templateUrl: './admin-paginas.page.html',
   styleUrls: ['./admin-panel.shared.scss', './admin-paginas.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -3,8 +3,6 @@ import {
   Component,
   computed,
   inject,
-  input,
-  output,
   signal
 } from '@angular/core';
 import { IonIcon } from '@ionic/angular';

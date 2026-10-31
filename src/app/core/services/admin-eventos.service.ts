@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { EventosService } from './eventos.service';
 import { SupabaseService } from './supabase.service';
@@ -68,10 +68,61 @@ export class AdminEventosService {
   private readonly _pestana = signal<'validados' | 'en_validacion'>('validados');
   private readonly _busqueda = signal('');
 
+  /**
+   * Generación de la última orden de carga. Cada cambiarPestana/
+   * aplicarBusqueda la incrementa y toda respuesta que llegue de la
+   * generación anterior se descarta. Es lo que evita el solapamiento:
+   * alternar de pestaña mientras una carga corre pintaba las filas del
+   * grupo anterior en la vista nueva (cargador antiguo + pestaña nueva).
+   */
+  private generacion = 0;
+
   /** Filas acumuladas de la pestaña activa (sólo lo ya descargado). */
   private readonly _filas = signal<AdminEventoFila[]>([]);
   private readonly _hayMas = signal(false);
   private readonly _paginaSiguiente = signal(0);
+
+  /**
+   * Copia instantánea por pestaña (stale-while-revalidate del cliente): al
+   * volver a una pestaña ya visitada se muestran de inmediato el último
+   * bloque descargado y la petición revalida en segundo plano. Elimina la
+   * espera percibida: la tabla ya no desaparece tras cada cambio de pestaña
+   * mientras la Edge Function responde. La búsqueda no usa la cache (la
+   * resuelve el motor del servidor).
+   */
+  private readonly cachePestanas: Partial<
+    Record<
+      'validados' | 'en_validacion',
+      { filas: AdminEventoFila[]; hayMas: boolean; paginaSiguiente: number }
+    >
+  > = {};
+
+  /** Guarda la copia instantánea de la pestaña activa (sin búsqueda). */
+  private guardarPestana(
+    filas: AdminEventoFila[],
+    hayMas: boolean,
+    paginaSiguiente: number
+  ): void {
+    if (this._busqueda()) return;
+    const pestana = this._pestana();
+    if (pestana !== 'validados' && pestana !== 'en_validacion') return;
+    this.cachePestanas[pestana] = { filas: [...filas], hayMas, paginaSiguiente };
+  }
+
+  /** Restaura la copia instantánea de la pestaña activa (si existe). */
+  private restablecerPestana(): boolean {
+    if (this._busqueda()) return false;
+    const pestana = this._pestana();
+    const cache =
+      pestana === 'validados' || pestana === 'en_validacion'
+        ? this.cachePestanas[pestana]
+        : undefined;
+    if (!cache) return false;
+    this._filas.set([...cache.filas]);
+    this._hayMas.set(cache.hayMas);
+    this._paginaSiguiente.set(cache.paginaSiguiente);
+    return true;
+  }
 
   /** Eventos en curso de cambio (para deshabilitar su switch/botón). */
   private readonly _cambiando = signal<Set<string>>(new Set());
@@ -88,11 +139,29 @@ export class AdminEventosService {
 
   /** Carga (o recarga) desde la página 0 del estado actual. */
   async cargar(): Promise<void> {
-    if (this._cargando()) return;
-    this._cargando.set(true);
-    this._error.set(null);
-    this._filas.set([]);
-    this._paginaSiguiente.set(0);
+    // Cada llamada marca una única generación vigente: si mientras una carga
+    // corre cambia de pestaña/búsqueda, la respuesta previa se descarta al
+    // llegar y la vista nueva nunca muestra datos del estado anterior.
+    const epoch = ++this.generacion;
+    // Instantánea del estado CAPTURADA antes del await: coherente con la
+    // petición que se emite (pestaña + búsqueda de este momento).
+    const sinBusqueda = this._busqueda() === '';
+
+    // Con copia instantánea disponible: se pinta al instante y la petición
+    // corre en segundo plano sin spinner (el viaje completo sigue pasando,
+    // sólo deja de bloquear la vista).
+    const restaurado = sinBusqueda && this.restablecerPestana();
+    if (restaurado) {
+      // Limpia un spinner de una carga anterior abortada por este cambio de
+      // pestaña: su finally ya no lo va a limpiar (generación distinta).
+      this._cargando.set(false);
+      this._error.set(null);
+    } else {
+      this._cargando.set(true);
+      this._error.set(null);
+      this._filas.set([]);
+      this._paginaSiguiente.set(0);
+    }
     try {
       const respuesta = await this.llamar<PaginaResponse>('listar', {
         pestana: this._pestana(),
@@ -100,21 +169,30 @@ export class AdminEventosService {
         pagina: 0,
         limite: BLOQUE
       });
+      if (epoch !== this.generacion) return; // llegó tarde: hay un estado más nuevo
       this._conteos.set(respuesta.conteos);
       this._filas.set(respuesta.filas ?? []);
       this._hayMas.set(!!respuesta.hayMas);
       this._paginaSiguiente.set(1);
+      if (sinBusqueda) this.guardarPestana(respuesta.filas ?? [], !!respuesta.hayMas, 1);
     } catch (e: unknown) {
+      if (epoch !== this.generacion) return;
+      // Con copia visible, el fallo de la revalidación no borra la tabla:
+      // el último bloque sirve para seguir trabajando.
+      if (restaurado && this._filas().length > 0) return;
       const err = e as { message?: string };
       this._error.set(err.message || 'No se pudo cargar el catálogo de administración.');
     } finally {
-      this._cargando.set(false);
+      if (epoch === this.generacion) this._cargando.set(false);
     }
   }
 
   /** "Mostrar más": trae la siguiente página del mismo estado. */
   async cargarMas(): Promise<void> {
     if (this._cargando() || this._cargandoMas() || !this._hayMas()) return;
+    // Generación al partir: si cambió (nueva pestaña/búsqueda), la respuesta
+    // no se mezcla con la lista de otro estado.
+    const epoch = this.generacion;
     this._cargandoMas.set(true);
     this._error.set(null);
     try {
@@ -126,11 +204,15 @@ export class AdminEventosService {
       });
       // Reemplaza conteos sólo si el servidor no los cambió en el intertanto;
       // lo barato es aceptarlos siempre (son 3 counts indexados).
+      if (epoch !== this.generacion) return; // cambió el estado: descartar
       this._conteos.set(respuesta.conteos);
       this._filas.update((actuales) => [...actuales, ...(respuesta.filas ?? [])]);
       this._hayMas.set(!!respuesta.hayMas);
       this._paginaSiguiente.update((n) => n + 1);
+      // Refresca la copia instantánea con el bloque extra ya incluido.
+      this.guardarPestana(this._filas(), !!respuesta.hayMas, this._paginaSiguiente());
     } catch (e: unknown) {
+      if (epoch !== this.generacion) return;
       const err = e as { message?: string };
       this._error.set(err.message || 'No se pudo cargar más eventos.');
     } finally {
@@ -218,6 +300,8 @@ export class AdminEventosService {
       await this.llamar('validar', { evento_id: evento.id });
       this.refrescarCatalogoPublico();
       this._filas.update((actuales) => actuales.filter((e) => e.id !== evento.id));
+      // La fila sale también de la copia instantánea de esta pestaña.
+      this.guardarPestana(this._filas(), this._hayMas(), this._paginaSiguiente());
       this._conteos.update((c) => ({
         ...c,
         enValidacion: Math.max(0, c.enValidacion - 1),

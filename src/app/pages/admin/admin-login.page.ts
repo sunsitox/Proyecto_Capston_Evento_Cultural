@@ -27,6 +27,9 @@ export class AdminLoginPage {
   readonly error = signal('');
   readonly cargando = signal(false);
 
+  /** Aviso de la sesión del panel cerrada automáticamente por inactividad. */
+  readonly avisoInactividad = this.admin.cerradaPorInactividad;
+
   constructor() {
     // Si ya hay una sesión de administrador vigente (Supabase la mantiene
     // entre recargas), esta URL actúa como el dashboard directamente.
@@ -44,6 +47,7 @@ export class AdminLoginPage {
       this.error.set('Ingresa tu correo y contraseña.');
       return;
     }
+    this.admin.descartarAvisoDeInactividad();
     this.cargando.set(true);
     try {
       await this.admin.ingresar(this.correo().trim(), this.clave());

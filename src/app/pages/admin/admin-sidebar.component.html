@@ -80,7 +80,7 @@
           aria-haspopup="true"
         >
           <span class="avatar" aria-hidden="true">{{
-            (s.usuario[0] ?? 'A').toUpperCase()
+            (s.usuario[0] || 'A').toUpperCase()
           }}</span>
           <span class="identidad">
             <strong>{{ s.usuario }}</strong>

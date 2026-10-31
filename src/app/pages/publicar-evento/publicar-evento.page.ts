@@ -180,7 +180,7 @@ export class PublicarEventoPage {
       categoria: valores.categoria as Evento['categoria'],
       categorias: [valores.categoria as Evento['categoria']],
       organizador: 'Tu organización',
-      precio: !!valores.gratuito ? '' : (valores.precio || 'Con costo'),
+      precio: valores.gratuito ? '' : (valores.precio || 'Con costo'),
       gratuito: !!valores.gratuito,
       publico: valores.publico || 'Todo público',
       accesibilidad: valores.accesibilidad || undefined,

@@ -1,6 +1,6 @@
 # Evento Cultural
 
-Plataforma para descubrir y publicar eventos culturales, comerciales y municipales en Chile. Construida con **Ionic Framework + Angular (componentes standalone)**, 100% responsive (web y móvil) e **integrada end-to-end**: el catálogo real vive en **Supabase/PostgreSQL** (alimentado por el scraper automatizado en GitHub Actions) y la web lo consume a través de una **API intermedia** en Python, con **autenticación real vía Supabase Auth**.
+Plataforma para descubrir y publicar eventos culturales, comerciales y municipales en Chile. Construida con **Ionic Framework + Angular (componentes standalone)**, 100% responsive (web y móvil) e **integrada end-to-end**: el catálogo real vive en **Supabase/PostgreSQL** (alimentado por el scraper automatizado en GitHub Actions) y la web lo consume **directamente con supabase-js** desde el navegador (clave pública + Row Level Security), con **autenticación real vía Supabase Auth** y **Edge Functions en Deno** para todo lo que exige la clave de servicio.
 
 ## Stack
 
@@ -11,15 +11,15 @@ Plataforma para descubrir y publicar eventos culturales, comerciales y municipal
 - **Backend en TypeScript (misma arquitectura que el frontend):** `@supabase/supabase-js` desde el navegador con la clave pública; Row Level Security gobierna todo el acceso
   - Catálogo: tabla `events` paginada + `communes` + `event_categories` (`SupabaseService.catalogo()`)
   - Auth: `signInWithPassword` / `signUp` / `signInWithOAuth` (regreso PKCE en `/auth/callback`)
-  - Operación con clave secreta: **Edge Function `admin-account`** (eliminar cuenta, registro pre-confirmado en desarrollo) — `supabase/functions/`
-  - Publicación: INSERT directo con el JWT del usuario (pendiente la política RLS INSERT: los errores 403 se explican en la UI)
+  - Operaciones con clave de servicio: **Edge Functions Deno/TS** en `supabase/functions/` — `admin-account` (eliminar cuenta), `registrar-cuenta` (registro ya confirmado + correo de bienvenida vía Resend), `publicar-evento` (publicación de organizadores), `admin-eventos` (moderación del panel), `reset-password-request` / `reset-password-confirm` (recuperación) y `recomendaciones-semanal` (correos semanales, protegida con `RECS_CRON_KEY`)
+  - Publicación: la Edge Function `publicar-evento` revalida el JWT con Admin API, exige rol organizador en servidor y cliente, completa las columnas NOT NULL de `events` y crea la fila con `status: 'draft'`; el panel admin la pasa a `published` tras moderar
 - **Datos de respaldo:** `src/app/data/mock-eventos.ts` — solo se usan si la API no responde (la app no se rompe sin backend)
 - Pruebas con Vitest (`npm test`)
 
 ## Configuración previa
 
 1. **Credenciales públicas de Supabase** en `src/environments/environment.ts` (`supabaseUrl`, `supabaseAnonKey`; en producción, en `environment.prod.ts`). La clave anon es segura en el navegador (RLS). Los valores ya están configurados; el `.env` en la raíz queda como referencia (no se comparte).
-2. **Edge Function `admin-account`** (opcional, para borrar cuenta y registro pre-confirmado en desarrollo): desplegar con `supabase functions deploy` y configurar `SUPABASE_SERVICE_ROLE_KEY` en sus secretos; guía completa en `AdminAccount_EdgeFunction.md`.
+2. **Edge Functions** (`supabase/functions/`): desplegar con `supabase functions deploy` y configurar sus secretos (`SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RECS_CRON_KEY`…); guía de admin-account en `AdminAccount_EdgeFunction.md`.
 3. **OAuth (opcional):** activar el proveedor en Supabase Dashboard y registrar `/auth/callback` en Redirect URLs; checklist en `OAUTH_SETUP.md`.
 
 ## Sistema de diseño
@@ -54,7 +54,7 @@ evento-cultural/
 ├── package.json
 ├── angular.json
 ├── ionic.config.json
-├── supabase/functions/         # Edge Functions (admin-account, reset-password-*), Deno/TS
+├── supabase/functions/         # Edge Functions Deno/TS (admin-account, registrar-cuenta, publicar-evento, admin-eventos, reset-password-*, recomendaciones-semanal)
 ├── .env                        # Referencia de credenciales (no compartido)
 └── src/
     ├── main.ts                 # Bootstrap + supresión de rechazos benignos de View Transitions
@@ -68,9 +68,14 @@ evento-cultural/
         ├── app.routes.ts
         ├── core/models/        # evento.model.ts, recomendacion.model.ts
         ├── core/services/
-        │   ├── api.service.ts              # Sesión real (token + usuario) y llamadas HTTP
-        │   ├── eventos.service.ts          # Catálogo desde la API + filtros y orden (signals)
-        │   ├── recomendacion.service.ts    # Señales de interés en memoria (signals)
+        │   ├── supabase.service.ts         # Cliente Supabase: sesión, catálogo por lotes y publicación
+        │   ├── api.service.ts              # Fachada de sesión para la UI
+        │   ├── eventos.service.ts          # Catálogo + filtros/facetas/orden (signals)
+        │   ├── recomendacion.service.ts    # Señales de interés + motor «Para ti» (signals)
+        │   ├── supabase-recomendacion-persistencia.service.ts # Persistencia en user_event_interactions
+        │   ├── admin-auth.service.ts       # Sesión del panel admin (rol admin verificado en BD)
+        │   ├── admin-eventos.service.ts    # Moderación del catálogo (Edge admin-eventos)
+        │   ├── geocodificacion.service.ts  # Coordenadas por recinto (Nominatim + caché)
         │   ├── view-preferences.service.ts # Vista y orden (localStorage)
         │   └── toast.service.ts
         ├── data/mock-eventos.ts            # Respaldo si la API no responde + constantes
@@ -82,9 +87,11 @@ evento-cultural/
         │   ├── mapa/               # Mapa real (Leaflet/OSM) + lista accesible
         │   ├── para-ti/            # Recomendaciones por señales de interés
         │   ├── detalle-evento/     # Ficha del evento
-        │   ├── publicar-evento/    # Formulario conectado a la API (bloqueado por RLS: 501)
+        │   ├── publicar-evento/    # Formulario → Edge Function publicar-evento (+ moderación)
         │   ├── perfil/             # Perfil + cierre/eliminación de cuenta real
-        │   ├── login/              # Login / registro (Supabase Auth vía API intermedia)
+        │   ├── login/              # Login / registro (registro confirmado vía Edge registrar-cuenta)
+        │   ├── admin/              # Panel de administración: ingreso /v00/admin + dashboard + moderación
+        │   ├── restablecer-contrasena/ # Recuperación de contraseña (Edge reset-password-*)
         │   └── auth-callback/      # Regreso de OAuth (procesa #access_token)
         └── shared/components/
             ├── evento-card/            # Tarjeta de evento reutilizable
@@ -162,9 +169,10 @@ node verify-css.js                        # Tokens presentes en el CSS compilado
 
 ## Notas importantes
 
-- **Integración activa:** catálogo real desde Supabase a través de la API intermedia; sesión y perfil gestionados con Supabase Auth. Los mocks son solo respaldo de emergencia.
-- **Publicación bloqueada por diseño:** `POST /api/eventos` responde 501 mientras no exista la política RLS INSERT para organizadores (la clave pública no puede escribir). El formulario ya está conectado; se habilitará con la política y el modelo de propiedad cuentas↔organizadores.
-- **Senales de interés en memoria:** "Me interesa", "No me interesa" y "Ver similares" alimentan «Para ti» durante la sesión (se pierden al recargar). Su persistencia en `user_event_interactions` queda como siguiente paso. Única preferencia persistente hoy: vista y orden en `localStorage` (`ViewPreferencesService`).
+- **Integración activa:** catálogo real directo desde Supabase (supabase-js, lotes en paralelo y Leaflet bajo demanda); los mocks son respaldo de emergencia cargado con import() dinámico. Sesión y perfil con Supabase Auth.
+- **Publicación activa (Edge Function):** `publicar-evento` revalida el JWT, exige rol organizador (servidor y cliente) y crea el evento como `draft`; el panel admin lo revisa y lo publica (moderación draft → published). Verificado E2E en producción (27-10): 201 con organizador, 403 sin rol.
+- **Señales de interés persistidas:** "Me interesa", "No me interesa" y "Ver similares" se guardan en `user_event_interactions` (RLS por usuario) y las preferencias declaradas en `user_metadata.recomendaciones`: «Para ti» sigue a la cuenta entre dispositivos. Vista y orden siguen en `localStorage` (`ViewPreferencesService`).
+- **Panel de administración:** ingreso ofuscado en `/v00/admin` (sin enlaces públicos); exige sesión por correo con rol `admin` consultado en la BD en cada navegación, rechaza cuentas OAuth y cierra sesión por inactividad (10 min).
 - **OAuth preparado:** el flujo completo está implementado (`/login` → `signInWithOAuth` → consentimiento de Supabase → regreso PKCE en `/auth/callback`); solo falta activar el proveedor y las URLs de redirección en Supabase Dashboard (`OAUTH_SETUP.md`).
 - **App móvil:** la compilación con **Capacitor 8 + Android Studio** está definida como estrategia, pero se ejecutará cuando la web esté completamente estabilizada (decisión del equipo, Fase 2).
 - La documentación técnica completa (arquitectura, servicios, pantallas y control de cambios) está en `docs/documentacion-frontend.tex` / `.pdf`, y la documentación formal de Fase 2 en `../CAPSTONE_/Fase 2/Evidencias Proyecto/Documentacion Tecnica/`.

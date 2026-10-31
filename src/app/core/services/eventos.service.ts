@@ -6,7 +6,7 @@ import {
   Evento,
   ModalidadEvento
 } from '../models/evento.model';
-import { MOCK_EVENTOS, PUNTO_REFERENCIA } from '../../data/mock-eventos';
+import { PUNTO_REFERENCIA } from '../../data/mock-eventos';
 import { SupabaseService } from './supabase.service';
 import { RecomendacionService } from './recomendacion.service';
 
@@ -82,7 +82,7 @@ export interface FacetasEventos {
 export class EventosService {
   private readonly supabase = inject(SupabaseService);
   private readonly recomendacion = inject(RecomendacionService);
-  private readonly _eventos = signal<Evento[]>(MOCK_EVENTOS);
+  private readonly _eventos = signal<Evento[]>([]);
   private readonly _filtros = signal<FiltrosEventos>({ ...FILTROS_INICIALES });
   private readonly _ordenPor = signal<OrdenEventos>('fecha');
   private readonly _cargando = signal<boolean>(false);
@@ -586,6 +586,7 @@ export class EventosService {
       });
       if (eventos.length === 0) {
         this._error.set('Supabase respondió sin eventos. Se muestran eventos de demostración.');
+        await this.mostrarMock();
         return;
       }
       // Estado final coherente: la lista completa en el orden del servidor.
@@ -596,8 +597,24 @@ export class EventosService {
           ? 'La carga se interrumpió a mitad del catálogo (se muestran los eventos que llegaron).'
           : 'No se pudo conectar con Supabase. Se muestran eventos de demostración.'
       );
+      // El mock solo es respaldo: si ya llegaron lotes reales no se pisan.
+      if (!hayPrimerLote) await this.mostrarMock();
     } finally {
       this._cargando.set(false);
+    }
+  }
+
+  /**
+   * O4 (auditoría): MOCK_EVENTOS (~600 filas) ya no viaja en el bundle
+   * inicial; se baja con import() dinámico sólo cuando el catálogo real no
+   * cargó, que es su única función (respaldo de emergencia).
+   */
+  private async mostrarMock(): Promise<void> {
+    try {
+      const { MOCK_EVENTOS } = await import('../../data/mock-eventos');
+      this._eventos.set(MOCK_EVENTOS);
+    } catch {
+      /* sin mock no hay respaldo: la UI se queda con su estado vacío/error */
     }
   }
 

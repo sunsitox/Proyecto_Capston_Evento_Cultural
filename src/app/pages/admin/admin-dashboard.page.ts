@@ -12,7 +12,6 @@ import {
   viewChild
 } from '@angular/core';
 import { DecimalPipe, DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import * as L from 'leaflet';
 import { EventosService } from '../../core/services/eventos.service';
 import { AdminSidebarComponent } from './admin-sidebar.component';
@@ -54,7 +53,7 @@ const PALETA_CALOR: { color: string; radio: number }[] = [
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [DecimalPipe, DatePipe, RouterLink, AdminSidebarComponent],
+  imports: [DecimalPipe, DatePipe, AdminSidebarComponent],
   templateUrl: './admin-dashboard.page.html',
   styleUrls: ['./admin-panel.shared.scss', './admin-dashboard.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

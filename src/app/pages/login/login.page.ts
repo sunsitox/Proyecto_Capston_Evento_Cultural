@@ -178,7 +178,7 @@ export class LoginPage {
         // la cuenta confirmada y aquí ingresamos con la misma contraseña), así
         // que vamos a Home sin pedir verificación de correo.
       }
-      const usuario = await this.api.ingresar(email!, password!);
+      await this.api.ingresar(email!, password!);
       // Siempre a Home: el rol aparece en Perfil y «Publicar» sigue accesible
       // desde el nav; el login no debe llevar al organizador a una pantalla de trabajo.
       await this.router.navigateByUrl('/home');

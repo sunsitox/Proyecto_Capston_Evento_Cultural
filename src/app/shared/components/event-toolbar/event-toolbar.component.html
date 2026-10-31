@@ -1,7 +1,9 @@
 <ng-container [formGroup]="form">
   <div class="ec-toolbar" role="group" aria-label="Ordenar y ver eventos">
-    <!-- UNA decisión de orden (select) en vez de cinco chips simultáneos -->
-    <label class="ec-sort-field">
+    <!-- UNA decisión de orden (select) en vez de cinco chips simultáneos.
+         El select ya se anuncia por sí solo (aria-label): no hay control
+         nativo asociable, así que el texto es decorativo, no un <label>. -->
+    <span class="ec-sort-field">
       <span class="ec-sort-label">Ordenar por</span>
       <ion-select
         class="ec-sort-select"
@@ -17,7 +19,7 @@
           <ion-select-option [value]="o.valor">{{ o.etiqueta }}</ion-select-option>
         }
       </ion-select>
-    </label>
+    </span>
 
     <!-- Toggle de vista: dos opciones, estado anunciado con aria-pressed -->
     <div class="ec-view-toggle" role="group" aria-label="Cambiar vista">

@@ -5,6 +5,12 @@
       <p>Evento Cultural · acceso interno</p>
     </header>
 
+    @if (avisoInactividad()) {
+      <p class="ec-admin-login__aviso" role="status">
+        Sesión del panel cerrada por inactividad. Ingresa de nuevo para continuar.
+      </p>
+    }
+
     <form class="ec-admin-login__form" (ngSubmit)="ingresar()">
       <ion-input
         label="Correo electrónico"

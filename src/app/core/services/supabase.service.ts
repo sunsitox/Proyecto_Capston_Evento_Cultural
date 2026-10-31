@@ -463,7 +463,7 @@ export class SupabaseService {
   async subirAvatar(archivo: Blob, nombreArchivo: string): Promise<UsuarioSesion> {
     const usuario = this._usuario();
     if (!usuario) throw new Error('Necesitas sesión para cambiar tu imagen.');
-    const ruta = `${usuario.id}/avatar-${Date.now()}-${nombreArchivo.replace(/[^\w.\-]/g, '_')}`;
+    const ruta = `${usuario.id}/avatar-${Date.now()}-${nombreArchivo.replace(/[^\w.-]/g, '_')}`;
     const { error: errorSubida } = await this.cliente.storage
       .from('avatars')
       .upload(ruta, archivo, {
@@ -609,30 +609,50 @@ export class SupabaseService {
       /* sin categorías, la ficha muestra "Otros" */
     }
 
-    // --- eventos publicados, por lotes (el lote entrega su callback) ---
+    // --- eventos publicados, por lotes en paralelo (O2 de la auditoría) ---
+    // Descargar los ~7 bloques en serie era la parte más lenta del arranque.
+    // El orden final lo reconstruye el llamador (`_eventos.set(acumulados)`),
+    // así que las peticiones pueden ir simultáneas: se lanzan de a 3 y se
+    // avanza hasta que un lote llega incompleto. Cada lote que llega sigue
+    // invocando `alLote` (el pintado progresivo no cambia).
     const eventos: (EventoRaw & { categorias: string[] })[] = [];
     const TAM = 150;
-    for (let offset = 0; ; offset += TAM) {
-      const { data, error } = await this.cliente
-        .from('events')
-        .select('*')
-        .eq('status', 'published')
-        .eq('is_suppressed', false)
-        .order('start_at', { ascending: true })
-        .range(offset, offset + TAM - 1);
-      if (error) break;
-      const filas = (data ?? []) as EventoRaw[];
-      const lote = filas.map((fila) => ({
-        ...fila,
-        categorias: categoriasPorEvento.get(fila.id) ?? []
-      }));
-      eventos.push(...lote);
-      try {
-        alLote?.(lote);
-      } catch {
-        /* un callback que falla no corta el resto del catálogo */
+    const PARALELO = 3;
+    let offset = 0;
+    let agotado = false;
+    while (!agotado) {
+      const offsets: number[] = [];
+      for (let i = 0; i < PARALELO; i++) {
+        if (agotado) break;
+        offsets.push(offset);
+        offset += TAM;
       }
-      if (filas.length < TAM) break;
+      const resultados = await Promise.all(
+        offsets.map(async (desde) => {
+          const { data, error } = await this.cliente
+            .from('events')
+            .select('*')
+            .eq('status', 'published')
+            .eq('is_suppressed', false)
+            .order('start_at', { ascending: true })
+            .range(desde, desde + TAM - 1);
+          return { desde, filas: error ? [] : ((data ?? []) as EventoRaw[]) };
+        })
+      );
+      for (const { filas } of resultados) {
+        if (filas.length < TAM) agotado = true;
+        if (filas.length === 0) continue;
+        const lote = filas.map((fila) => ({
+          ...fila,
+          categorias: categoriasPorEvento.get(fila.id) ?? []
+        }));
+        eventos.push(...lote);
+        try {
+          alLote?.(lote);
+        } catch {
+          /* un callback que falla no corta el resto del catálogo */
+        }
+      }
     }
 
     return { eventos, comunas, total: eventos.length };

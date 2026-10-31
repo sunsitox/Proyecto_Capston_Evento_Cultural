@@ -1,4 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { SupabaseService } from './supabase.service';
 
 /** Sesión del panel de administración (identidad que muestra la interfaz). */
@@ -37,9 +38,23 @@ export class AdminAccesoError extends Error {
 const CLAVE_ROL_ADMIN = 'admin';
 const ROL_MOSTRADO = 'Administrador';
 
+/** Tiempo de inactividad (sin interacción en la página) que cierra el panel. */
+const INACTIVIDAD_MS = 10 * 60 * 1000;
+/** Frecuencia con que se comprueba la inactividad. */
+const CHEQUEO_INACTIVIDAD_MS = 15 * 1000;
+/** Eventos de interacción que consideran al usuario activo. */
+const EVENTOS_ACTIVIDAD: (keyof WindowEventMap)[] = [
+  'pointermove',
+  'pointerdown',
+  'keydown',
+  'wheel',
+  'touchstart'
+];
+
 @Injectable({ providedIn: 'root' })
 export class AdminAuthService {
   private readonly supabase = inject(SupabaseService);
+  private readonly router = inject(Router);
 
   private readonly _sesion = signal<SesionAdmin | null>(null);
 
@@ -47,6 +62,17 @@ export class AdminAuthService {
   readonly sesion = this._sesion.asReadonly();
 
   readonly autenticado = computed(() => !!this._sesion());
+
+  /**
+   * true si el panel se cerró automáticamente por inactividad: la página de
+   * ingreso lo muestra como aviso y se descarta al volver a entrar.
+   */
+  readonly cerradaPorInactividad = signal(false);
+
+  /** Última interacción registrada (época en ms). */
+  private ultimaActividad = 0;
+  private vigilancia: ReturnType<typeof setInterval> | null = null;
+  private escuchaActividad: (() => void) | null = null;
 
   /**
    * Valida las credenciales y abre la sesión del panel si todo cumple:
@@ -92,6 +118,8 @@ export class AdminAuthService {
       rol: ROL_MOSTRADO
     };
     this._sesion.set(sesion);
+    this.cerradaPorInactividad.set(false);
+    this.iniciarVigilanciaDeInactividad();
     return sesion;
   }
 
@@ -118,6 +146,12 @@ export class AdminAuthService {
         email: go.email,
         rol: ROL_MOSTRADO
       });
+      this.cerradaPorInactividad.set(false);
+    }
+    // Tras una recarga la sesión puede seguir vigente de Supabase: la
+    // vigilancia de inactividad debe seguir cubriéndola.
+    if (!this.vigilancia) {
+      this.iniciarVigilanciaDeInactividad();
     }
     return true;
   }
@@ -127,8 +161,61 @@ export class AdminAuthService {
     void this.cerrarSesionPublica();
   }
 
+  /** Quita el aviso de cierre por inactividad de la página de ingreso. */
+  descartarAvisoDeInactividad(): void {
+    this.cerradaPorInactividad.set(false);
+  }
+
+  /**
+   * Observa la interacción del usuario y programa el cierre del panel si no
+   * hay ninguna durante INACTIVIDAD_MS. Barata: un manejador que sólo
+   * actualiza una época y un intervalo de comprobación cada 15 s.
+   */
+  private iniciarVigilanciaDeInactividad(): void {
+    this.detenerVigilanciaDeInactividad();
+    this.ultimaActividad = Date.now();
+    const registrar = () => {
+      this.ultimaActividad = Date.now();
+    };
+    EVENTOS_ACTIVIDAD.forEach((evento) =>
+      window.addEventListener(evento, registrar, { passive: true })
+    );
+    this.escuchaActividad = registrar;
+    this.vigilancia = setInterval(() => {
+      if (!this._sesion()) return;
+      if (Date.now() - this.ultimaActividad >= INACTIVIDAD_MS) {
+        this.cerrarPorInactividad();
+      }
+    }, CHEQUEO_INACTIVIDAD_MS);
+  }
+
+  private detenerVigilanciaDeInactividad(): void {
+    if (this.vigilancia) {
+      clearInterval(this.vigilancia);
+      this.vigilancia = null;
+    }
+    const escucha = this.escuchaActividad;
+    if (escucha) {
+      EVENTOS_ACTIVIDAD.forEach((evento) =>
+        window.removeEventListener(evento, escucha as EventListener)
+      );
+      this.escuchaActividad = null;
+    }
+  }
+
+  /** Cierre automático por inactividad: suelta la sesión y vuelve al ingreso. */
+  private cerrarPorInactividad(): void {
+    this.detenerVigilanciaDeInactividad();
+    this.cerradaPorInactividad.set(true);
+    void this
+      .cerrarSesionPublica()
+      .then(() => this.router.navigateByUrl('/v00/admin'))
+      .catch(() => undefined);
+  }
+
   private async cerrarSesionPublica(): Promise<void> {
     this._sesion.set(null);
+    this.detenerVigilanciaDeInactividad();
     try {
       await this.supabase.salir();
     } catch {
