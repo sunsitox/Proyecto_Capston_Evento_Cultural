@@ -22,8 +22,8 @@
 /* ---------- Panel del mes ---------- */
 
 .ec-cal__panel {
-  background: var(--ec-surface, #fffdf9);
-  border: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+  background: var(--ec-surface);
+  border: var(--ec-border-width, 1px) solid var(--ec-border-light);
   border-radius: var(--ec-radius-lg, 16px);
   padding: var(--ec-space-md, 16px);
   box-shadow: var(--ec-shadow-sm);
@@ -41,7 +41,7 @@
   margin: 0;
   font-family: var(--ec-font-serif, serif);
   font-size: 1.1rem;
-  color: var(--ec-text-dark, #211c16);
+  color: var(--ec-text-dark);
 }
 
 .ec-cal__nav {
@@ -50,10 +50,10 @@
   justify-content: center;
   width: var(--ec-touch-target, 44px);
   height: var(--ec-touch-target, 44px);
-  border: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+  border: var(--ec-border-width, 1px) solid var(--ec-border-light);
   border-radius: var(--ec-radius-full, 999px);
-  background: var(--ec-surface, #fffdf9);
-  color: var(--ec-text-dark, #211c16);
+  background: var(--ec-surface);
+  color: var(--ec-text-dark);
   cursor: pointer;
 
   ion-icon {
@@ -61,8 +61,8 @@
   }
 
   &:hover:not(:disabled) {
-    border-color: var(--ec-primary, #7a4f2e);
-    color: var(--ec-primary-dark, #5e3b21);
+    border-color: var(--ec-primary);
+    color: var(--ec-primary-dark);
   }
 
   &:disabled {
@@ -71,7 +71,7 @@
   }
 
   &:focus-visible {
-    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus);
     outline-offset: 2px;
   }
 }
@@ -92,7 +92,7 @@
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--ec-text-light, #6d6557);
+  color: var(--ec-text-light);
   padding: 4px 0;
 }
 
@@ -107,18 +107,18 @@
   border: none;
   border-radius: 10px;
   background: transparent;
-  color: var(--ec-text-dark, #211c16);
+  color: var(--ec-text-dark);
   font: inherit;
   font-size: 0.82rem;
   cursor: pointer;
   transition: background var(--ec-duration-fast, 0.15s) var(--ec-ease, ease);
 
   &:hover:not(:disabled) {
-    background: var(--ec-surface-hover, #e6dccd);
+    background: var(--ec-surface-hover);
   }
 
   &:focus-visible {
-    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus);
     outline-offset: -2px;
   }
 
@@ -134,7 +134,7 @@
 }
 
 .ec-cal__dia--pasado {
-  color: var(--ec-text-light, #6d6557);
+  color: var(--ec-text-light);
   opacity: 0.55;
 }
 
@@ -144,16 +144,16 @@
 }
 
 .ec-cal__dia--marcado {
-  background: var(--ec-primary-bg, #f2e9df);
+  background: var(--ec-primary-bg);
   font-weight: 700;
 }
 
 .ec-cal__dia--hoy {
-  background: var(--ec-primary, #7a4f2e);
-  color: var(--pr-white, #fffdf9);
+  background: var(--ec-primary);
+  color: var(--pr-white);
 
   .ec-cal__dia-punto {
-    background: var(--pr-white, #fffdf9);
+    background: var(--pr-white);
   }
 }
 
@@ -162,17 +162,17 @@
 /* Inicio pendiente (esperando el segundo clic) */
 .ec-cal__dia--rango-borde.ec-cal__dia--hoy,
 .ec-cal__dia--rango-borde {
-  background: var(--ec-primary, #7a4f2e);
-  color: var(--pr-white, #fffdf9);
+  background: var(--ec-primary);
+  color: var(--pr-white);
 
   .ec-cal__dia-punto {
-    background: var(--pr-white, #fffdf9);
+    background: var(--pr-white);
   }
 }
 
 /* Días intermedios del rango */
 .ec-cal__dia--rango {
-  background: var(--ec-primary-light, #ecdcd0);
+  background: var(--ec-primary-light);
   border-radius: 0;
 }
 
@@ -180,7 +180,7 @@
 .ec-cal__pista {
   margin-top: var(--ec-space-sm, 8px);
   font-size: 0.78rem;
-  color: var(--ec-text-muted, #5d564a);
+  color: var(--ec-text-muted);
   text-align: center;
 }
 
@@ -194,7 +194,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--ec-primary, #7a4f2e);
+  background: var(--ec-primary);
 }
 
 .ec-cal__hoy {
@@ -205,22 +205,22 @@
   justify-content: center;
   gap: 6px;
   min-height: var(--ec-touch-target, 44px);
-  border: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+  border: var(--ec-border-width, 1px) solid var(--ec-border-light);
   border-radius: var(--ec-radius-full, 999px);
   background: transparent;
-  color: var(--ec-primary-dark, #5e3b21);
+  color: var(--ec-primary-dark);
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
 
   &:hover {
-    border-color: var(--ec-primary, #7a4f2e);
-    background: var(--ec-primary-bg, #f2e9df);
+    border-color: var(--ec-primary);
+    background: var(--ec-primary-bg);
   }
 
   &:focus-visible {
-    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus);
     outline-offset: 2px;
   }
 }
@@ -242,7 +242,7 @@
     margin: 0;
     font-family: var(--ec-font-serif, serif);
     font-size: 1.2rem;
-    color: var(--ec-text-dark, #211c16);
+    color: var(--ec-text-dark);
   }
 }
 
@@ -250,7 +250,7 @@
   font-family: var(--ec-font-sans, sans-serif);
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--ec-text-muted, #5d564a);
+  color: var(--ec-text-muted);
 }
 
 .ec-cal__filtros {
@@ -263,19 +263,19 @@
 .ec-cal__filtro select {
   min-height: var(--ec-touch-target, 44px);
   padding: 0 34px 0 14px;
-  border: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+  border: var(--ec-border-width, 1px) solid var(--ec-border-light);
   border-radius: var(--ec-radius-full, 999px);
-  background: var(--ec-surface, #fffdf9)
+  background: var(--ec-surface)
     url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%235d564a' d='M6 8.5 2.5 5h7z'/%3E%3C/svg%3E")
     no-repeat right 12px center / 12px;
-  color: var(--ec-text-dark, #211c16);
+  color: var(--ec-text-dark);
   font: inherit;
   font-size: 0.84rem;
   cursor: pointer;
   appearance: none;
 
   &:focus-visible {
-    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus);
     outline-offset: 2px;
   }
 }
@@ -304,7 +304,7 @@
 .ec-cal__avance {
   margin: 0;
   font-size: 0.78rem;
-  color: var(--ec-text-light, #6d6557);
+  color: var(--ec-text-light);
   font-variant-numeric: tabular-nums;
 }
 

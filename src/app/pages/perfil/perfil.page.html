@@ -3,7 +3,39 @@
   <h1 class="ec-perfil-title">Perfil</h1>
 
   <div class="ec-perfil-card">
-    <ion-icon name="person-circle-outline" class="ec-perfil-avatar" aria-hidden="true"></ion-icon>
+    <div class="ec-perfil-cabecera">
+      @if (api.estaAutenticado()) {
+        @if (avatarDeSesion(); as url) {
+          <img
+            class="ec-perfil-avatar-img"
+            [src]="url"
+            alt="Imagen de perfil"
+            width="88"
+            height="88"
+            referrerpolicy="no-referrer"
+          />
+        } @else {
+          <ion-icon name="person-circle-outline" class="ec-perfil-avatar" aria-hidden="true"></ion-icon>
+        }
+        @if (!subiendoImagen()) {
+          <label class="ec-perfil-avatar-cambiar" for="ec-perfil-foto">
+            <ion-icon name="camera-outline" aria-hidden="true"></ion-icon>
+            Cambiar foto
+          </label>
+        } @else {
+          <span class="ec-perfil-avatar-cambiar ec-perfil-avatar-cambiar--ocupado">Subiendo…</span>
+        }
+        <input
+          id="ec-perfil-foto"
+          class="ec-sr-only"
+          type="file"
+          accept="image/*"
+          (change)="elegirImagen($event)"
+        />
+      } @else {
+        <ion-icon name="person-circle-outline" class="ec-perfil-avatar" aria-hidden="true"></ion-icon>
+      }
+    </div>
     @if (api.estaAutenticado()) {
       <h2>{{ api.usuario()?.nombre || 'Usuario' }}</h2>
       @if (api.usuario()?.email; as correo) {
@@ -12,6 +44,15 @@
       <p class="ec-perfil-sub">
         Cuenta {{ api.usuario()?.rol === 'organizador' ? 'de Organizador' : 'registrada' }} activa.
       </p>
+      <button
+        type="button"
+        class="ec-perfil-editar"
+        (click)="abrirEdicion()"
+        [attr.aria-expanded]="editandoPerfil()"
+      >
+        <ion-icon name="pencil-outline" aria-hidden="true"></ion-icon>
+        Editar datos
+      </button>
     } @else {
       <h2>Usuario invitado</h2>
       <p class="ec-perfil-sub">
@@ -57,6 +98,101 @@
       </ion-button>
     }
   </div>
+
+  <!-- ================= Edición de datos de la cuenta ================= -->
+  @if (api.estaAutenticado() && editandoPerfil()) {
+    <section class="ec-perfil-edicion" aria-labelledby="ec-edicion-titulo">
+      <div class="ec-perfil-edicion__cabecera">
+        <h2 id="ec-edicion-titulo">Editar mis datos</h2>
+        <button type="button" class="ec-perfil-edicion__cerrar" (click)="cerrarEdicion()" aria-label="Cerrar edición">
+          <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+        </button>
+      </div>
+
+      @if (mensajePerfil(); as msg) {
+        <p class="ec-perfil-aviso ec-perfil-aviso--exito" role="status">{{ msg }}</p>
+      }
+      @if (errorPerfil(); as err) {
+        <p class="ec-perfil-aviso ec-perfil-aviso--error" role="alert">{{ err }}</p>
+      }
+
+      @if (esGoogle()) {
+        <p class="ec-perfil-aviso">
+          Tu sesión es de Google: la imagen que se muestra proviene de tu cuenta
+          de Google. Al subir una foto propia tiene precedencia en el perfil.
+        </p>
+      }
+
+      <div class="ec-perfil-campo">
+        <label for="ec-perfil-nombre">Nombre</label>
+        <input
+          id="ec-perfil-nombre"
+          type="text"
+          maxlength="80"
+          autocomplete="name"
+          [(ngModel)]="nombreTemporal"
+        />
+        <button
+          type="button"
+          class="ec-perfil-guardar"
+          (click)="guardarNombre()"
+          [disabled]="guardandoNombre()"
+        >
+          @if (guardandoNombre()) { Guardando… } @else { Guardar nombre }
+        </button>
+      </div>
+
+      <div class="ec-perfil-campo" [formGroup]="formClave">
+        <label for="ec-perfil-clave">Contraseña nueva</label>
+        <input
+          id="ec-perfil-clave"
+          type="password"
+          formControlName="nueva"
+          autocomplete="new-password"
+        />
+        @if (formClave.controls.nueva.errors; as e) {
+          @if (formClave.controls.nueva.touched) {
+            <p class="ec-perfil-regla ec-perfil-regla--error" role="alert">
+              @if (e['required']) { Ingresa la contraseña nueva. }
+              @else if (e['minlength']) { Mínimo 8 caracteres. }
+              @else if (e['sinMayuscula']) { Agrega al menos una mayúscula. }
+              @else if (e['sinMinuscula']) { Agrega al menos una minúscula. }
+              @else if (e['sinNumero']) { Agrega al menos un número. }
+              @else if (e['sinSimbolo']) { Agrega un símbolo (por ejemplo ! o .). }
+            </p>
+          }
+        }
+        <label for="ec-perfil-clave2">Confirmar contraseña</label>
+        <input
+          id="ec-perfil-clave2"
+          type="password"
+          formControlName="confirmar"
+          autocomplete="new-password"
+        />
+        @if (claveIncoherente) {
+          <p class="ec-perfil-regla ec-perfil-regla--error" role="alert">Las contraseñas no coinciden.</p>
+        }
+        <button
+          type="button"
+          class="ec-perfil-guardar"
+          (click)="guardarClave()"
+          [disabled]="cambiandoClave() || formClave.invalid"
+        >
+          @if (cambiandoClave()) { Actualizando… } @else { Cambiar contraseña }
+        </button>
+        @if (mensajeClave(); as msg) {
+          <p class="ec-perfil-aviso ec-perfil-aviso--exito" role="status">{{ msg }}</p>
+        }
+        @if (errorClave(); as err) {
+          <p class="ec-perfil-aviso ec-perfil-aviso--error" role="alert">{{ err }}</p>
+        }
+        <p class="ec-perfil-regla">
+          Si tu cuenta usa Google y nunca definiste una contraseña, al fijar una
+          podrás iniciar sesión también con tu correo y esta clave.
+        </p>
+      </div>
+    </section>
+  }
 
   <nav class="ec-perfil-menu" aria-label="Menú de usuario">
     <ion-item routerLink="/para-ti" lines="full" button detail="true">

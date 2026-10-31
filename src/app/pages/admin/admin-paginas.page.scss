@@ -18,8 +18,8 @@
 
   .btn {
     border: 1px solid rgba(90, 77, 66, 0.3);
-    background: var(--ec-surface, #fffdf9);
-    color: var(--ec-text, #3b332b);
+    background: var(--ec-surface);
+    color: var(--ec-text);
     border-radius: 9px;
     font-size: 0.82rem;
     font-weight: 600;
@@ -32,7 +32,7 @@
   }
 
   .btn--peligro {
-    color: #b3261e;
+    color: var(--ec-danger);
     border-color: rgba(179, 38, 30, 0.4);
 
     &:hover {
@@ -69,7 +69,7 @@
 
     strong {
       font-size: 0.9rem;
-      color: var(--ec-text, #3b332b);
+      color: var(--ec-text);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -77,7 +77,7 @@
 
     small {
       font-size: 0.76rem;
-      color: var(--ec-text-muted, #5d564a);
+      color: var(--ec-text-muted);
     }
   }
 }
@@ -101,12 +101,12 @@
 
     /* Foco visible para navegación con teclado */
     &:focus-visible + .pista {
-      outline: 2px solid #d95f2b;
+      outline: 2px solid var(--ec-accent);
       outline-offset: 2px;
     }
 
     &:checked + .pista {
-      background: #499269;
+      background: var(--ec-success-strong);
 
       .perilla {
         transform: translateX(18px);
@@ -131,7 +131,7 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #fffdf9;
+    background: var(--ec-surface);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
     transition: transform 0.2s ease;
   }
@@ -139,7 +139,7 @@
   .estado {
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--ec-text-muted, #5d564a);
+    color: var(--ec-text-muted);
     min-width: 52px;
   }
 }

@@ -11,8 +11,8 @@
   width: 264px;
   display: flex;
   flex-direction: column;
-  background: #241d17;
-  color: #f5efe7;
+  background: var(--ec-text-dark);
+  color: var(--ec-bg);
   overflow-y: auto;
 
   &.abierto {
@@ -28,7 +28,7 @@
   strong {
     display: block;
     font-size: 1rem;
-    color: #f6a37a;
+    color: var(--ec-primary-light);
   }
 
   span {
@@ -64,7 +64,7 @@
 
   a.activo {
     background: rgba(246, 163, 122, 0.16);
-    color: #f6a37a;
+    color: var(--ec-primary-light);
     font-weight: 600;
   }
 
@@ -105,8 +105,8 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #d95f2b;
-    color: #fff;
+    background: var(--ec-accent);
+    color: var(--pr-pure-white);
     display: grid;
     place-items: center;
     font-weight: 700;
@@ -151,7 +151,7 @@
   left: 10px;
   right: 10px;
   bottom: calc(100% + 6px);
-  background: #fffdf9;
+  background: var(--ec-surface);
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
   padding: 6px;
@@ -168,14 +168,14 @@
     font-size: 0.88rem;
     text-align: left;
     cursor: pointer;
-    color: #3b332b;
+    color: var(--ec-text);
 
     &:hover {
       background: rgba(90, 77, 66, 0.08);
     }
 
     &.peligro {
-      color: #b3261e;
+      color: var(--ec-danger);
       font-weight: 600;
     }
   }
@@ -275,7 +275,7 @@
 
   &:hover {
     background: rgba(245, 239, 231, 0.16);
-    color: #f6a37a;
+    color: var(--ec-primary-light);
   }
 
   &:focus-visible {

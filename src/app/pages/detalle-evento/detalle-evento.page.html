@@ -67,12 +67,14 @@
             <span>
               @if (ev.permanente) {
                 Vigencia permanente (museo o centro abierto todo el año)
+              } @else if (rangoProlongado()) {
+                Desde {{ ev.fecha | date: 'd MMMM y' }} · vigencia prolongada
               } @else if (ev.fechaTermino) {
                 {{ ev.fecha | date: 'EEEE d MMMM y' }} – {{ ev.fechaTermino | date: 'EEEE d MMMM y' }}
               } @else {
                 {{ ev.fecha | date: 'EEEE d MMMM y' }}
               }
-              · @if (ev.hora) { {{ ev.hora }}@if (ev.horaTermino) { – {{ ev.horaTermino }} } hrs } @else if (ev.permanente) { Consulta horarios en la fuente } @else { Horario por confirmar }
+              · @if (ev.hora) { {{ ev.hora }}@if (ev.horaTermino && !duranteNoche()) { – {{ ev.horaTermino }} } hrs } @else if (ev.permanente) { Consulta horarios en la fuente } @else { Horario por confirmar }
             </span>
           </p>
           <h1>{{ ev.titulo }}</h1>

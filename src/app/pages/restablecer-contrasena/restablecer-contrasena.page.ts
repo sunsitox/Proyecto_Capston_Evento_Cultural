@@ -238,8 +238,8 @@ import {
       font-size: 0.76rem; color: var(--ec-text-muted);
       li { display: flex; align-items: center; gap: 5px;
         ion-icon { font-size: 0.95rem; flex-shrink: 0; color: var(--ec-border); } }
-      li.ec-req-ok { color: var(--ec-success, #2e7d32);
-        ion-icon { color: var(--ec-success, #2e7d32); } }
+      li.ec-req-ok { color: var(--ec-success);
+        ion-icon { color: var(--ec-success); } }
     }
     .ec-reset-submit {
       --border-radius: var(--ec-radius-full);

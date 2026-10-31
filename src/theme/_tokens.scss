@@ -98,6 +98,8 @@
   --pr-olive-soft: #6b8a5e;
   --pr-brick: #9a3b2e;
   --pr-brick-wash: #fbeeec;
+  --pr-warn-strong: #d99b2b;   /* ámbar sólido (estado pendiente) */
+  --pr-success-strong: #499269; /* verde sólido para fondos con texto blanco */
   --pr-ink: #211c16;
   --pr-ink-soft: #322c25;
   --pr-ink-muted: #5d564a;   /* 6.5:1 sobre --ec-bg (AA texto pequeño) */
@@ -130,6 +132,16 @@
   --ec-accent: var(--pr-copper);
   --ec-green: var(--pr-olive);
   --ec-green-bg: var(--pr-olive-wash);
+  /* Éxito (semántico): alias del oliva de la identidad. Antes no existía y
+     las páginas usaban el fallback verde de sistema #2e7d32, fuera de paleta. */
+  --ec-success: var(--pr-olive);
+  --ec-success-bg: var(--pr-olive-wash);
+  --ec-success-strong: var(--pr-success-strong); /* sólido para texto blanco encima */
+  /* Advertencia/pendiente: texto en el ocre de categorías (4.5:1 sobre papel)
+     y versión sólida ámbar para fondos. Antes el admin los tenía como hex
+     sueltos (#8a5f10 / #d99b2b) fuera del sistema. */
+  --ec-warning: var(--pr-cat-gastro);
+  --ec-warning-strong: var(--pr-warn-strong);
   --ec-danger: var(--pr-brick);
   --ec-danger-bg: var(--pr-brick-wash);
   --ec-text: var(--pr-ink-soft);

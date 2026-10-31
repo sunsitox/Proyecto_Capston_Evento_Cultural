@@ -41,6 +41,15 @@
   display: block;
   min-width: 0;
   flex: 1;
+
+  /* En pantallas angostas el header sticky (64px, vidrio translúcido) queda
+     flotando sobre el arranque de la página: los eyebrows de las secciones
+     ropa cabían en su 24px de padding superior y se veían recortados a
+     media letra. Se reserva el alto del header (DEF-AUDIT-A1). En escritorio
+     el shell ya espacia el contenido, así que no se toca. */
+  @media (max-width: 991.98px) {
+    padding-top: var(--ec-header-h);
+  }
 }
 
 // ========================================

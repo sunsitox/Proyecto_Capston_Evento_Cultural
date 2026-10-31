@@ -20,6 +20,11 @@ export interface UsuarioSesion {
   email: string;
   nombre?: string;
   rol: 'usuario' | 'organizador';
+  /** Imagen de perfil: la que subió la persona (avatar_url_custom) o la
+   *  que trae la sesión OAuth (Google escribe avatar_url). */
+  avatarUrl?: string;
+  /** Proveedor con el que se inició sesión: "email" o "google". */
+  proveedor?: string;
 }
 
 /** Fila cruda de la tabla `events` (esquema del pipeline del scraper). */
@@ -130,6 +135,7 @@ export class SupabaseService {
     id: string;
     email?: string;
     user_metadata?: Record<string, unknown>;
+    app_metadata?: Record<string, unknown>;
   }): UsuarioSesion {
     const meta = user.user_metadata ?? {};
     // OAuth (Google) escribe `full_name`/`name` y manda; si el usuario ya
@@ -145,7 +151,17 @@ export class SupabaseService {
       typeof meta['rol'] === 'string' && meta['rol'] === 'organizador'
         ? 'organizador'
         : 'usuario';
-    return { id: user.id, email: user.email ?? '', nombre, rol };
+    // Imagen: primero la subida manual del usuario; si no, la que traiga la
+    // sesión OAuth (Google escribe avatar_url en el metadata). Un registro por
+    // correo sin imagen queda sin avatar y muestra el ícono genérico.
+    const avatarUrl =
+      (typeof meta['avatar_url_custom'] === 'string' && meta['avatar_url_custom']) ||
+      (typeof meta['avatar_url'] === 'string' && meta['avatar_url']) ||
+      undefined;
+    const aplico = user.app_metadata ?? {};
+    const proveedor =
+      typeof aplico['provider'] === 'string' ? aplico['provider'] : undefined;
+    return { id: user.id, email: user.email ?? '', nombre, rol, avatarUrl, proveedor };
   }
 
   // ------------------------------------------------------------------
@@ -302,6 +318,61 @@ export class SupabaseService {
     const { data, error } = await this.cliente.auth.updateUser({ password: nueva });
     if (error) throw error;
     if (data.user) this._usuario.set(this.aSesion(data.user));
+  }
+
+  /**
+   * Guarda los datos editables del perfil: el nombre visible.
+   * Escribe el mismo valor en las tres claves del metadata (`nombre`,
+   * `nombre_display` y `full_name`) para que el cambio se vea aunque el
+   * perfil venga de OAuth (que consulta `full_name` primero).
+   */
+  async actualizarPerfilDatos(nombre: string): Promise<UsuarioSesion> {
+    const nombreLimpio = nombre.trim().slice(0, 80);
+    if (!nombreLimpio) throw new Error('El nombre no puede quedar vacío.');
+    const { data, error } = await this.cliente.auth.updateUser({
+      data: {
+        nombre: nombreLimpio,
+        nombre_display: nombreLimpio,
+        full_name: nombreLimpio
+      }
+    });
+    if (error) throw error;
+    if (!data.user) throw new Error('No se pudo actualizar el perfil.');
+    const usuario = this.aSesion(data.user);
+    this._usuario.set(usuario);
+    return usuario;
+  }
+
+  /**
+   * Sube la imagen de avatar a Storage (bucket `avatars`, ruta del propio
+   * usuario) y la fija en el metadata como `avatar_url_custom`, que en
+   * `aSesion` tiene precedencia sobre la imagen de la sesión OAuth.
+   * El bucket y sus políticas se crean con la migración de avatars.
+   */
+  async subirAvatar(archivo: Blob, nombreArchivo: string): Promise<UsuarioSesion> {
+    const usuario = this._usuario();
+    if (!usuario) throw new Error('Necesitas sesión para cambiar tu imagen.');
+    const ruta = `${usuario.id}/avatar-${Date.now()}-${nombreArchivo.replace(/[^\w.\-]/g, '_')}`;
+    const { error: errorSubida } = await this.cliente.storage
+      .from('avatars')
+      .upload(ruta, archivo, {
+        upsert: true,
+        contentType: archivo.type || 'image/jpeg'
+      });
+    if (errorSubida) throw errorSubida;
+    const { data: publica } = this.cliente.storage.from('avatars').getPublicUrl(ruta);
+    const url = publica?.publicUrl;
+    if (!url) throw new Error('No se pudo resolver la URL pública de la imagen.');
+    const { data, error } = await this.cliente.auth.updateUser({
+      data: { avatar_url_custom: url }
+    });
+    if (error) throw error;
+    if (data.user) {
+      const actualizado = this.aSesion(data.user);
+      this._usuario.set(actualizado);
+      return actualizado;
+    }
+    throw new Error('No se pudo actualizar el perfil.');
   }
 
   /**

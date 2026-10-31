@@ -15,7 +15,7 @@
 }
 
 .ec-admin-ev__kpis .kpi {
-  background: var(--ec-surface, #fffdf9);
+  background: var(--ec-surface);
   border: 1px solid rgba(90, 77, 66, 0.14);
   border-radius: 14px;
   padding: 12px 14px;
@@ -27,26 +27,26 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--ec-text-muted, #5d564a);
+    color: var(--ec-text-muted);
   }
 
   .kpi__valor {
     font-size: 1.5rem;
     line-height: 1.15;
-    color: var(--ec-text, #3b332b);
+    color: var(--ec-text);
   }
 
   .kpi__detalle {
     font-size: 0.74rem;
-    color: var(--ec-text-muted, #5d564a);
+    color: var(--ec-text-muted);
   }
 
   &.kpi--validacion .kpi__valor {
-    color: #8a5f10;
+    color: var(--ec-warning);
   }
 
   &.kpi--ocultos .kpi__valor {
-    color: #a32014;
+    color: var(--ec-danger);
   }
 }
 
@@ -63,8 +63,8 @@
   flex: 1 1 260px;
   border: 1px solid rgba(90, 77, 66, 0.25);
   border-radius: 10px;
-  background: var(--ec-surface, #fffdf9);
-  color: var(--ec-text, #3b332b);
+  background: var(--ec-surface);
+  color: var(--ec-text);
   padding: 8px 12px;
   font-size: 0.86rem;
 
@@ -79,14 +79,14 @@
   align-items: center;
   gap: 6px;
   font-size: 0.84rem;
-  color: var(--ec-text-muted, #5d564a);
+  color: var(--ec-text-muted);
   white-space: nowrap;
 
   select {
     border: 1px solid rgba(90, 77, 66, 0.25);
     border-radius: 8px;
-    background: var(--ec-surface, #fffdf9);
-    color: var(--ec-text, #3b332b);
+    background: var(--ec-surface);
+    color: var(--ec-text);
     padding: 6px 8px;
     font: inherit;
     cursor: pointer;
@@ -103,11 +103,11 @@
   align-items: center;
   gap: 8px;
   font-size: 0.84rem;
-  color: var(--ec-text-muted, #5d564a);
+  color: var(--ec-text-muted);
   cursor: pointer;
 
   input {
-    accent-color: #d95f2b;
+    accent-color: var(--ec-accent);
   }
 }
 
@@ -140,7 +140,7 @@
   }
 
   &.activa {
-    color: #b04a1f;
+    color: var(--ec-accent);
 
     span {
       font-size: 0.66rem;
@@ -161,8 +161,8 @@
     padding: 7px 14px;
     border: 1px solid rgba(90, 77, 66, 0.25);
     border-radius: 8px;
-    background: var(--ec-surface, #fffdf9);
-    color: var(--ec-text, #3b332b);
+    background: var(--ec-surface);
+    color: var(--ec-text);
     font-size: 0.82rem;
     cursor: pointer;
 
@@ -183,7 +183,7 @@
 
   .paginacion__info {
     font-size: 0.8rem;
-    color: var(--ec-text-muted, #5d564a);
+    color: var(--ec-text-muted);
   }
 }
 
@@ -199,7 +199,7 @@
   &--cabecera {
     font-size: 0.76rem;
     font-weight: 600;
-    color: var(--ec-text-muted, #5d564a);
+    color: var(--ec-text-muted);
     border-bottom: 1px solid rgba(90, 77, 66, 0.22);
   }
 
@@ -213,7 +213,7 @@
   min-width: 0;
 
   strong {
-    color: var(--ec-text, #3b332b);
+    color: var(--ec-text);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -221,7 +221,7 @@
 
   small {
     font-size: 0.74rem;
-    color: var(--ec-text-muted, #5d564a);
+    color: var(--ec-text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -230,20 +230,20 @@
 
 .ec-admin-ev__tabla .comuna,
 .ec-admin-ev__tabla .fuente {
-  color: var(--ec-text-muted, #5d564a);
+  color: var(--ec-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .ec-admin-ev__tabla .fecha {
-  color: var(--ec-text, #3b332b);
+  color: var(--ec-text);
   text-transform: capitalize;
 
   em {
     font-style: normal;
     font-size: 0.78rem;
-    color: var(--ec-text-muted, #5d564a);
+    color: var(--ec-text-muted);
   }
 }
 
@@ -259,22 +259,22 @@
 
   &--proximo {
     background: rgba(217, 95, 43, 0.12);
-    color: #b04a1f;
+    color: var(--ec-accent);
   }
 
   &--activo {
     background: rgba(73, 146, 105, 0.15);
-    color: #2f6d4c;
+    color: var(--ec-green);
   }
 
   &--ampar {
     background: rgba(217, 155, 43, 0.16);
-    color: #8a5f10;
+    color: var(--ec-warning);
   }
 
   &--peligro {
     background: rgba(179, 38, 30, 0.12);
-    color: #a32014;
+    color: var(--ec-danger);
   }
 }
 
@@ -284,8 +284,8 @@
   padding: 9px 12px;
   border: 1px solid rgba(90, 77, 66, 0.25);
   border-radius: 10px;
-  background: var(--ec-surface, #fffdf9);
-  color: var(--ec-text, #3b332b);
+  background: var(--ec-surface);
+  color: var(--ec-text);
   font-size: 0.84rem;
   cursor: pointer;
 
@@ -325,8 +325,8 @@
   padding: 7px 14px;
   border: 1px solid rgba(90, 77, 66, 0.25);
   border-radius: 999px;
-  background: var(--ec-surface, #fffdf9);
-  color: var(--ec-text-muted, #5d564a);
+  background: var(--ec-surface);
+  color: var(--ec-text-muted);
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
@@ -341,9 +341,9 @@
   }
 
   &.activa {
-    background: #d95f2b;
-    border-color: #b04a1f;
-    color: #fffdf9;
+    background: var(--ec-accent);
+    border-color: var(--ec-accent);
+    color: var(--ec-surface);
   }
 }
 
@@ -384,7 +384,7 @@
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: #fffdf9;
+    background: var(--ec-surface);
     transition: transform 0.15s ease;
   }
 
@@ -392,16 +392,16 @@
     font-style: normal;
     font-size: 0.76rem;
     font-weight: 600;
-    color: #2f6d4c;
+    color: var(--ec-green);
     min-width: 74px;
   }
 
   &.sin-visibilidad em {
-    color: #a32014;
+    color: var(--ec-danger);
   }
 
   input:checked + span {
-    background: #498a65;
+    background: var(--ec-success-strong);
   }
 
   input:checked + span::before {
@@ -431,10 +431,10 @@
 
 .ec-admin-ev__tabla .btn-validar {
   padding: 5px 10px;
-  border: 1px solid #2f6d4c;
+  border: 1px solid var(--ec-green);
   border-radius: 8px;
   background: rgba(73, 146, 105, 0.15);
-  color: #2f6d4c;
+  color: var(--ec-green);
   font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
@@ -463,7 +463,7 @@
 
 .ec-admin-ev__tabla .fila.oculta .titulo::after {
   content: ' · oculto';
-  color: #8a5f10;
+  color: var(--ec-warning);
   font-size: 0.72rem;
   font-weight: 600;
 }
@@ -488,15 +488,15 @@
     align-items: center;
     gap: 8px;
     font-size: 0.82rem;
-    color: var(--ec-text-muted, #5d564a);
+    color: var(--ec-text-muted);
 
     select {
       border: 1px solid rgba(90, 77, 66, 0.25);
       border-radius: 8px;
       padding: 6px 8px;
       font-size: 0.82rem;
-      background: var(--ec-surface, #fffdf9);
-      color: var(--ec-text, #3b332b);
+      background: var(--ec-surface);
+      color: var(--ec-text);
       cursor: pointer;
 
       &:focus-visible {
@@ -514,9 +514,9 @@
     cursor: pointer;
 
     &--apagar {
-      border: 1px solid #a13d3d;
+      border: 1px solid var(--ec-danger);
       background: rgba(161, 61, 61, 0.08);
-      color: #a13d3d;
+      color: var(--ec-danger);
 
       &:hover:not(:disabled) {
         background: rgba(161, 61, 61, 0.18);
@@ -524,9 +524,9 @@
     }
 
     &--prender {
-      border: 1px solid #2f6d4c;
+      border: 1px solid var(--ec-green);
       background: rgba(73, 146, 105, 0.08);
-      color: #2f6d4c;
+      color: var(--ec-green);
 
       &:hover:not(:disabled) {
         background: rgba(73, 146, 105, 0.18);
@@ -546,6 +546,6 @@
 
   .masivo__aviso {
     font-size: 0.8rem;
-    color: var(--ec-text-muted, #5d564a);
+    color: var(--ec-text-muted);
   }
 }

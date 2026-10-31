@@ -53,6 +53,16 @@ export class ApiService {
     return this.supabase.actualizarContrasena(nueva);
   }
 
+  /** Guarda los datos editables del perfil (nombre visible). */
+  actualizarPerfilDatos(nombre: string): Promise<UsuarioSesion> {
+    return this.supabase.actualizarPerfilDatos(nombre);
+  }
+
+  /** Sube la imagen elegida y la fija como avatar del perfil. */
+  subirAvatar(archivo: Blob, nombreArchivo: string): Promise<UsuarioSesion> {
+    return this.supabase.subirAvatar(archivo, nombreArchivo);
+  }
+
   /** Confirma el cambio de contraseña con el token temporal (flujo desacoplado). */
   confirmarResetContrasena(token: string, password: string): Promise<{ email: string }> {
     return this.supabase.confirmarResetContrasena(token, password);

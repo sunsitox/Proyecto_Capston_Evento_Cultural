@@ -38,6 +38,93 @@
   margin-bottom: 6px;
 }
 
+.ec-perfil-cabecera {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--ec-space-sm);
+}
+
+.ec-perfil-avatar-img {
+  width: 88px;
+  height: 88px;
+  border-radius: var(--ec-radius-full);
+  object-fit: cover;
+  border: 3px solid var(--ec-primary-light);
+  box-shadow: var(--ec-shadow-sm);
+
+  &:focus-visible {
+    outline: 3px solid var(--ec-primary);
+    outline-offset: 2px;
+  }
+}
+
+.ec-perfil-avatar-cambiar {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border: var(--ec-border-width, 1px) solid var(--ec-border-light);
+  border-radius: var(--ec-radius-full, 999px);
+  background: var(--ec-surface);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ec-text-muted);
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 0.85rem;
+    color: var(--ec-primary);
+  }
+
+  &:hover {
+    background: var(--ec-surface-hover, var(--ec-surface));
+    color: var(--ec-text-dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ec-primary);
+    outline-offset: 2px;
+  }
+
+  &--ocupado {
+    cursor: default;
+    opacity: 0.7;
+  }
+}
+
+.ec-perfil-editar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--ec-space-sm);
+  padding: 6px 16px;
+  border: var(--ec-border-width, 1px) solid var(--ec-border-light);
+  border-radius: var(--ec-radius-full, 999px);
+  background: var(--ec-surface);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ec-text-muted);
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 0.9rem;
+    color: var(--ec-primary);
+  }
+
+  &:hover {
+    background: var(--ec-surface-hover, var(--ec-surface));
+    color: var(--ec-text-dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ec-primary);
+    outline-offset: 2px;
+  }
+}
+
 .ec-perfil-sub {
   margin: 0 auto;
   font-size: 0.9rem;
@@ -109,6 +196,139 @@
   }
 }
 
+// ---------- Edición de datos ----------
+
+.ec-perfil-edicion {
+  background: var(--ec-surface);
+  border: var(--ec-border-width) solid var(--ec-border-light);
+  border-radius: var(--ec-radius-lg);
+  padding: var(--ec-space-lg) var(--ec-space-md);
+  margin-bottom: var(--ec-space-lg);
+
+  &__cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ec-space-sm);
+    margin: 0 0 var(--ec-space-md);
+
+    h2 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+  }
+
+  &__cerrar {
+    padding: 4px;
+    border: none;
+    background: none;
+    color: var(--ec-text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: var(--ec-radius-full);
+
+    &:hover {
+      color: var(--ec-text-dark);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ec-primary);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.ec-perfil-campo {
+  margin-bottom: var(--ec-space-lg);
+
+  label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ec-text-light);
+    margin-bottom: 5px;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    border: var(--ec-border-width, 1px) solid var(--ec-border-light);
+    border-radius: var(--ec-radius-md, 12px);
+    font: inherit;
+    font-size: 0.9rem;
+
+    &:focus-visible {
+      outline: 3px solid var(--ec-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  button + label {
+    margin-top: var(--ec-space-sm);
+  }
+}
+
+.ec-perfil-guardar {
+  margin-top: var(--ec-space-sm);
+  padding: 9px 18px;
+  border: none;
+  border-radius: var(--ec-radius-full, 999px);
+  background: var(--ec-primary);
+  color: #fffdf9;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--ec-primary-dark);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--ec-primary);
+    outline-offset: 2px;
+  }
+}
+
+.ec-perfil-regla {
+  margin: var(--ec-space-xs) 0 0;
+  font-size: 0.78rem;
+  color: var(--ec-text-muted);
+
+  &--error {
+    color: var(--ec-danger);
+  }
+}
+
+.ec-perfil-aviso {
+  margin: 0 0 var(--ec-space-md);
+  padding: var(--ec-space-sm) var(--ec-space-md);
+  border-radius: var(--ec-radius-md);
+  font-size: 0.82rem;
+  color: var(--ec-text-muted);
+  background: var(--ec-primary-bg);
+  border: 1px solid var(--ec-primary-light);
+
+  &--exito {
+    color: #1b5e20;
+    background: #e8f5e9;
+    border-color: #a5d6a7;
+  }
+
+  &--error {
+    color: var(--ec-danger);
+    background: var(--ec-danger-bg);
+    border-color: var(--ec-danger);
+  }
+}
+
 // ---------- Intereses explorados ----------
 
 .ec-perfil-intereses {
@@ -162,7 +382,7 @@
     gap: 6px;
     cursor: pointer;
     font-size: 0.74rem;
-    color: var(--ec-text-light, #8b8378);
+    color: var(--ec-text-light);
     opacity: 0.75;
     transition: opacity var(--ec-duration-fast, 0.15s) ease;
     list-style: none;
@@ -170,7 +390,7 @@
     &:hover,
     &:focus-visible {
       opacity: 1;
-      outline: 2px solid var(--ec-primary-dark, #5e3b21);
+      outline: 2px solid var(--ec-primary-dark);
       outline-offset: 2px;
       border-radius: 4px;
     }
@@ -191,12 +411,12 @@
     background: none;
     font: inherit;
     font-size: 0.8rem;
-    color: var(--ec-danger, #a33b2e);
+    color: var(--ec-danger);
     text-decoration: underline;
     cursor: pointer;
 
     &:focus-visible {
-      outline: 2px solid var(--ec-danger, #a33b2e);
+      outline: 2px solid var(--ec-danger);
       outline-offset: 2px;
     }
   }
@@ -204,15 +424,15 @@
   &__caja {
     margin-top: var(--ec-space-sm);
     padding: var(--ec-space-md);
-    background: var(--ec-danger-bg, #fdf1ef);
-    border: 1px solid var(--ec-danger, #a33b2e);
+    background: var(--ec-danger-bg);
+    border: 1px solid var(--ec-danger);
     border-radius: var(--ec-radius-md);
     text-align: left;
 
     h3 {
       margin: 0 0 4px;
       font-size: 0.95rem;
-      color: var(--ec-danger, #a33b2e);
+      color: var(--ec-danger);
     }
 
     p {
@@ -234,13 +454,13 @@
     width: 100%;
     max-width: 260px;
     padding: 10px 12px;
-    border: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+    border: var(--ec-border-width, 1px) solid var(--ec-border-light);
     border-radius: var(--ec-radius-md, 12px);
     font: inherit;
     font-size: 0.9rem;
 
     &:focus-visible {
-      outline: 3px solid var(--ec-primary-dark, #5e3b21);
+      outline: 3px solid var(--ec-primary-dark);
       outline-offset: 1px;
     }
   }
@@ -248,7 +468,7 @@
   &__error {
     margin: var(--ec-space-sm) 0 0;
     font-size: 0.8rem;
-    color: var(--ec-danger, #a33b2e);
+    color: var(--ec-danger);
   }
 
   &__acciones {
@@ -259,16 +479,16 @@
 
   &__cancelar {
     padding: 8px 16px;
-    border: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+    border: var(--ec-border-width, 1px) solid var(--ec-border-light);
     border-radius: var(--ec-radius-full, 999px);
-    background: var(--ec-surface, #fffdf9);
+    background: var(--ec-surface);
     font: inherit;
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
 
     &:hover {
-      background: var(--ec-surface-hover, #f6efe4);
+      background: var(--ec-surface-hover);
     }
   }
 
@@ -276,7 +496,7 @@
     padding: 8px 16px;
     border: none;
     border-radius: var(--ec-radius-full, 999px);
-    background: var(--ec-danger, #a33b2e);
+    background: var(--ec-danger);
     color: #fffdf9;
     font: inherit;
     font-size: 0.82rem;
@@ -289,7 +509,7 @@
     }
 
     &:focus-visible {
-      outline: 3px solid var(--ec-danger, #a33b2e);
+      outline: 3px solid var(--ec-danger);
       outline-offset: 2px;
     }
   }

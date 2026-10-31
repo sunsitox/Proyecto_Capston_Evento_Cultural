@@ -52,11 +52,14 @@
   &__hero-overlay {
     position: absolute;
     inset: 0;
+    /* El texto vive abajo-izquierda: la sombra se concentra en la base
+       y la esquina inferior derecha (antes a 0.1, ilegible sobre fotos
+       claras) queda a ≥ 0.6. */
     background: linear-gradient(
-      135deg,
-      rgba(0, 0, 0, 0.7) 0%,
-      rgba(0, 0, 0, 0.3) 50%,
-      rgba(0, 0, 0, 0.1) 100%
+      180deg,
+      rgba(0, 0, 0, 0.28) 0%,
+      rgba(0, 0, 0, 0.38) 45%,
+      rgba(0, 0, 0, 0.74) 100%
     );
     display: flex;
     flex-direction: column;

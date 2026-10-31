@@ -17,7 +17,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ec-text-light, #6d6557);
+  color: var(--ec-text-light);
 }
 
 .ec-fs-chips {
@@ -32,10 +32,10 @@
   gap: 6px;
   min-height: 40px;
   padding: 0 14px;
-  border: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+  border: var(--ec-border-width, 1px) solid var(--ec-border-light);
   border-radius: var(--ec-radius-full, 999px);
-  background: var(--ec-surface, #fffdf9);
-  color: var(--ec-text-dark, #211c16);
+  background: var(--ec-surface);
+  color: var(--ec-text-dark);
   font: inherit;
   font-size: 0.82rem;
   font-weight: 600;
@@ -46,25 +46,25 @@
 
   ion-icon {
     font-size: 1rem;
-    color: var(--ec-primary-dark, #5e3b21);
+    color: var(--ec-primary-dark);
   }
 
   &:hover {
-    border-color: var(--ec-primary, #7a4f2e);
+    border-color: var(--ec-primary);
   }
 
   &:focus-visible {
-    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus);
     outline-offset: 2px;
   }
 
   &--activo {
-    background: var(--ec-primary, #7a4f2e);
-    border-color: var(--ec-primary, #7a4f2e);
-    color: var(--pr-white, #fffdf9);
+    background: var(--ec-primary);
+    border-color: var(--ec-primary);
+    color: var(--pr-white);
 
     ion-icon {
-      color: var(--pr-white, #fffdf9);
+      color: var(--pr-white);
     }
   }
 
@@ -77,8 +77,8 @@
 .ec-fs-chip__num {
   padding: 1px 7px;
   border-radius: var(--ec-radius-full, 999px);
-  background: var(--ec-surface-2, #f0e9df);
-  color: var(--ec-text-light, #6d6557);
+  background: var(--ec-surface-2);
+  color: var(--ec-text-light);
   font-size: 0.7rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -86,7 +86,7 @@
 
 .ec-fs-chip--activo .ec-fs-chip__num {
   background: rgba(255, 255, 255, 0.24);
-  color: var(--pr-white, #fffdf9);
+  color: var(--pr-white);
 }
 
 .ec-fs-nota {
@@ -94,7 +94,7 @@
   margin: 2px 0 0;
   font-size: 0.74rem;
   line-height: 1.45;
-  color: var(--ec-text-light, #6d6557);
+  color: var(--ec-text-light);
 }
 
 .ec-fs-campo {
@@ -108,17 +108,17 @@
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--ec-text-light, #6d6557);
+    color: var(--ec-text-light);
   }
 
   select,
   input[type='date'] {
     min-height: var(--ec-touch-target, 44px);
     padding: 0 12px;
-    border: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+    border: var(--ec-border-width, 1px) solid var(--ec-border-light);
     border-radius: var(--ec-radius-md, 12px);
-    background: var(--ec-surface-2, #f0e9df);
-    color: var(--ec-text-dark, #211c16);
+    background: var(--ec-surface-2);
+    color: var(--ec-text-dark);
     font: inherit;
     font-size: 0.88rem;
   }
@@ -139,7 +139,7 @@
 
   select:focus-visible,
   input:focus-visible {
-    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+    outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus);
     outline-offset: 2px;
   }
 }

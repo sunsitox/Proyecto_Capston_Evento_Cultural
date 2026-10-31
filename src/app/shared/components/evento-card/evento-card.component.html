@@ -35,6 +35,8 @@
         <span>
           @if (esPermanente()) {
             Vigencia permanente
+          } @else if (rangoProlongado()) {
+            Desde {{ evento().fecha | date: formatoInicio() }}@if (evento().hora) { · {{ evento().hora }} hrs }
           } @else {
             {{ evento().fecha | date: formatoInicio() }}@if (evento().fechaTermino) {
               – {{ evento().fechaTermino | date: formatoTermino() }}

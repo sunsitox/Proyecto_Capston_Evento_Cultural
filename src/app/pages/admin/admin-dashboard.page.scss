@@ -8,7 +8,7 @@
   min-height: 100dvh;
   background:
     radial-gradient(1000px 400px at 90% -5%, rgba(190, 82, 26, 0.08), transparent 60%),
-    var(--ec-bg, #faf7f2);
+    var(--ec-bg);
 }
 
 // ---- Distribución compacta con scroll (categorías) -------------------------
@@ -51,7 +51,7 @@
 }
 
 .ec-admin-dash__kpi {
-  background: var(--ec-surface, #fffdf9);
+  background: var(--ec-surface);
   border: 1px solid rgba(90, 77, 66, 0.14);
   border-radius: 14px;
   padding: 14px 16px;
@@ -62,18 +62,25 @@
     font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--ec-text-muted, #5d564a);
+    color: var(--ec-text-muted);
   }
 
   strong {
     font-size: 1.6rem;
     line-height: 1.15;
-    color: var(--ec-text, #3b332b);
+    color: var(--ec-text);
+    font-variant-numeric: tabular-nums;
   }
 
+  /* B4: sublabel a una línea fija (ellipsis) para que las cards
+     queden a la misma altura siempre, con o sin sublabel larga. */
   small {
-    color: var(--ec-text-muted, #5d564a);
+    color: var(--ec-text-muted);
     font-size: 0.76rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 1.15em;
   }
 }
 
@@ -95,7 +102,7 @@
 
   &__etiqueta {
     font-size: 0.84rem;
-    color: var(--ec-text, #3b332b);
+    color: var(--ec-text);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -117,16 +124,16 @@
     display: block;
     height: 100%;
     border-radius: 999px;
-    background: #d95f2b;
+    background: var(--ec-accent);
     min-width: 6px;
     transition: width 0.35s ease;
 
     &--verde {
-      background: #499269;
+      background: var(--ec-success-strong);
     }
 
     &--ambar {
-      background: #d99b2b;
+      background: var(--ec-warning-strong);
     }
   }
 
@@ -134,7 +141,7 @@
     font-size: 0.84rem;
     font-weight: 600;
     text-align: right;
-    color: var(--ec-text, #3b332b);
+    color: var(--ec-text);
   }
 }
 
@@ -154,7 +161,7 @@
   align-items: center;
   gap: 4px;
   font-size: 0.76rem;
-  color: var(--ec-text-muted, #5d564a);
+  color: var(--ec-text-muted);
 
   i {
     width: 18px;
@@ -169,7 +176,7 @@
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid rgba(90, 77, 66, 0.14);
-  background: #eee;
+  background: var(--ec-border-light);
 }
 
 @media (max-width: 640px) {

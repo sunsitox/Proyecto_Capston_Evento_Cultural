@@ -76,10 +76,10 @@ import { SolicitaSesionService } from '../../../core/services/solicita-sesion.se
       gap: 5px;
       min-height: var(--ec-touch-target, 44px);
       padding: 0 12px;
-      border: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+      border: var(--ec-border-width, 1px) solid var(--ec-border-light);
       border-radius: var(--ec-radius-full, 999px);
-      background: var(--ec-surface, #fffdf9);
-      color: var(--ec-text-dark, #211c16);
+      background: var(--ec-surface);
+      color: var(--ec-text-dark);
       font: inherit;
       font-size: 0.78rem;
       font-weight: 600;
@@ -95,8 +95,8 @@ import { SolicitaSesionService } from '../../../core/services/solicita-sesion.se
       }
 
       &:hover {
-        border-color: var(--ec-primary, #7a4f2e);
-        background: var(--ec-primary-bg, #f2e9df);
+        border-color: var(--ec-primary);
+        background: var(--ec-primary-bg);
       }
 
       &:active {
@@ -104,18 +104,18 @@ import { SolicitaSesionService } from '../../../core/services/solicita-sesion.se
       }
 
       &:focus-visible {
-        outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+        outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus);
         outline-offset: 2px;
       }
 
       &--on {
-        background: var(--ec-primary, #7a4f2e);
-        border-color: var(--ec-primary, #7a4f2e);
-        color: var(--pr-white, #fffdf9);
+        background: var(--ec-primary);
+        border-color: var(--ec-primary);
+        color: var(--pr-white);
 
         &:hover {
-          background: var(--ec-primary-dark, #5e3b21);
-          border-color: var(--ec-primary-dark, #5e3b21);
+          background: var(--ec-primary-dark);
+          border-color: var(--ec-primary-dark);
         }
       }
 

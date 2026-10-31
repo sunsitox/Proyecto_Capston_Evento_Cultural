@@ -14,14 +14,14 @@
   gap: 8px;
   flex-wrap: wrap;
   padding: 10px 16px;
-  border: 1px dashed var(--ec-border, #e3d9ca);
+  border: 1px dashed var(--ec-border);
   border-radius: var(--ec-radius-full, 999px);
-  background: var(--ec-surface-2, #f6efe6);
-  color: var(--ec-text-muted, #5d564a);
+  background: var(--ec-surface-2);
+  color: var(--ec-text-muted);
   font-size: 0.82rem;
 
   ion-icon {
-    color: var(--ec-primary, #7a4f2e);
+    color: var(--ec-primary);
     flex-shrink: 0;
   }
 }

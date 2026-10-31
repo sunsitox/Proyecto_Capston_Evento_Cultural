@@ -315,8 +315,8 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
       max-width: 640px;
       margin: 0 auto;
       padding: var(--ec-space-xl, 32px) var(--ec-space-md, 16px);
-      background: var(--ec-surface, #fffdf9);
-      border: 1px solid var(--ec-border-light, #ece4d7);
+      background: var(--ec-surface);
+      border: 1px solid var(--ec-border-light);
       border-radius: var(--ec-radius-lg, 16px);
       text-align: center;
     }
@@ -328,8 +328,8 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
       width: 52px;
       height: 52px;
       border-radius: var(--ec-radius-circle, 50%);
-      background: var(--ec-primary-bg, #f2e9df);
-      color: var(--ec-primary-dark, #5e3b21);
+      background: var(--ec-primary-bg);
+      color: var(--ec-primary-dark);
       margin-bottom: var(--ec-space-sm, 8px);
 
       ion-icon {
@@ -341,7 +341,7 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
       margin: 0 0 var(--ec-space-xs, 6px);
       font-family: var(--ec-font-serif, serif);
       font-size: 1.5rem;
-      color: var(--ec-text-dark, #211c16);
+      color: var(--ec-text-dark);
     }
 
     .ec-onb__title--compact {
@@ -351,7 +351,7 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
     .ec-onb__subtitle {
       margin: 0 auto var(--ec-space-md, 16px);
       max-width: 46ch;
-      color: var(--ec-text-muted, #5d564a);
+      color: var(--ec-text-muted);
       font-size: 0.92rem;
       line-height: 1.5;
     }
@@ -369,12 +369,12 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
       padding: 0;
       border: none;
       border-radius: 50%;
-      background: var(--ec-border, #e3d9ca);
+      background: var(--ec-border);
       cursor: pointer;
       transition: background var(--ec-duration-fast, 0.15s) var(--ec-ease, ease);
 
       &--activo {
-        background: var(--ec-primary, #7a4f2e);
+        background: var(--ec-primary);
         transform: scale(1.15);
       }
 
@@ -384,7 +384,7 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
       }
 
       &:focus-visible {
-        outline: 3px solid var(--ec-primary-dark, #5e3b21);
+        outline: 3px solid var(--ec-primary-dark);
         outline-offset: 2px;
       }
     }
@@ -392,7 +392,7 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
     .ec-onb__hint {
       margin: 6px 0 0;
       font-size: 0.78rem;
-      color: var(--ec-text-muted, #5d564a);
+      color: var(--ec-text-muted);
     }
 
     .ec-onb__field {
@@ -406,7 +406,7 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
         font-weight: 700;
         letter-spacing: 0.07em;
         text-transform: uppercase;
-        color: var(--ec-text-light, #6d6557);
+        color: var(--ec-text-light);
         margin-bottom: var(--ec-space-xs, 6px);
         padding: 0;
         text-align: left;
@@ -423,10 +423,10 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
     .ec-chip {
       min-height: 40px;
       padding: 0 14px;
-      border: 1px solid var(--ec-border-light, #ece4d7);
+      border: 1px solid var(--ec-border-light);
       border-radius: var(--ec-radius-full, 999px);
-      background: var(--ec-surface, #fffdf9);
-      color: var(--ec-text-dark, #211c16);
+      background: var(--ec-surface);
+      color: var(--ec-text-dark);
       font: inherit;
       font-size: 0.8rem;
       font-weight: 600;
@@ -436,22 +436,22 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
         border-color var(--ec-duration-fast, 0.15s) var(--ec-ease, ease);
 
       &:hover {
-        border-color: var(--ec-primary, #7a4f2e);
+        border-color: var(--ec-primary);
       }
 
       &:focus-visible {
-        outline: 3px solid var(--ec-primary-dark, #5e3b21);
+        outline: 3px solid var(--ec-primary-dark);
         outline-offset: 2px;
       }
 
       &--active {
-        background: var(--ec-primary, #7a4f2e);
-        border-color: var(--ec-primary, #7a4f2e);
-        color: var(--pr-white, #fffdf9);
+        background: var(--ec-primary);
+        border-color: var(--ec-primary);
+        color: var(--pr-white);
       }
 
       &--soft {
-        background: var(--ec-surface-2, #f0e9df);
+        background: var(--ec-surface-2);
       }
 
       &--wide {
@@ -476,19 +476,19 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
       padding: 0 24px;
       border: none;
       border-radius: var(--ec-radius-full, 999px);
-      background: var(--ec-primary, #7a4f2e);
-      color: var(--pr-white, #fffdf9);
+      background: var(--ec-primary);
+      color: var(--pr-white);
       font: inherit;
       font-size: 0.95rem;
       font-weight: 700;
       cursor: pointer;
 
       &:hover:not(:disabled) {
-        background: var(--ec-primary-dark, #5e3b21);
+        background: var(--ec-primary-dark);
       }
 
       &:focus-visible {
-        outline: 3px solid var(--ec-primary-dark, #5e3b21);
+        outline: 3px solid var(--ec-primary-dark);
         outline-offset: 2px;
       }
 
@@ -506,7 +506,7 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
       padding: 0 12px;
       border: none;
       background: transparent;
-      color: var(--ec-primary-dark, #5e3b21);
+      color: var(--ec-primary-dark);
       font: inherit;
       font-size: 0.85rem;
       font-weight: 600;
@@ -514,7 +514,7 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
       text-decoration: underline;
 
       &:focus-visible {
-        outline: 3px solid var(--ec-primary-dark, #5e3b21);
+        outline: 3px solid var(--ec-primary-dark);
         outline-offset: 2px;
         border-radius: 4px;
       }
@@ -527,7 +527,7 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
       align-items: flex-start;
       gap: 6px;
       font-size: 0.78rem;
-      color: var(--ec-text-muted, #5d564a);
+      color: var(--ec-text-muted);
       line-height: 1.45;
       text-align: left;
 

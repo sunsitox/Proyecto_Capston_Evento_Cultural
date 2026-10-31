@@ -132,6 +132,20 @@ export class EventoCardComponent {
   /** Espacio permanente (museo, centro abierto todo el año): sin fecha. */
   readonly esPermanente = computed(() => !!this.evento()?.permanente);
 
+  /**
+   * Rango de fechas ≥ ~10 meses (exposiciones con vigencia de años).
+   * El rango simétrico "1 ENE – 1 ENE 2027" ocupa todo el pie y empuja
+   * la hora fuera de la card: se resume en «Desde <inicio>».
+   */
+  readonly rangoProlongado = computed(() => {
+    const ev = this.evento();
+    if (!ev || ev.permanente || !ev.fecha || !ev.fechaTermino) return false;
+    const inicio = new Date(ev.fecha + 'T12:00:00').getTime();
+    const termino = new Date(ev.fechaTermino + 'T12:00:00').getTime();
+    if (Number.isNaN(inicio) || Number.isNaN(termino)) return false;
+    return termino - inicio >= 300 * 24 * 60 * 60 * 1000;
+  });
+
   /** "Me interesa" activo para este evento (memoria de la visita). */
   readonly meInteresaActivo = computed(
     () => this.recomendacion.tieneSenal(this.evento()?.id ?? '', 'me_interesa')

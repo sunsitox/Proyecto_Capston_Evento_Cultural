@@ -87,6 +87,32 @@ export class DetalleEventoPage {
     this.eventosService.obtenerPorId(this.eventoId)
   );
 
+  /**
+   * Rango de fechas ≥ ~10 meses: el catálogo real trae exposiciones con
+   * vigencia de años ("1 enero 2026 – 1 enero 2027" no aportaba nada).
+   * Mostrar «Desde <inicio> · vigencia prolongada» es más claro que un
+   * rango simétrico. No aplica a espacios permanentes (ya hay etiqueta).
+   */
+  readonly rangoProlongado = computed(() => {
+    const ev = this.evento();
+    if (!ev || ev.permanente || !ev.fecha || !ev.fechaTermino) return false;
+    const inicio = new Date(ev.fecha + 'T12:00:00').getTime();
+    const termino = new Date(ev.fechaTermino + 'T12:00:00').getTime();
+    if (Number.isNaN(inicio) || Number.isNaN(termino)) return false;
+    return termino - inicio >= 300 * 24 * 60 * 60 * 1000;
+  });
+
+  /**
+   * Hora de término menor o igual a la de inicio: horario tipo
+   * "19:00 – 01:00" que da la vuelta al reloj; mostrar hasta el
+   * término era confuso (parecía un error de datos).
+   */
+  readonly duranteNoche = computed(() => {
+    const ev = this.evento();
+    if (!ev || !ev.hora || !ev.horaTermino) return false;
+    return ev.horaTermino <= ev.hora;
+  });
+
   /** Hasta 3 eventos vigentes de la misma categoría (excluye el actual) */
   readonly similares = computed(() => {
     const ev = this.evento();

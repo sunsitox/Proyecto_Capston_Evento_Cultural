@@ -11,8 +11,8 @@
 .ec-admin-org__busqueda {
   border: 1px solid rgba(90, 77, 66, 0.25);
   border-radius: 10px;
-  background: var(--ec-surface, #fffdf9);
-  color: var(--ec-text, #3b332b);
+  background: var(--ec-surface);
+  color: var(--ec-text);
   padding: 8px 12px;
   font-size: 0.86rem;
   min-width: 220px;
@@ -42,7 +42,7 @@
     min-width: 0;
 
     strong {
-      color: var(--ec-text, #3b332b);
+      color: var(--ec-text);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -50,7 +50,7 @@
 
     small {
       font-size: 0.76rem;
-      color: var(--ec-text-muted, #5d564a);
+      color: var(--ec-text-muted);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -60,7 +60,7 @@
   .conteo {
     text-align: right;
     font-variant-numeric: tabular-nums;
-    color: #b04a1f;
+    color: var(--ec-accent);
   }
 }
 

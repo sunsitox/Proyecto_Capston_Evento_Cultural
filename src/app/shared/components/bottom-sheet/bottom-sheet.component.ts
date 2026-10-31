@@ -85,8 +85,8 @@ import { IonIcon } from '@ionic/angular';
       max-height: min(86vh, 720px);
       display: flex;
       flex-direction: column;
-      background: var(--ec-surface, #fffdf9);
-      border: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+      background: var(--ec-surface);
+      border: var(--ec-border-width, 1px) solid var(--ec-border-light);
       border-bottom: none;
       border-radius: var(--ec-radius-xl, 22px) var(--ec-radius-xl, 22px) 0 0;
       box-shadow: var(--ec-shadow-lg, 0 14px 40px rgba(60, 47, 33, 0.12));
@@ -110,7 +110,7 @@ import { IonIcon } from '@ionic/angular';
       height: 4px;
       margin: 10px auto 2px;
       border-radius: 999px;
-      background: var(--ec-border, #e3d9ca);
+      background: var(--ec-border);
     }
 
     .ec-sheet__header {
@@ -119,7 +119,7 @@ import { IonIcon } from '@ionic/angular';
       justify-content: space-between;
       gap: 8px;
       padding: 6px 16px 10px;
-      border-bottom: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+      border-bottom: var(--ec-border-width, 1px) solid var(--ec-border-light);
       flex-shrink: 0;
     }
 
@@ -127,7 +127,7 @@ import { IonIcon } from '@ionic/angular';
       margin: 0;
       font-family: var(--ec-font-serif, serif);
       font-size: 1.05rem;
-      color: var(--ec-text-dark, #211c16);
+      color: var(--ec-text-dark);
     }
 
     .ec-sheet__cerrar {
@@ -139,8 +139,8 @@ import { IonIcon } from '@ionic/angular';
       padding: 0;
       border: none;
       border-radius: 50%;
-      background: var(--ec-surface-2, #f0e9df);
-      color: var(--ec-text-muted, #5d564a);
+      background: var(--ec-surface-2);
+      color: var(--ec-text-muted);
       cursor: pointer;
 
       ion-icon {
@@ -148,12 +148,12 @@ import { IonIcon } from '@ionic/angular';
       }
 
       &:hover {
-        background: var(--ec-surface-hover, #e6dccd);
-        color: var(--ec-text-dark, #211c16);
+        background: var(--ec-surface-hover);
+        color: var(--ec-text-dark);
       }
 
       &:focus-visible {
-        outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus, #5e3b21);
+        outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus);
         outline-offset: 2px;
       }
     }
@@ -169,8 +169,8 @@ import { IonIcon } from '@ionic/angular';
       display: flex;
       gap: 8px;
       padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
-      border-top: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
-      background: var(--ec-surface, #fffdf9);
+      border-top: var(--ec-border-width, 1px) solid var(--ec-border-light);
+      background: var(--ec-surface);
       border-radius: 0 0 0 0;
       flex-shrink: 0;
 
@@ -200,7 +200,7 @@ import { IonIcon } from '@ionic/angular';
         width: min(560px, 92vw);
         max-height: 82vh;
         border-radius: var(--ec-radius-lg, 16px);
-        border-bottom: var(--ec-border-width, 1px) solid var(--ec-border-light, #ece4d7);
+        border-bottom: var(--ec-border-width, 1px) solid var(--ec-border-light);
         transform: translate(-50%, -40%) scale(0.98);
         opacity: 0;
         transition:

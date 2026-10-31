@@ -176,7 +176,7 @@
   transition: border-color 0.3s ease;
 
   &--register {
-    border-color: var(--ec-accent, #c9622d);
+    border-color: var(--ec-accent);
   }
 }
 
@@ -196,7 +196,7 @@
 
   &--register {
     background: rgba(201, 98, 45, 0.12);
-    color: var(--ec-accent, #c9622d);
+    color: var(--ec-accent);
   }
 }
 
@@ -286,10 +286,10 @@
   }
 
   li.ec-req-ok {
-    color: var(--ec-success, #2e7d32);
+    color: var(--ec-success);
 
     ion-icon {
-      color: var(--ec-success, #2e7d32);
+      color: var(--ec-success);
     }
   }
 }
@@ -605,7 +605,7 @@
   height: 48px;
 
   &--register {
-    --background: var(--ec-accent, #c9622d);
+    --background: var(--ec-accent);
   }
 }
 
@@ -641,7 +641,7 @@
       content: '';
       flex: 1;
       height: 1px;
-      background: var(--ec-border, #d8d2c7);
+      background: var(--ec-border);
     }
   }
 
