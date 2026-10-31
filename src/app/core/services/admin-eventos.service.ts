@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { EventosService } from './eventos.service';
+import { SupabaseService } from './supabase.service';
 
 /**
  * Fila de la lista de eventos del panel (data que devuelve la Edge Function
@@ -39,15 +40,18 @@ const BLOQUE = 60;
  *   - conteos globales (4 números)
  *   - filas de la pestaña activa acumuladas por "Mostrar más"
  *
- * Cambiar de pestaña o de búsqueda reinicia a la página 0. La sesión del
- * panel es demo, así que la función se llama con la cabecera interna; el
- * acceso real vive en ALLOW_DEMO_ADMIN dentro de Supabase (ver
- * supabase/functions/admin-eventos/index.ts).
+ * Cambiar de pestaña o de búsqueda reinicia a la página 0. Cada llamada
+ * lleva el JWT de la sesión de Supabase del admin (ver
+ * supabase/functions/admin-eventos/index.ts: la función valida el token y
+ * exige rol 'admin' en public.profiles, con proveedor de cuenta = email).
  */
 @Injectable({ providedIn: 'root' })
 export class AdminEventosService {
   /** Catálogo público: se refresca tras cada mutación del panel. */
   private readonly eventosPublico = inject(EventosService);
+
+  /** Sesión de Supabase para el Authorization del panel. */
+  private readonly supabase = inject(SupabaseService);
 
   /** Estado del servidor sincronizado con la última respuesta de conteos. */
   private readonly _cargando = signal(false);
@@ -248,12 +252,19 @@ export class AdminEventosService {
   }
 
   private async llamar<T>(accion: string, extra: Record<string, unknown> = {}): Promise<T> {
+    // Autorización REAL: el JWT de la sesión de Supabase del admin. La Edge
+    // Function valida el token, rechaza cuentas OAuth y comprueba en la base
+    // de datos que profiles.role sea 'admin' (la sesión del panel ya no es
+    // demo, así que no existe la puerta ALLOW_DEMO_ADMIN).
+    const sesion = await this.supabase.sesionGoTrue();
+    if (!sesion || (sesion.proveedor && sesion.proveedor !== 'email')) {
+      throw new Error('Necesitas una sesión de administrador para gestionar el catálogo.');
+    }
     const respuesta = await fetch(environment.adminEventosEdgeFunctionUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Cabecera interna del panel (ofuscación, igual que la ruta /v00/admin).
-        'x-ec-admin': 'v00-interno'
+        Authorization: `Bearer ${sesion.token}`
       },
       body: JSON.stringify({ accion, ...extra })
     });

@@ -16,6 +16,10 @@ export const environment = {
 
   adminEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/admin-account',
 
+  // Registro sin verificación de correo: crea la cuenta YA confirmada (con la
+  // Admin API) y manda el correo de "registro exitoso"; ver registrar-cuenta.
+  registrarEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/registrar-cuenta',
+
   // Moderación de eventos desde el panel (validados / en validación y
   // visibilidad pública con service_role; ver admin-eventos.service.ts).
   adminEventosEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/admin-eventos',

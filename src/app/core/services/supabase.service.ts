@@ -118,6 +118,47 @@ export class SupabaseService {
   readonly esOrganizador = computed(() => this._usuario()?.rol === 'organizador');
   readonly sesionLista = this._sesionLista.asReadonly();
 
+  /**
+   * Datos crudos de la sesión GoTrue activa. La usa el guard del panel de
+   * administración (necesita el proveedor y el token de acceso, cosas que el
+   * perfil amigable de `usuario()` no expone).
+   */
+  async sesionGoTrue(): Promise<{
+    id: string;
+    email: string;
+    /** identity provider de la sesión: 'email' para cuentas con contraseña. */
+    proveedor: string;
+    token: string;
+  } | null> {
+    const { data } = await this.cliente.auth.getSession();
+    const user = data.session?.user;
+    if (!user) return null;
+    const aplico = (user.app_metadata ?? {}) as Record<string, unknown>;
+    const proveedor = typeof aplico['provider'] === 'string' ? aplico['provider'] : 'email';
+    return {
+      id: user.id,
+      email: user.email ?? '',
+      proveedor,
+      token: data.session?.access_token ?? ''
+    };
+  }
+
+  /**
+   * Rol real del usuario según la base de datos (`public.profiles.role`,
+   * dominio visitor/editor/admin). El cliente autenticado sólo puede leer su
+   * propia fila (RLS "Users read own profile"), así que este dato no es
+   * falsificable desde el cliente. Retorna null si no hay fila o falla.
+   */
+  async rolDelPerfil(uid: string): Promise<string | null> {
+    const { data, error } = await this.cliente
+      .from('profiles')
+      .select('role')
+      .eq('id', uid)
+      .maybeSingle();
+    if (error) return null;
+    return typeof data?.role === 'string' ? data.role : null;
+  }
+
   private async restaurarSesion(): Promise<void> {
     try {
       const { data } = await this.cliente.auth.getSession();
@@ -168,36 +209,106 @@ export class SupabaseService {
   // Autenticación por contraseña (GoTrue directo)
   // ------------------------------------------------------------------
 
+  /**
+   * Registro SIN el paso de verificación de correo:
+   *
+   *  1. La Edge Function `registrar-cuenta` crea el usuario YA CONFIRMADO
+   *     (Admin API con email_confirm: true) y envía el correo de registro
+   *     exitoso (motor Resend configurado en la función).
+   *  2. Aquí se abre la sesión de inmediato con la misma contraseña.
+   *
+   * Si la función no está desplegada (503), cae al flujo legacy de signUp
+   * (con el correo de confirmación de Supabase) para que el registro no
+   * quede bloqueado: la página de login muestra el aviso de verificar buzón.
+   * Devuelve la sesión abierta; si el usuario existía, lanza "Correo ya
+   * registrado" (409 de la función) para que la UI lo muestre.
+   */
+  /** Error reservado del flujo legacy: cuenta creada, falta confirmar el buzón. */
+  static readonly REGISTRO_PENDIENTE_CONFIRMACION = 'PENDIENTE_CONFIRMACION';
+
   async registrar(
     email: string,
     password: string,
     nombre?: string,
     rol: UsuarioSesion['rol'] = 'usuario'
-  ): Promise<{ correoAConfirmar: boolean }> {
+  ): Promise<UsuarioSesion> {
     const nombreLimpio = (nombre ?? '').trim();
-    // `rol` viaja en user_metadata: es lo que `aSesion` lee para distinguir
-    // cuentas de organizador de cuentas ciudadanas.
-    const data = {
-      nombre: nombreLimpio,
-      nombre_display: nombreLimpio,
-      email: email.trim(),
-      rol
-    };
-    // emailRedirectTo: lleva al usuario de regreso si Supabase envía un enlace
-    // de confirmación de correo (o para OAuth en "signup con enlace mágico").
+
+    // 1) Función registrar-cuenta: crea la cuenta YA confirmada, envía el
+    //    correo de registro exitoso y devolvemos sesión abierta abajo.
+    let funcionDisponible = false;
+    let errorFuncion: string | null = null;
+    try {
+      const respuesta = await fetch(environment.registrarEdgeFunctionUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          nombre: nombreLimpio,
+          esOrganizador: rol === 'organizador'
+        })
+      });
+      const cuerpo = (await respuesta.json().catch(() => null)) as { error?: string } | null;
+
+      if (respuesta.status === 404 || respuesta.status === 503) {
+        // Sin desplegar / sin secretos: usamos el respaldo legacy.
+        funcionDisponible = false;
+      } else if (!respuesta.ok) {
+        errorFuncion = cuerpo?.error || 'No se pudo registrar la cuenta.';
+      } else {
+        funcionDisponible = true;
+      }
+    } catch {
+      // Fetch no respondió (red/CDN): probamos el respaldo legacy, que con
+      // Supabase directo dará el error de red real si corresponde.
+      funcionDisponible = false;
+    }
+
+    if (errorFuncion) throw new Error(errorFuncion);
+
+    // 2) Respaldo legacy (comportamiento anterior con correo de confirmación)
+    //    sólo cuando la función no está activa.
+    if (!funcionDisponible) {
+      return this.registrarLegacy(email, password, nombreLimpio, rol);
+    }
+
+    // 3) Cuenta ya confirmada: la sesión se abre al instante.
+    return this.ingresar(email, password);
+  }
+
+  /**
+   * Respaldo (si registrar-cuenta aún no está desplegada): signUp normal.
+   * Con "Confirm email" activo la sesión queda vacía y se lanza
+   * REGISTRO_PENDIENTE_CONFIRMACION para que la UI muestre el aviso clásico.
+   */
+  private async registrarLegacy(
+    email: string,
+    password: string,
+    nombreLimpio: string,
+    rol: UsuarioSesion['rol']
+  ): Promise<UsuarioSesion> {
     const { error } = await this.cliente.auth.signUp({
       email: email.trim(),
       password,
       options: {
-        data,
+        data: {
+          nombre: nombreLimpio,
+          nombre_display: nombreLimpio,
+          email: email.trim(),
+          rol
+        },
         emailRedirectTo: `${location.origin}/auth/callback`
       }
     });
     if (error) throw error;
-    // Con "Confirm email" activado, Supabase manda el correo; la sesión llega
-    // vacía hasta confirmar. Sin confirmación, onAuthStateChange ya setea al usuario.
     const { data: sesion } = await this.cliente.auth.getSession();
-    return { correoAConfirmar: !sesion.session?.user };
+    if (sesion.session?.user) {
+      const usuario = this.aSesion(sesion.session.user);
+      this._usuario.set(usuario);
+      return usuario;
+    }
+    throw new Error(SupabaseService.REGISTRO_PENDIENTE_CONFIRMACION);
   }
 
   /**

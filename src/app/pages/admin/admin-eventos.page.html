@@ -139,7 +139,7 @@
       @if (cargando()) {
         <p class="vacio" role="status">Cargando catálogo…</p>
       } @else if (error()) {
-        <p class="vacio error" role="alert">{{ error() }} La función admin-eventos debe estar desplegada y con ALLOW_DEMO_ADMIN=true.</p>
+        <p class="vacio error" role="alert">{{ error() }} Asegura que la Edge Function admin-eventos esté desplegada y que tu cuenta tenga el rol admin en la base de datos.</p>
         <button type="button" class="ec-admin-ev__mas" (click)="reintentar()">
           Reintentar
         </button>

@@ -23,23 +23,22 @@
 //                           visible } → is_suppressed = !visible en TODO el
 //                           grupo, devuelve el número de filas afectadas.
 //
-// Seguridad del panel:
-// - La sesión del panel sigue siendo DEMO (admin/admin en localStorage), así
-//   que no hay JWT real que verificar. El acceso se habilita igual que
-//   `registrar_confirmado` en admin-account: SOLO con ALLOW_DEMO_ADMIN=true
-//   en los secretos del proyecto (desarrollo/demo) y exigiendo además la
-//   cabecera ofuscada `x-ec-admin: v00-interno`. Sin ese flag, la función
-//   requiere un JWT válido de un usuario con user_metadata.rol === 'admin'.
-//   PENDIENTE DOCUMENTADO: reemplazar la sesión demo por Supabase Auth.
+// Seguridad del panel (REAL, sin puerta demo):
+// - Toda llamada exige un JWT de sesión válido de Supabase Auth.
+// - La cuenta NO puede ser OAuth (Google, etc.): sólo identity provider
+//   'email' (user+contraseña) accede al panel.
+// - El rol se consulta en la Base de datos: public.profiles.role debe ser
+//   exactamente 'admin' (visitor y editor quedan fuera). No se usa
+//   user_metadata porque el cliente puede escribir en su propio metadata.
+//   Con service_role la lectura de profiles ignora RLS.
 //
 // Despliegue:
 //   supabase functions deploy admin-eventos --project-ref ngwkehuewmjykiiujqic
-//   --no-verify-jwt (el panel demo no manda JWT; la puerta es la cabecera
-//   interna + el secreto ALLOW_DEMO_ADMIN)
+//   (el JWT estándar pasa la verificación de plataforma; que la función
+//   puede desplegarse SIN --no-verify-jwt)
 //
 // Secretos requeridos (ya configurados para las demás funciones):
 //   SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL
-//   ALLOW_DEMO_ADMIN=true (solo mientras el panel use la sesión demo)
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -85,24 +84,29 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const admin = createClient(PROJECT_URL, SERVICE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false }
   });
-  let token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
-  if (Deno.env.get('ALLOW_DEMO_ADMIN') === 'true') {
-    if (req.headers.get('x-ec-admin') !== 'v00-interno') {
-      return json(403, { error: 'Acceso no autorizado al panel.' });
-    }
-    token = '';
-  } else if (!token) {
+  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
+  if (!token) {
     return json(401, { error: 'Se requiere sesión de administrador.' });
   }
+  const { data: quien, error: errQuien } = await admin.auth.getUser(token);
+  if (errQuien || !quien?.user) {
+    return json(401, { error: 'Sesión inválida o expirada.' });
+  }
 
-  if (token) {
-    const { data: quien, error: errQuien } = await admin.auth.getUser(token);
-    if (errQuien || !quien?.user) {
-      return json(401, { error: 'Sesión inválida o expirada.' });
-    }
-    if ((quien.user.user_metadata as Record<string, unknown> | null)?.['rol'] !== 'admin') {
-      return json(403, { error: 'Tu cuenta no tiene perfil de administración.' });
-    }
+  // Sólo cuentas con usuario/contraseña: el panel no acepta OAuth.
+  const aplico = (quien.user.app_metadata ?? {}) as Record<string, unknown>;
+  if (typeof aplico['provider'] === 'string' && aplico['provider'] !== 'email') {
+    return json(403, { error: 'El panel no acepta cuentas de proveedores OAuth.' });
+  }
+
+  // El rol exigido vive en la base de datos (public.profiles.role).
+  const { data: perfil, error: errPerfil } = await admin
+    .from('profiles')
+    .select('role')
+    .eq('id', quien.user.id)
+    .maybeSingle();
+  if (errPerfil || perfil?.role !== 'admin') {
+    return json(403, { error: 'Tu cuenta no tiene el rol de administración requerido.' });
   }
 
   // ---- Cuerpo -----------------------------------------------------------

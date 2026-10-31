@@ -60,7 +60,18 @@
           <div class="ec-header__actions">
             @if (api.estaAutenticado()) {
               <a routerLink="/perfil" class="ec-header__user-pill" [title]="api.usuario()?.email">
-                <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+                @if (api.usuario()?.avatarUrl; as avatarUrl) {
+                  <img
+                    class="ec-header__user-avatar"
+                    [src]="avatarUrl"
+                    alt=""
+                    width="30"
+                    height="30"
+                    referrerpolicy="no-referrer"
+                  />
+                } @else {
+                  <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+                }
                 <span class="ec-header__user-pill-text">
                   <span class="ec-header__user-pill-name">{{ api.usuario()?.nombre }}</span>
                   @if (api.usuario()?.email; as correo) {
@@ -195,7 +206,18 @@
            usuario (esa vive en el header web), así que la tab de Perfil es
            la única entrada a /perfil. -->
       <ion-tab-button tab="perfil" routerLink="/perfil" routerLinkActive="tab-selected">
-        <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+        @if (api.usuario()?.avatarUrl; as avatarUrl) {
+          <img
+            class="ec-tab-avatar"
+            [src]="avatarUrl"
+            alt=""
+            width="24"
+            height="24"
+            referrerpolicy="no-referrer"
+          />
+        } @else {
+          <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+        }
         <ion-label>Perfil</ion-label>
       </ion-tab-button>
     </ion-tab-bar>

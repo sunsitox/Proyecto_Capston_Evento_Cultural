@@ -8,6 +8,7 @@ import {
 } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
+import { SupabaseService } from '../../core/services/supabase.service';
 import {
   PasswordRulesValidator,
   sinNumerosNiRaros
@@ -167,25 +168,15 @@ export class LoginPage {
       if (this.modo() === 'registrarse') {
         // El rol elegido en el registro debe persistir en la cuenta: es lo que
         // decide si luego ve el formulario de publicación.
-        const { correoAConfirmar } = await this.api.registrar(
+        await this.api.registrar(
           email!,
           password!,
           nombre!,
           esOrganizador ? 'organizador' : 'usuario'
         );
-        if (correoAConfirmar) {
-          // Supabase con "Confirm email" activado: el usuario existe, falta
-          // verificar el buzón; no intentamos login todavía.
-          // Aviso de ÉXITO (verde, role=status): el registro funcionó; pintarlo
-          // como error (rojo, role=alert) confundía el significado (WCAG 3.3.1).
-          this.avisoInfo.set(
-            'Cuenta creada. Te enviamos un correo de confirmación: ' +
-            'revísalo (y la carpeta de spam) e inicia sesión después de confirmar.'
-          );
-          this.formulario.get('password')?.reset();
-          this.formulario.get('confirmar')?.reset();
-          return;
-        }
+        // Registro directo: la sesión YA está abierta (registrar-cuenta crea
+        // la cuenta confirmada y aquí ingresamos con la misma contraseña), así
+        // que vamos a Home sin pedir verificación de correo.
       }
       const usuario = await this.api.ingresar(email!, password!);
       // Siempre a Home: el rol aparece en Perfil y «Publicar» sigue accesible
@@ -194,6 +185,21 @@ export class LoginPage {
     } catch (e: unknown) {
       const err = e as { message?: string; error_description?: string };
       const mensaje = err.error_description || err.message || '';
+      if (
+        this.modo() === 'registrarse' &&
+        mensaje === SupabaseService.REGISTRO_PENDIENTE_CONFIRMACION
+      ) {
+        // Respaldo legacy (función registrar-cuenta no desplegada): la cuenta
+        // se creó pero Supabase pide confirmar el buzón antes de entrar.
+        // Aviso de ÉXITO (verde, role=status), no error (WCAG 3.3.1).
+        this.avisoInfo.set(
+          'Cuenta creada. Te enviamos un correo de confirmación: ' +
+          'revísalo (y la carpeta de spam) e inicia sesión después de confirmar.'
+        );
+        this.formulario.get('password')?.reset();
+        this.formulario.get('confirmar')?.reset();
+        return;
+      }
       if (/not confirmed/i.test(mensaje)) {
         this.errorServidor.set(
           'Correo sin confirmar: revisa tu email (o spam) y confirma tu cuenta antes de iniciar sesión.'

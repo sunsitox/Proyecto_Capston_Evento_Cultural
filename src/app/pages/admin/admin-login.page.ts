@@ -2,13 +2,13 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { IonButton, IonInput } from '@ionic/angular';
-import { AdminAuthService } from '../../core/services/admin-auth.service';
+import { AdminAccesoError, AdminAuthService } from '../../core/services/admin-auth.service';
 
 /**
- * Ingreso del panel de administración.
- *
- * PROVISIONAL: valida contra credenciales fijas (admin / admin) definidas en
- * AdminAuthService; el plan es migrar a Supabase Auth con rol 'admin'.
+ * Ingreso del panel de administración con Supabase Auth real:
+ * correo + contraseña de una cuenta cuyo rol en public.profiles sea 'admin'
+ * y que NO provenga de un proveedor OAuth. Las cuentas 'visitor' y 'editor'
+ * se rechazan con un mensaje específico.
  */
 @Component({
   selector: 'app-admin-login',
@@ -22,30 +22,40 @@ export class AdminLoginPage {
   private readonly admin = inject(AdminAuthService);
   private readonly router = inject(Router);
 
-  readonly usuario = signal('');
+  readonly correo = signal('');
   readonly clave = signal('');
   readonly error = signal('');
   readonly cargando = signal(false);
 
   constructor() {
-    // Si la sesión del panel ya está activa, esta URL es directamente el
-    // dashboard (una sola URL para quien gestiona).
-    if (this.admin.autenticado()) {
-      void this.router.navigateByUrl('/v00/admin/panel', { replaceUrl: true });
-    }
+    // Si ya hay una sesión de administrador vigente (Supabase la mantiene
+    // entre recargas), esta URL actúa como el dashboard directamente.
+    void this.admin.validarSesionActual().then((ok) => {
+      if (ok) {
+        void this.router.navigateByUrl('/v00/admin/panel', { replaceUrl: true });
+      }
+    });
   }
 
   async ingresar(): Promise<void> {
+    if (this.cargando()) return;
     this.error.set('');
+    if (!this.correo().trim() || !this.clave()) {
+      this.error.set('Ingresa tu correo y contraseña.');
+      return;
+    }
     this.cargando.set(true);
-    // Pequeña pausa deliberada: evita que el botón parpadee y amortigua fuerza bruta.
-    await new Promise((r) => setTimeout(r, 250));
-    const ok = this.admin.ingresar(this.usuario(), this.clave());
-    this.cargando.set(false);
-    if (ok) {
+    try {
+      await this.admin.ingresar(this.correo().trim(), this.clave());
       void this.router.navigateByUrl('/v00/admin/panel');
-    } else {
-      this.error.set('Usuario o contraseña incorrectos.');
+    } catch (e: unknown) {
+      if (e instanceof AdminAccesoError) {
+        this.error.set(e.message);
+      } else {
+        this.error.set('No se pudo iniciar sesión. Intenta de nuevo.');
+      }
+    } finally {
+      this.cargando.set(false);
     }
   }
 }

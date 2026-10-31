@@ -15,6 +15,7 @@ export const environment = {
   supabaseAnonKey: 'sb_publishable_HH26bB4-nDELsrv7Tibjew_Iff1Avtm',
 
   adminEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/admin-account',
+  registrarEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/registrar-cuenta',
 
   // Moderación de eventos desde el panel (ver environment.ts).
   adminEventosEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/admin-eventos',

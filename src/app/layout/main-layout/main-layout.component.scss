@@ -255,6 +255,15 @@
     flex-shrink: 0;
   }
 
+  .ec-header__user-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--ec-border-light);
+  }
+
   &:hover {
     background: var(--ec-surface-hover);
   }
@@ -424,6 +433,23 @@
 
     &.tab-selected ion-icon {
       transform: scale(1.12) translateY(-2px);
+    }
+
+    .ec-tab-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid transparent;
+
+      &:focus-visible {
+        outline: 2px solid var(--ec-primary);
+        outline-offset: 2px;
+      }
+    }
+
+    &.tab-selected .ec-tab-avatar {
+      border-color: var(--ec-primary);
     }
   }
 }

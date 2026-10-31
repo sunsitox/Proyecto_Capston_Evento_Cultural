@@ -7,14 +7,15 @@
 
     <form class="ec-admin-login__form" (ngSubmit)="ingresar()">
       <ion-input
-        label="Usuario"
+        label="Correo electrónico"
         labelPlacement="stacked"
         fill="outline"
+        type="email"
         autocomplete="username"
         spellcheck="false"
         autocapitalize="none"
-        [value]="usuario()"
-        (ionInput)="usuario.set($any($event.detail).value ?? '')"
+        [value]="correo()"
+        (ionInput)="correo.set($any($event.detail).value ?? '')"
       ></ion-input>
 
       <ion-input
