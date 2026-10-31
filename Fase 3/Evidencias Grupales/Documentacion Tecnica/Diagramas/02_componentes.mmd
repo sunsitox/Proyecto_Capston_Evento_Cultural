@@ -1,0 +1,41 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial","fontSize":"16px","primaryColor":"#FBF7F2","primaryBorderColor":"#C9622D","lineColor":"#1F5C57"}}}%%
+flowchart TB
+  subgraph CLIENTE["Cliente Angular / Ionic"]
+    ROUTER["Router + MainLayout<br/>Navbar / tabs"]
+    PAGES["Catálogo · Ficha · Mapa · Calendario<br/>Para ti · Cuenta · Publicar"]
+    ADMIN["Panel /v00/admin/*<br/>adminGuard + AdminAuthService<br/>Inactividad cliente 10 min"]
+    SERVICES["EventosService · ApiService<br/>SupabaseService"]
+    REC["RecomendacionService<br/>Adaptador de persistencia"]
+    GEO["Leaflet / OSM · Geolocalización<br/>Nominatim aproximado"]
+  end
+  subgraph SERVER["Supabase"]
+    AUTH["Auth + Storage avatars"]
+    DB["PostgreSQL / RLS"]
+    REG["registrar-cuenta / admin-account"]
+    RESET["reset-password-request / confirm"]
+    PUB["publicar-evento<br/>Usuario autenticado → draft"]
+    MOD["admin-eventos<br/>JWT + proveedor email + rol admin"]
+    EMAIL["recomendaciones-semanal"]
+  end
+  ROUTER --> PAGES
+  ROUTER --> ADMIN
+  PAGES --> SERVICES
+  PAGES --> GEO
+  PAGES --> REC --> DB
+  ADMIN --> SERVICES
+  SERVICES --> AUTH
+  SERVICES -->|"SDK público"| DB
+  SERVICES --> REG
+  SERVICES --> RESET
+  SERVICES --> PUB
+  ADMIN --> MOD
+  REG --> DB
+  RESET --> DB
+  PUB --> DB
+  MOD --> DB
+  EMAIL --> DB
+  SC["Scraper Python / GitHub Actions"] -->|"Carga idempotente"| DB
+  MAIL["Resend (servidor)"]
+  REG --> MAIL
+  RESET --> MAIL
+  EMAIL --> MAIL

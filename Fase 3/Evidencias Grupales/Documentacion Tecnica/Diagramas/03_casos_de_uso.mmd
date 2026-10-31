@@ -1,0 +1,44 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial, Helvetica, sans-serif","fontSize":"13px","primaryColor":"#FBF7F2","primaryTextColor":"#1F1A14","primaryBorderColor":"#5A4D42","lineColor":"#5A4D42","clusterBkg":"transparent","clusterBorder":"#999999"},"flowchart":{"curve":"basis","nodeSpacing":30,"rankSpacing":60,"htmlLabels":true}}}%%
+flowchart LR
+  T["Diagrama de casos de uso — Plataforma Evento Cultural"]
+  classDef tit fill:#C9622D,stroke:#8A4520,color:#FFFFFF,font-weight:bold
+  classDef actor fill:#FBF7F2,stroke:#5A4D42,color:#1F1A14
+  classDef uc fill:#FBF7F2,stroke:#5A4D42,color:#1F1A14
+  classDef nota fill:#FBF0EF,stroke:#B03A3A,color:#1F1A14,font-style:italic
+
+  V["Visitante"]
+  UR["Usuario registrado"]
+  ORG["Organizador"]
+
+  subgraph SYS["Plataforma Evento Cultural"]
+    UC1(["RF-01 · Buscar y filtrar eventos"])
+    UC2(["RF-03 · Ver detalle de evento"])
+    UC3(["RF-04 · Ver eventos en mapa"])
+    UC4(["Ver recomendaciones «para ti»"])
+    UC5(["RF-02 · Ver calendario"])
+    UC6(["RF-06 · Registrar / iniciar sesión (simulado)"])
+    UC7(["RF-08 · Publicar evento (simulado)"])
+    UC8(["Recolectar y publicar eventos automáticamente"])
+  end
+
+  GHA4["GitHub Actions<br/>(programador)"]
+  NIM5["NVIDIA NIM<br/>(servicio IA)"]
+  NOTA["Nota: registro/login y publicación existen como pantallas del frontend, pero simulan el flujo con datos mock; la conexión real con Supabase está pendiente. RF-11 a RF-15 (moderación, notificaciones, panel de administración) no tienen implementación aún."]
+
+  V --> UC1
+  V --> UC2
+  V --> UC3
+  V --> UC4
+  V --> UC5
+  UR --> UC6
+  UR --> UC4
+  ORG --> UC7
+  GHA4 --> UC8
+  UC8 -.->|"usa OCR / redacción"| NIM5
+
+  style SYS fill:#FFFFFF,stroke:#999999
+  class T tit
+  class V,UR,ORG,GHA4,NIM5 actor
+  class UC1,UC2,UC3,UC4,UC5,UC6,UC7,UC8 uc
+  class NOTA nota
+  linkStyle default stroke-width:1.5px

@@ -1,0 +1,139 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial, Helvetica, sans-serif","fontSize":"13px","primaryColor":"#FBF7F2","primaryTextColor":"#1F1A14","primaryBorderColor":"#5A4D42","lineColor":"#5A4D42"}}}%%
+erDiagram
+  %% ===== Nucleo del scraper =====
+  sources ||--o{ events : "1:N"
+  organizers |o--o{ events : "0..1 : N"
+  communes |o--o{ events : "0..1 : N"
+  categories ||--o{ event_categories : "1:N"
+  events ||--o{ event_categories : "1:N"
+  events ||--o{ media_assets : "1:N"
+  events ||--o| event_provenance : "1 : 0..1"
+  %% ===== Usuarios e interacciones (Supabase Auth) =====
+  auth_users ||--o| profiles : "1 : 0..1"
+  auth_users ||--o{ user_event_interactions : "1:N"
+  auth_users ||--o{ reports : "1:N"
+  events ||--o{ user_event_interactions : "1:N"
+  events ||--o{ reports : "1:N"
+
+  sources {
+    uuid id PK
+    text name
+    text website_url
+    boolean is_active
+    timestamp last_seen_at
+    timestamp created_at
+    timestamp updated_at
+  }
+  organizers {
+    uuid id PK
+    text name
+    text entity_type
+    boolean is_blocked "control administrativo privado"
+    timestamp last_seen_at
+  }
+  communes {
+    uuid id PK
+    text name
+    text region
+    text country
+  }
+  categories {
+    uuid id PK
+    text name
+  }
+  events {
+    uuid id PK "UUID v5 determinista"
+    text external_key UK "clave externa unica"
+    uuid source_id FK "hacia sources"
+    uuid organizer_id FK "hacia organizers"
+    uuid commune_id FK "hacia communes"
+    text title
+    timestamp start_at
+    timestamp end_at
+    text venue
+    text address
+    text location "ubicacion canonica, not null"
+    text location_precision "exact | coordinates | venue | commune | city | region | online | country"
+    text location_source "origen de la ubicacion"
+    double latitude
+    double longitude
+    text city
+    text region
+    text country
+    text status "published | cancelled | draft | archived"
+    boolean is_suppressed "exclusion administrativa persistente"
+    text audience
+    boolean is_free
+    text description
+    text price_text
+    text currency
+    text image_url
+    text source_url
+    text official_url
+    text extraction_method
+    timestamp scraped_at
+    timestamp last_seen_at
+  }
+  event_categories {
+    uuid event_id FK "PK compuesta (event_id, category_id)"
+    uuid category_id FK
+  }
+  media_assets {
+    uuid id PK
+    uuid event_id FK
+    text url "not null"
+    text media_type "image | video | audio | document"
+    boolean is_primary
+    timestamp created_at
+  }
+  event_provenance {
+    uuid event_id PK, FK "1:1 con events"
+    text original_url
+    text source_description
+    text ocr_text
+    boolean is_rewritten
+    timestamp updated_at
+  }
+  scrape_runs {
+    uuid id PK
+    timestamp started_at
+    timestamp finished_at
+    text status "running o succeeded o failed"
+    integer events_count
+    text error_message
+    jsonb metadata
+  }
+  profiles {
+    uuid id PK, FK "ref auth_users (Supabase Auth)"
+    text display_name
+    text role "visitor | editor | admin"
+    timestamp created_at
+    timestamp updated_at
+  }
+  user_event_interactions {
+    uuid id PK
+    uuid user_id FK "ref auth_users"
+    uuid event_id FK
+    text interaction_type "view_detail | open_source | open_official_site | interested | not_interested | share | report"
+    timestamp occurred_at
+    jsonb metadata
+  }
+  reports {
+    uuid id PK
+    uuid user_id FK "ref auth_users"
+    uuid event_id FK
+    text reason "not null"
+    text status "pending | reviewed | resolved"
+    timestamp created_at
+    timestamp updated_at
+  }
+  auth_users {
+    uuid id PK "tabla externa gestionada por Supabase Auth (auth.users)"
+  }
+  catalog_staging {
+    uuid run_id "PK compuesta (run_id, entity, chunk_index)"
+    text entity "fase de staging privada"
+    integer chunk_index
+    jsonb payload
+    timestamp created_at
+  }

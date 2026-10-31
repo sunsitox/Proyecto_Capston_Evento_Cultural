@@ -1,0 +1,132 @@
+[
+  {
+    "path": "axe_home.json",
+    "bytes": 7262,
+    "sha256": "a452d5a9b1907070570824e045b082e7b15130dd087cf4db64c71d025aeffd2a"
+  },
+  {
+    "path": "axe_login.json",
+    "bytes": 6573,
+    "sha256": "794ec465436b71de62c1a390db3911539ddd557b45d718dad54fe1168cdfdab3"
+  },
+  {
+    "path": "browser_errors.txt",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "capturas/01_home_escritorio.png",
+    "bytes": 130543,
+    "sha256": "ba66a1cfefabe2294520a003c7fb1febdd6cddd56a88aec86e0e9b259ecd49e6"
+  },
+  {
+    "path": "capturas/02_busqueda_vacia.png",
+    "bytes": 131632,
+    "sha256": "dfb3ab791d126629b251bc7dd90e8e802fd77121c47962be22cd1ee609697214"
+  },
+  {
+    "path": "capturas/03_busqueda_teatro.png",
+    "bytes": 130587,
+    "sha256": "bf3fdf00e33d1688345470af2fe41a3263a44f0a7ba8eb48ffc02fc3ffc5370e"
+  },
+  {
+    "path": "capturas/04_admin_sin_sesion.png",
+    "bytes": 70287,
+    "sha256": "b18f3dc75318c2bd17ceff1a071e15a83308edce99d4558d09db84e9f1dbac37"
+  },
+  {
+    "path": "capturas/05_evento_inexistente.png",
+    "bytes": 69792,
+    "sha256": "59327db9e017b50c1d56d9e6d8b525a84158dab0c47421d4a908b99339593021"
+  },
+  {
+    "path": "capturas/06_detalle_evento.png",
+    "bytes": 388243,
+    "sha256": "8cea00c8bb9cfa524e33d77ffde5186950189a7dcf9a8c542463006a383ac1c0"
+  },
+  {
+    "path": "capturas/07_publicar_invitado.png",
+    "bytes": 59763,
+    "sha256": "7fa586df90aa00eb52274bcff964c036f17b835bd92752094ef4105dc4dd250b"
+  },
+  {
+    "path": "capturas/08_calendario_movil.png",
+    "bytes": 44823,
+    "sha256": "d4c2deaf0a15ab47eac6ed8fc0b5005737249b7be189b8444d54e439b9e1fb3a"
+  },
+  {
+    "path": "capturas/09_calendario_cambio_dia.png",
+    "bytes": 48123,
+    "sha256": "ec7bf966b96f1e8b89b947ccc7aa9ea05cd284ec762bb7a927a920eea3535cf4"
+  },
+  {
+    "path": "capturas/10_mapa_movil.png",
+    "bytes": 117206,
+    "sha256": "94f1221bf4bc9dcc2dbd40c308026c267ab37ad65a574b610f1d8f51480a4e5b"
+  },
+  {
+    "path": "capturas/11_perfil_invitado.png",
+    "bytes": 35084,
+    "sha256": "361e9cdfbdd75b68ad7e5aff5c3783cc06c0a789a67e7228e2c0f60242411a42"
+  },
+  {
+    "path": "capturas/12_parati_invitado.png",
+    "bytes": 45675,
+    "sha256": "b112ee506e1cd80f913fd289f8c52f756bd878ef0e4f142b155e2e1d95bdf309"
+  },
+  {
+    "path": "capturas/13_registro_formulario.png",
+    "bytes": 37989,
+    "sha256": "fe3d3d2b2fd9cd5e12037930b8582ef3f5bdea63ad35456dd1339a43ad85b395"
+  },
+  {
+    "path": "capturas/14_registro_invalido.png",
+    "bytes": 37352,
+    "sha256": "bc76a02d5468d0db1c6def2e72af05117f9d82d9a4a87632dbb0eda26cf5eb5f"
+  },
+  {
+    "path": "capturas/15_home_320.png",
+    "bytes": 125047,
+    "sha256": "42fbd08bcdb819658c13f833a9f361c7be53d899e9acf5654379f5c1193b4aea"
+  },
+  {
+    "path": "capturas/16_filtro_region.png",
+    "bytes": 614375,
+    "sha256": "5c35a70dcad28ea0bf9de78aa6aa35e911709ed00a25909cf22c0f7665d97fea"
+  },
+  {
+    "path": "capturas/17_filtros_limpiados.png",
+    "bytes": 377279,
+    "sha256": "b799ee14bf9a0ee995cf5a1b74dabf64a096a3c225c7853b7030fe5454800c4e"
+  },
+  {
+    "path": "capturas/18_home_tablet.png",
+    "bytes": 271217,
+    "sha256": "4ec279ab7d05bfa1b268e3e2b4d7dd256902eec4ec330ca25eb73b413eb7898a"
+  },
+  {
+    "path": "controles.json",
+    "bytes": 1030,
+    "sha256": "0c9c791be88290dee79510d864d611b0009e3d82ec4abbebfcbe35b490f62f3a"
+  },
+  {
+    "path": "frontend_build.log",
+    "bytes": 2106,
+    "sha256": "bf74762953525e8d621159854cdac7fe47ff37cb3dcce814331fe45bc080b834"
+  },
+  {
+    "path": "frontend_lint.log",
+    "bytes": 85,
+    "sha256": "ba7bfad53c71d7ba30596c517a7c99cb2cc42e185ce9bbcb2abded4cb37ca3a4"
+  },
+  {
+    "path": "frontend_tests.log",
+    "bytes": 1312,
+    "sha256": "daa6cddadd8282d6bc69e5c7f27c0f7b3df9e238fcf5c9e5d1f094a2c3842d17"
+  },
+  {
+    "path": "scraper_tests.log",
+    "bytes": 23627,
+    "sha256": "cb4cb8904df5966636d0deadc45cca74651f3380eb4edb2360246eb14c6cffd3"
+  }
+]

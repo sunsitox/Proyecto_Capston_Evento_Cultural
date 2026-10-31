@@ -1,0 +1,96 @@
+% Revisión de Fase 3, 31-10-2026.
+\section{Requisitos no funcionales}
+\label{sec:rnf}
+Se conserva la identificación RNF de la matriz MoSCoW. Implementación no equivale
+a cumplimiento medido: los estados siguientes se basan en código local y evidencia
+histórica identificada, no en una auditoría actual de producción.
+\begin{longtable}{p{1.6cm}p{2.1cm}p{10.5cm}}
+\toprule ID & Estado & Fundamento y brecha \\\midrule\endhead
+RNF-01 & Parcial & Interfaz de descubrimiento y cuenta implementada. Revalidar defectos de usabilidad del ciclo 11-10-2026. \\
+RNF-02 & Parcial & Navegación adaptativa y proyecto Capacitor con APK debug existente. Faltan pruebas nativas en dispositivo y regresión responsive. \\
+RNF-03 & Sin medición actual & El tiempo HTTP histórico no mide renderizado ni Core Web Vitals. Faltan volumen, concurrencia y métricas de interacción. \\
+RNF-04 & Parcial & Auth, funciones Edge, RLS y secretos de servidor. Registro principal sin verificación de propiedad del buzón; revisar abuso y exposición de datos. La presencia de políticas no acredita su eficacia remota. \\
+RNF-05 & Parcial & Guard y servidor exigen profiles.role=admin y proveedor email; visitor/editor/OAuth quedan fuera. Timeout de 10 min en cliente. Faltan pruebas negativas y de revocación. \\
+RNF-06 & Parcial & Vercel y evidencia histórica de CI. No se aporta medición de disponibilidad actual ni SLA; el scheduler puede retrasarse. \\
+RNF-07 & Diseño implementado & Paginación y upsert en componentes documentados. No se acredita capacidad bajo carga sin medición. \\
+RNF-08 & Parcial & Pipeline de saneamiento y deduplicación documentado; revisar muestra actual del catálogo y ubicaciones aproximadas. \\
+RNF-09 & Parcial & Servicios, pruebas Vitest, fuentes de diagramas y documentación versionable. Completar ejecución actual y trazabilidad de entrega. \\
+RNF-10 & Disponible & Contenido en español y regiones/comunas chilenas; revisión editorial final pendiente. \\
+RNF-11 & Parcial & Build web, configuración Vercel y Capacitor presentes; validar reproducción en entorno limpio. Docker no adoptado. \\
+RNF-12 & Parcial & Roles ARIA, foco y movimiento reducido en formularios. No se declara conformidad WCAG 2.2 completa sin auditoría y recorrido manual. \\
+\bottomrule
+\caption{Estado de los RNF al corte documental.}\label{tab:rnfestado}
+\end{longtable}
+
+\subsection{Seguridad y limitaciones}
+La autenticación comprueba identidad; la autorización administrativa se decide con
+\texttt{profiles.role} y se repite en \texttt{admin-eventos}. Ocultar una ruta no
+la protege. La clave pública del navegador no es un secreto y exige políticas RLS
+correctas; \texttt{service\_role} no debe incorporarse al frontend, capturas ni Git.
+El registro sin verificación de correo es una decisión funcional: confirmar mediante
+Admin API no acredita que la persona controle el buzón. El correo de bienvenida no
+reemplaza esa comprobación. El cierre por inactividad es cliente y puede reiniciarse
+con recarga; no se describe como revocación de servidor.
+
+Las notificaciones por correo tienen código en funciones, pero requieren configuración,
+recepción comprobada y, para recomendaciones periódicas, invocación programada verificable.
+La moderación de eventos está implementada; los reportes ciudadanos y la administración
+de organizadores no se dan por completos por existir tablas o rutas. La ocultación
+local de fuentes no cambia la ejecución del scraper. La estadística del dashboard es
+un cálculo del catálogo, no analítica comercial.
+
+\section{Pruebas y evidencia}
+\label{sec:pruebas}
+\subsection{Resultados históricos conservados}
+El ciclo QA de Vercel del 11-10-2026 registra 13 escenarios: 6 aprobados,
+6 con observaciones y 1 fallido, con 13 defectos abiertos. Se conserva en
+\texttt{Evidencias\_QA\_Frontend\_2026-10-11} y en la matriz metodológica.
+No se cierran defectos sin una nueva ejecución.
+La evidencia de CI del scraper conserva cinco ejecuciones trazadas y el run 25
+funcional con dos artefactos; su inicio fuera de ventana se registró como DEF-CI-001.
+El inventario histórico describe 14 módulos de pruebas del scraper; no se certifica
+que ese conteo represente la rama actual.
+
+El anexo previo registra \texttt{ng test --watch=false} con 23/23 el 27-10-2026
+y builds anteriores. Son antecedentes, no resultados reproducidos en esta revisión
+documental. Los archivos actuales incluyen pruebas de recomendaciones, Supabase y
+acciones de interés. No se infiere cobertura de seguridad a partir de su existencia.
+
+\subsection{Plan incremental de cierre}
+El Plan de pruebas metodológico incorpora casos F3-01 a F3-10 con resultados
+\textbf{pendientes}. Incluyen registro/bienvenida, recuperación, perfil, roles,
+OAuth, inactividad, moderación, persistencia, Android y regresión.
+Los comandos previstos son \texttt{npm test -- --watch=false},
+\texttt{npm run build} y las pruebas focalizadas de cada integración.
+Una ejecución debe identificar versión, entorno, responsable y resultado real;
+la compilación de esta documentación únicamente acredita generación de entregables.
+
+\section{Despliegue sin Docker}
+\label{sec:docker}
+La estrategia adoptada no utiliza Docker: el scraper se ejecuta mediante GitHub
+Actions, la SPA en Vercel y Android con Capacitor. Supabase es un servicio administrado.
+No se agrega un despliegue alternativo ni se declara Docker como implementado.
+Su adopción futura requeriría una decisión explícita de arquitectura y pruebas propias.
+El Manual técnico describe la reproducción del build y las dependencias de servidor.
+
+\section{Innovación y alcance del MVP}
+\label{sec:innovacion}
+El valor del proyecto es reunir fuentes culturales heterogéneas y conservar procedencia,
+normalización, deduplicación y vigencia en un catálogo consultable. El uso selectivo de
+NVIDIA NIM para OCR y enriquecimiento evita repetir trabajo sin cambios; los checkpoints
+permiten reanudar procesos. Las recomendaciones al ciudadano se basan en afinidad y
+señales explícitas; no se presentan como inferencia de un LLM.
+
+El prototipo académico depende de servicios externos y cuotas configuradas; no dispone
+de una infraestructura propia de inferencia. No se afirman ahorros, mejoras de latencia,
+usuarios activos ni cifras de eventos actuales sin medición fechada.
+El mapa diferencia coordenadas conocidas y ubicaciones aproximadas; esas aproximaciones
+no deben presentarse como direcciones exactas.
+
+\subsection{Sostenibilidad: propuesta futura}
+El MVP es gratuito y no implementa pagos, suscripciones, venta de datos personales ni
+comisiones por entradas. Un eventual contenido patrocinado exigiría validación legal,
+comercial y ética, identificación visible, separación de recomendaciones orgánicas y
+compatibilidad con las condiciones del hosting. No se certifican condiciones comerciales
+vigentes de un proveedor mediante este documento. Cualquier monetización queda fuera
+del alcance del cierre actual.

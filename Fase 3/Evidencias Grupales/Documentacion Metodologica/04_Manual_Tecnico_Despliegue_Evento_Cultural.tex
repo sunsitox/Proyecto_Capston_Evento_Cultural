@@ -1,0 +1,130 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{estilo_capstone}
+\setlength{\emergencystretch}{3em}
+\sloppy
+\titulo{Manual técnico y de despliegue — Evento Cultural}
+\subtitulo{Fase 3: reproducción y límites operativos}
+\autor{Roberto Riffo · José Miguel Moncada · David Herrera}
+\fecha{31 de octubre de 2026}
+\begin{document}
+\maketitlecapstone
+\section{Alcance}
+Guía para el equipo técnico. Fuente principal: copia local
+\nolinkurl{EventoCultural_Integrado/EventoCultural_Integrado}; referencia remota:
+\url{https://github.com/sunsitox/Proyecto_Capston_Evento_Cultural/tree/deploy/vercel-preview}.
+No se certifica igualdad con la rama remota ni se despliega al generar este documento.
+La SPA usa Supabase directamente para catálogo y sesión; las operaciones privilegiadas
+se ejecutan en funciones Edge TypeScript. La carpeta Python \code{backend/} es legado,
+no un servicio necesario para iniciar la web actual.
+
+\section{Reproducir el frontend}
+Desde el directorio que contiene \code{package.json} y \code{package-lock.json},
+utilizar Node/npm compatibles con Angular 22 y las dependencias del lockfile.
+Registrar las versiones de Node y npm del entorno de entrega; este documento no
+inventa un resultado en una máquina limpia.
+\begin{verbatim}
+node --version
+npm --version
+npm ci
+npm start
+# Controles de calidad, según el cambio:
+npm test -- --watch=false
+npm run build
+npm run lint
+\end{verbatim}
+\code{npm start} ejecuta \code{ng serve}; por defecto se consulta
+\url{http://localhost:4200}. La salida del build es \code{www}, según
+\code{angular.json}. Un build aprobado no prueba correo, RLS ni OAuth.
+El catálogo de demostración de respaldo debe distinguirse del catálogo remoto.
+
+\section{Dependencias de Supabase}
+\begin{itemize}
+\item Configurar URL y clave pública en los entornos Angular existentes. Solo
+configuración pública puede terminar en el bundle del navegador.
+\item Verificar políticas RLS, perfiles y permisos por usuario. El rol administrativo
+se consulta en \code{public.profiles.role}, no se concede mediante metadata editable.
+\item Aplicar de manera controlada las migraciones necesarias, incluida
+\code{20261024000100\_password\_reset\_tokens.sql}. Contrastar el esquema real con
+las migraciones antes de modificarlas; documentar respaldo y resultado.
+\item Preparar Storage \code{avatars} y sus políticas de propiedad para imágenes.
+No conceder escritura global para resolver un error de permisos.
+\item Desplegar las funciones presentes en \code{supabase/functions/} mediante el
+procedimiento del proyecto y verificar su configuración de autenticación:
+\code{registrar-cuenta}, \code{admin-account}, \code{publicar-evento},
+\code{admin-eventos}, \code{reset-password-request},
+\code{reset-password-confirm}, \code{recomendaciones-semanal}.
+\end{itemize}
+
+Los secretos se configuran en el entorno del servidor, nunca en Angular ni Git:
+Supabase de servicio, \code{RESEND\_API\_KEY}, firma de recuperación y origen permitido
+según los nombres leídos en cada función. Usar las instrucciones del código y no
+copiar valores privados al informe. El registro principal crea una cuenta confirmada,
+abre sesión y solicita bienvenida por Resend. Si la función no está disponible, el
+respaldo legacy puede exigir verificación por correo. No declarar el flujo nuevo
+operativo hasta probar la función desplegada.
+
+La recuperación actual genera enlace propio a
+\code{/restablecer-contrasena?token=...}; depende de solicitud, firma, tabla de tokens,
+correo y confirmación. Validar caducidad y reutilización sin conservar tokens en capturas.
+Los antiguos pasos de SMTP/GoTrue no describen por sí solos este flujo.
+
+\section{Vercel}
+La configuración ya incluye \code{vercel.json} con reescritura a
+\code{/index.html}; no es un archivo pendiente de crear.
+Configurar el directorio raíz del proyecto que contiene \code{package.json},
+compilación \code{npm run build} y salida \code{www}; conservar el lockfile.
+Registrar URL, rama y SHA del despliegue autorizado. El antecedente QA es
+\url{https://eventocultural.vercel.app}, ciclo del 11-10-2026, no una comprobación actual.
+Verificar navegación directa a ficha, callback y rutas internas; inicio/cierre de sesión;
+y respuestas de funciones. La aplicación no requiere publicar la API Python antigua.
+
+\section{Google OAuth y administración}
+Google utiliza Supabase Auth y callback \code{/auth/callback}; comprobar proveedor,
+Redirect URLs de desarrollo/producción y regreso nativo según \code{OAUTH\_SETUP.md}.
+La presencia del botón no demuestra que el proveedor esté configurado.
+El panel se abre en \code{/v00/admin}. Solo cuentas de proveedor email con rol
+\code{admin} pueden entrar. \code{admin-eventos} también valida identidad y rol:
+no resolver un rechazo eliminando comprobaciones ni creando contraseñas fijas.
+El cierre por inactividad ocurre en cliente tras 10 minutos, revisados cada 15 segundos;
+una recarga inicia un nuevo seguimiento. Probar ese límite expresamente.
+
+\section{Android}
+Existe la plataforma \code{android/} y un APK debug local. No volver a agregarla.
+\begin{verbatim}
+npm run build
+npx cap sync android
+npx cap open android
+\end{verbatim}
+Compilar en Android Studio con SDK/JDK compatibles con el proyecto Gradle existente.
+Identidad según \code{capacitor.config.ts}: \code{cl.eventocultural.app}, salida
+\code{www}. Registrar hash y fecha del APK entregado; la mera existencia del APK no
+garantiza correspondencia con el código actual. Probar instalación, permisos,
+ubicación denegada/GPS, OAuth y persistencia en teléfono. No versionar firma privada.
+
+\section{Scraper y automatización}
+El scraper mantiene ejecución independiente en su repositorio, con dependencias y
+secretos propios. Su comando de pruebas documentado es
+\code{python -m unittest discover -s tests -v}. El ciclo CI histórico demuestra
+extracción/sincronización y conservación de artefactos; no acredita una ejecución hoy.
+Verificar el cron real en el workflow: no prometer ejecución puntual a las 23:37
+America/Santiago, especialmente ante cambios horarios y retrasos de GitHub Actions.
+NVIDIA y la clave de servicio permanecen fuera del cliente.
+Docker no forma parte de la estrategia adoptada.
+
+\section{Diagnóstico y entrega}
+\begin{itemize}
+\item Ante 401/403: comprobar sesión, proveedor, rol y políticas; no ampliar permisos
+sin identificar la causa.
+\item Si el registro vuelve a pedir confirmación: comprobar disponibilidad de
+\code{registrar-cuenta} y si se activó el respaldo legacy.
+\item Si falta correo: distinguir cuenta creada, solicitud al proveedor y recepción;
+revisar registros sanitizados sin publicar datos o tokens.
+\item Si una ruta directa falla: comprobar raíz, salida \code{www} y reescritura SPA.
+\item Puerto ocupado: identificar el proceso propio antes de detenerlo; no cerrar
+servidores ajenos.
+\item Entrega: guardar versión, controles ejecutados, limitaciones, fuentes/PDF y
+matrices. Adjuntar evidencia sanitizada y enlace de commit cuando el equipo lo autorice.
+\end{itemize}
+\end{document}

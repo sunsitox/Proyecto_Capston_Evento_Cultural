@@ -1,0 +1,28 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial","fontSize":"16px","primaryColor":"#FBF7F2","primaryBorderColor":"#C9622D","lineColor":"#1F5C57"}}}%%
+flowchart TB
+  USER["Visitante / Usuario / Administrador"]
+  WEB["SPA Angular 22 + Ionic 9<br/>Vercel / Capacitor Android"]
+  SDK["Servicios TypeScript + supabase-js<br/>Catálogo · Auth · Storage"]
+  EDGE["Supabase Edge Functions<br/>Registro · Cuenta · Recuperación<br/>Publicación · Moderación · Correo"]
+  AUTH["Supabase Auth<br/>Contraseña / Google OAuth"]
+  DB["PostgreSQL + RLS<br/>Catálogo · profiles.role<br/>Interacciones · Tokens de recuperación"]
+  STORE["Storage avatars<br/>Políticas de propiedad"]
+  MAIL["Resend<br/>Envío de correo desde servidor"]
+  GH["GitHub Actions<br/>Evidencia CI histórica"]
+  PIPE["Scraper Python<br/>Conectores · Saneamiento · Deduplicación<br/>Checkpoints SQLite"]
+  SRC["Fuentes públicas"]
+  AI["NVIDIA NIM<br/>Enriquecimiento selectivo"]
+  USER --> WEB --> SDK
+  SDK -->|"Clave pública / JWT"| AUTH
+  SDK -->|"PostgREST bajo RLS"| DB
+  SDK --> STORE
+  SDK -->|"HTTP; JWT según operación"| EDGE
+  EDGE -->|"Valida usuario; admin: email + profiles.role"| AUTH
+  EDGE -->|"Privilegios exclusivos del servidor"| DB
+  EDGE --> MAIL
+  GH --> PIPE
+  SRC --> PIPE
+  PIPE <--> AI
+  PIPE -->|"Upsert idempotente"| DB
+  NOTE["Implementación local no certifica despliegue remoto<br/>Python backend legado fuera del flujo web"]
+  NOTE -.-> WEB

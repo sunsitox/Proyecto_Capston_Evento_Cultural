@@ -1,0 +1,109 @@
+%% estilo_capstone.sty
+%% Plantilla reutilizable de LaTeX para la documentación técnica del proyecto
+%% "Evento Cultural" — Capstone APT122 (Duoc UC).
+%%
+%% Uso:
+%%   \documentclass[11pt,a4paper]{article}
+%%   \usepackage{estilo_capstone}      % con docs/ en TEXINPUTS o compilando junto al .sty
+%%   \begin{document}
+%%   \maketitlecapstone                % portada usando \titulo, \subtitulo, \autor, \fecha
+%%   ...
+%%   \pendiente{dato que debe completar el equipo}
+%%
+%% Requiere: babel-spanish, geometry, graphicx, booktabs, longtable, hyperref, xcolor
+%% (MiKTeX instala los paquetes faltantes automáticamente).
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{estilo_capstone}[2026/09/24 v1.0 Estilo documental Capstone Evento Cultural]
+
+%% ---------- Página: A4, márgenes 2,5 cm ----------
+\RequirePackage[a4paper,margin=2.5cm]{geometry}
+
+%% ---------- Tipografía y idioma (regla del proyecto: Latin Modern) ----------
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[spanish,es-noshorthands]{babel}
+%% Latin Modern es la fuente por defecto de pdfLaTeX; se declara explícitamente
+%% para dejar constancia de la regla visual del estándar.
+\RequirePackage{lmodern}
+
+%% ---------- Espaciado: interlineado 1,15 ----------
+\RequirePackage{setspace}
+\setstretch{1.15}
+
+%% ---------- Color institucional del proyecto ----------
+\RequirePackage{xcolor}
+\definecolor{capstoneprimario}{HTML}{C9622D}   % paleta del design brief (tokens del frontend)
+\definecolor{capstonesecundario}{HTML}{1F5C57}
+\definecolor{capstoneacento}{HTML}{E8A33D}
+
+%% ---------- Tablas y listas (regla: tablas legibles) ----------
+\RequirePackage{booktabs}
+\RequirePackage{longtable}
+\RequirePackage{array}
+\RequirePackage{enumitem}
+\setlist{topsep=2pt,itemsep=1pt,parsep=0pt}
+
+%% ---------- Figuras ----------
+\RequirePackage{graphicx}
+\graphicspath{{./}{Diagramas/}{../Diagramas/}}
+
+%% ---------- Encabezados y pies ----------
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\titulo}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+
+%% ---------- Enlaces ----------
+\RequirePackage[colorlinks=true,linkcolor=capstonesecundario,urlcolor=capstonesecundario,citecolor=capstonesecundario]{hyperref}
+\urlstyle{same}
+
+%% ---------- Jerarquía de títulos consistente ----------
+\RequirePackage{titlesec}
+\titleformat{\section}{\Large\bfseries\color{capstoneprimario}}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{capstonesecundario}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.4ex plus .2ex}{0.8ex}
+\titlespacing*{\subsection}{0pt}{1.2ex plus .2ex}{0.6ex}
+
+%% ---------- Código y términos técnicos ----------
+%% \code{identificador}: monoespaciado con división permitida en guiones
+%% (identificadores largos como DiscoverLayoutComponent no desbordan).
+\newcommand{\code}[1]{\texttt{\hyphenchar\font=`\-\relax #1\relax}}
+
+%% ---------- Metadatos del documento ----------
+\newcommand{\titulo}[1]{\def\@titulo{#1}}
+\newcommand{\subtitulo}[1]{\def\@subtitulo{#1}}
+\newcommand{\autor}[1]{\def\@autor{#1}}
+\newcommand{\fecha}[1]{\def\@fecha{#1}}
+\titulo{Documento técnico}
+\subtitulo{}
+\autor{Pendiente de completar por el equipo}
+\fecha{\today}
+
+%% ---------- Portada ----------
+\newcommand{\maketitlecapstone}{%
+  \begin{titlepage}
+    \centering
+    \vspace*{2.5cm}
+    {\color{capstoneacento}\rule{\linewidth}{2pt}}\\[1.2em]
+    {\Huge\bfseries \@titulo\par}
+    \vspace{0.8em}
+    {\Large \@subtitulo\par}
+    \vspace{1.5em}
+    {\color{capstoneacento}\rule{\linewidth}{2pt}}\\[2.5em]
+    {\large \@autor\par}
+    \vfill
+    {\large \@fecha\par}
+    \vspace{1cm}
+    {\small Proyecto Capstone APT122 · Duoc UC · Sede Maipú\par}
+  \end{titlepage}}
+
+%% ---------- Marcador para información no inventada ----------
+%% Regla del estándar: lo que no esté respaldado por evidencia se declara
+%% "Pendiente de completar por el equipo", nunca se rellena con supuestos.
+\newcommand{\pendiente}[1]{\textcolor{capstoneprimario}{\textbf{[Pendiente de completar por el equipo: #1]}}}
+\newenvironment{pendienteenv}{\begin{quote}\color{capstoneprimario}\small\textbf{Pendiente de completar por el equipo:}}{\end{quote}}
+
+\endinput

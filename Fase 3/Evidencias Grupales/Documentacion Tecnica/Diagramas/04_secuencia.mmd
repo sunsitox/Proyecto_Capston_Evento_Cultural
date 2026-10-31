@@ -1,0 +1,43 @@
+sequenceDiagram
+  autonumber
+  actor U as Usuario
+  participant F as Angular / supabase-js
+  participant E as Funciones Edge
+  participant A as Supabase Auth
+  participant D as PostgreSQL
+  participant M as Resend
+  U->>F: Registro (nombre, correo, contraseña)
+  F->>E: registrar-cuenta
+  E->>A: Admin API: email_confirm=true
+  A-->>E: Cuenta creada
+  E->>M: Solicitar correo de registro exitoso
+  Note over E,M: Solicitud no demuestra recepción
+  E-->>F: Resultado de creación
+  F->>A: signInWithPassword
+  A-->>F: Sesión
+  Note over F,A: Si función no disponible: respaldo signUp legacy
+  F->>D: Catálogo por PostgREST (RLS)
+  D-->>F: Eventos públicos
+  U->>F: Publicar evento
+  F->>E: publicar-evento + JWT
+  E->>A: getUser(JWT)
+  A-->>E: Identidad validada
+  E->>D: INSERT status=draft
+  D-->>E: Borrador
+  E-->>F: Resultado
+  actor AD as Administrador
+  AD->>F: Ingreso email + contraseña
+  F->>A: signInWithPassword
+  F->>D: Consultar profiles.role
+  Note over F,D: Guard: proveedor email y rol admin
+  F->>E: admin-eventos + JWT (publicar / suprimir)
+  E->>A: Validar JWT y proveedor
+  E->>D: Leer profiles.role
+  alt email y admin
+    E->>D: Aplicar acción validada
+    E-->>F: Resultado
+  else no autorizado
+    E-->>F: Rechazo
+  end
+  Note over F: 10 min sin interacción - cierre cliente y chequeo cada 15 s
+  Note over F,D: Flujo actual sin API Python intermedia

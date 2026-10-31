@@ -1,0 +1,303 @@
+% =====================================================================
+% Documentación técnica formal — Proyecto Capstone "Evento Cultural"
+% Compilación: pdflatex -interaction=nonstopmode main.tex  (dos pasadas)
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{caption}
+\setlength{\emergencystretch}{3em}
+\sloppy
+
+\definecolor{terracota}{HTML}{C9622D}
+\definecolor{verdes}{HTML}{1F5C57}
+\definecolor{rojo}{HTML}{B03A3A}
+\definecolor{azulurl}{HTML}{1F4E79}
+\usepackage[colorlinks=true,linkcolor=azulurl,urlcolor=azulurl]{hyperref}
+
+\graphicspath{{Diagramas/}}
+\captionsetup{font=small,labelfont=bf}
+\renewcommand{\tablename}{Tabla}
+
+\newcommand{\pendiente}{\textcolor{rojo}{\textbf{Pendiente de completar por el equipo.}}}
+\newcommand{\seccionpendiente}[1]{\textcolor{rojo}{\textbf{Pendiente de completar por el equipo:} #1}}
+
+\title{}
+\author{}
+\date{}
+
+\begin{document}
+
+% ---------------------------------------------------------- PORTADA
+\begin{titlepage}
+\centering
+{\color{terracota}\rule{\textwidth}{2pt}}\\[0.6cm]
+{\Large \textsc{Duoc UC -- Sede Maipú}}\\[0.2cm]
+{\large Capstone 2026 -- Asignatura APT122}\\[1.4cm]
+{\color{terracota}\Huge \textbf{Evento Cultural}}\\[0.5cm]
+{\LARGE Documentación Técnica del Proyecto}\\[0.4cm]
+{\large Plataforma chilena de eventos culturales}\\[1.2cm]
+{\color{terracota}\rule{\textwidth}{1pt}}\\[1.2cm]
+
+\begin{minipage}{0.82\textwidth}
+\renewcommand{\arraystretch}{1.35}
+\begin{center}
+\begin{tabular}{>{\bfseries}l l}
+Integrante & Rol principal \\ \midrule
+Roberto Riffo & Líder de proyecto / Frontend / UX \\
+José Miguel Moncada & Base de datos / QA \\
+David Herrera & Backend e integraciones \\
+\end{tabular}
+\end{center}
+\vspace{0.2cm}
+{\small Roles según el design brief aprobado en Fase 1 (\textit{design\_brief\_capstone.docx}).}
+\end{minipage}
+
+\vspace{1.2cm}
+\begin{minipage}{0.82\textwidth}
+\small
+\textbf{Stack del sistema:} Python (scraper con conectores, NVIDIA NIM y checkpoints SQLite),
+Supabase/PostgreSQL con Row Level Security, Edge Functions (registro, cuenta, publicación, moderación y recuperación),
+Angular 22 + Ionic 9 (web y móvil, catálogo real y autenticación directa vía \texttt{@supabase/supabase-js}),
+Leaflet + OpenStreetMap (mapa interactivo con pines georreferenciados) y GitHub Actions para automatización.
+\end{minipage}
+
+\vfill
+{\large Versión 1.3}\\[0.2cm]
+{\large 31 de octubre de 2026}\\[0.4cm]
+{\small Revisión de cierre (Fase 3): agrega estándares de desarrollo, estructura de evidencias y referencias.\\
+Revisión contrastada con el código local actual; resultados históricos separados\\
+de las verificaciones de cierre pendientes. Ver Respuesta\_Rubrica\_Fase2.md.\\
+Las omisiones se declaran como \textcolor{rojo}{\textbf{pendientes del equipo}} dentro
+de este mismo documento.}\\[0.3cm]
+{\color{terracota}\rule{\textwidth}{2pt}}
+\end{titlepage}
+
+% ---------------------------------------------------------- ÍNDICE
+\tableofcontents
+\newpage
+
+% ---------------------------------------------------------- INTRODUCCIÓN
+\section{Introducción y alcance}
+\label{sec:intro}
+
+Este documento consolida el estado técnico de Evento Cultural al 31-10-2026 a partir
+del código local actual, las funciones Edge y configuración de la aplicación. Conserva
+como línea base los requerimientos de Fase 1, el modelo de datos y la evidencia del
+scraper y QA de Fase 2. No certifica el esquema remoto ni reemplaza una ejecución de pruebas.
+
+\textbf{Convención de honestidad documental:} este documento distingue explícitamente entre
+lo \emph{implementado} (respaldado por código), lo \emph{parcial} (respaldado solo en parte)
+y lo \emph{pendiente} (información humana o trabajo futuro). Nada se afirma como terminado
+sin respaldo; los puntos abiertos se marcan con \pendiente
+
+\subsection{Estructura del sistema}
+
+El sistema se compone de tres bloques independientes que se comunican a través de la base
+de datos: el \textbf{scraper} (recolección y enriquecimiento de datos), la \textbf{base de
+datos} (catálogo canónico en Supabase/PostgreSQL) y el \textbf{frontend} (aplicación web y
+móvil), con \textbf{GitHub Actions} como automatización de la ejecución del scraper
+(ver Figura~\ref{fig:arq} en la Sección~\ref{sec:arq}).
+
+\subsection{Respuesta a la evaluación anterior}
+La planilla de Fase 2 registra 74/100 y nota 5,1. Los descuentos están en los indicadores
+3 (15/25), 4 (3/5), 5 (3/5), 6 (12/20) y 8 (6/10). No contiene observaciones narrativas
+específicas. Se corrigen precisión técnica, estado del producto, fuentes y trazabilidad;
+la entrega en Git y el dominio oral del equipo requieren evidencia adicional.
+El registro \texttt{Respuesta\_Rubrica\_Fase2.md} vincula cada indicador con acciones
+sin prometer una nueva calificación. Código implementado no equivale a prueba aprobada.
+
+\input{secciones/01-arquitectura}
+\input{secciones/02-datos-uml}
+\input{secciones/03-rnf-pruebas-docker-innovacion}
+
+% ---------------------------------------------------------- ESTÁNDARES Y EVIDENCIA
+\section{Estándares de desarrollo y evidencia del avance}
+\label{sec:estandares}
+
+Esta sección declara los estándares de la industria bajo los que se desarrolla el
+proyecto, cómo se organiza la evidencia del avance bajo control de versiones y
+dónde pueden verificarse los aportes por integrante; responde así a los criterios
+de evaluación de "evidencias que cumplan estándares de desarrollo",
+"estructura y nombres" y "aporte por integrante".
+
+\subsection{Estándares y prácticas de la industria aplicados}
+
+\begin{table}[ht]
+\centering\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{p{4.6cm} p{4.2cm} p{5.0cm}}
+\toprule
+\textbf{Estándar / práctica} & \textbf{Dónde se aplica} & \textbf{Evidencia verificable} \\
+\midrule
+Patrones orientados a WCAG 2.2 en las interfaces (avisos semánticos, foco visible,
+objetivos táctiles, movimiento reducido) &
+Login, recuperación de contraseña y publicación de eventos &
+\texttt{role="alert"} y \texttt{role="status"} con botón de cierre y tokens de color;
+Novedades de Fase 3, sección 6. \\
+OAuth 2.0 y PKCE (RFC 6749, RFC 7636) en el regreso de proveedores externos &
+\texttt{/auth/callback} (Angular Router) &
+\texttt{auth-callback.page.ts} y flujo \texttt{signInWithOAuth} de supabase-js. \\
+Control de acceso en la base de datos por mínimo
+privilegio (RLS de PostgreSQL) &
+Modelo documentado de catálogo y perfil; validar políticas remotas &
+Migraciones SQL (repositorio oficial del scraper) y vista \texttt{public\_event\_catalog}. \\
+Sincronización idempotente por upsert y conciliación configurable &
+\texttt{SupabaseExporter} del scraper &
+Pipeline por lotes configurable y pruebas \texttt{test\_supabase.py}. \\
+Integración continua con compuerta de calidad (las pruebas bloquean la publicación de datos) &
+Workflow \texttt{scrape-events.yml} &
+Run \#12: falla de pruebas impide extracción/sincronización; runs \#25 en verde. \\
+Separación de secretos por entorno (configuración 12-factor, sin claves en el cliente) &
+Backend y despliegues &
+\texttt{.env.example} en todos los entregables, GitHub Secrets y Edge Functions
+\texttt{admin-account} y funciones de recuperación con clave \texttt{service\_role} solo en Supabase. \\
+Patrones de arquitectura de software (Strategy, Factory, Repository, Adapter,
+Chain of Responsibility, Bulkhead, Cache-Aside) &
+Scraper y frontend Angular &
+Documentación interna de ambos entregables y pruebas con inyección de
+dependencias; servicios Angular con inyección estándar. \\
+Convenciones de estilo y verificación automática de dependencias &
+Repositorios del proyecto &
+Python snake\_case con \texttt{requirements.txt}; Angular 22 standalone con
+\texttt{angular-eslint} y \texttt{package-lock.json}; SCSS por token de diseño
+(\texttt{\_tokens.scss}). \\
+Responsividad y app instalable &
+Frontend web y Android &
+Navegación dual móvil/escritorio de Ionic, \texttt{manifest.webmanifest} y el build
+APK de Capacitor (Novedades de Fase 3, sección 4). \\
+\bottomrule
+\end{tabular}
+\caption{Estándares de desarrollo industriales adoptados con su evidencia en el repositorio.}
+\label{tab:estandares}
+\end{table}
+
+\subsection{Estructura de evidencias, nomenclatura y control de versiones}
+
+La carpeta raíz del proyecto se organiza por fase según la estructura oficial del
+curso (``Resumen evidencias.xlsx''): \texttt{Fase 1/2/3}, cada una con sus
+\texttt{Evidencias Individuales/}, \texttt{Evidencias Grupales/} y
+\texttt{Evidencias Proyecto/} según aplique. La nomenclatura es uniforme: nombres
+descriptivos en español, fechas en formato dd-mm-aaaa y estados explícitos
+(\emph{Pendiente de completar por el equipo}, parciales e implementados).
+
+El control de versiones es el respaldo central del avance: la bitácora
+\nolinkurl{REGISTRO_CAMBIOS_DOCUMENTACION.md} registra fecha, origen, acciones, verificación y
+archivos de cada ciclo documental (secciones 1--28); los commits del repositorio
+oficial del scraper muestran la línea de tiempo del backend (antecedente histórico: corrección del reloj de pruebas, commit \texttt{d201b0a}). La entrega debe excluir auxiliares LaTeX, dependencias y secretos, pero incluir los PDFs y fuentes evaluables. Esta revisión no certifica qué archivos están guardados en Git; el equipo debe registrar el commit y comprobar su contenido antes de entregar.
+
+\subsection{Roles planificados y trazabilidad individual pendiente}
+
+\begin{table}[ht]
+\centering\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{p{4.0cm} p{9.6cm}}
+\toprule
+\textbf{Integrante} & \textbf{Área de responsabilidad según planificación} \\
+\midrule
+Roberto Riffo (líder) &
+Frontend Angular/Ionic (páginas, layouts y design system), gestión del proyecto
+y documento de metodología. \\
+José Miguel Moncada &
+Base de datos, plan de pruebas y ejecución QA (ciclo del 11-10-2026 con 13
+escenarios y matriz de defectos); recomendaciones e informe QA de Fase 3.
+\\
+David Herrera &
+Backend e integraciones: scraper, su CI \texttt{scrape-events.yml}, migraciones SQL y
+Edge Functions \texttt{admin-account} / \texttt{reset-password}. \\
+\bottomrule
+\end{tabular}
+\caption{Distribución planificada según el design brief; no certifica autoría de cambios. Adjuntar commits o actas reales para demostrar aportes.}
+\label{tab:aportes}
+\end{table}
+
+% ---------------------------------------------------------- CIERRE
+\section{Trazabilidad documental}
+\label{sec:traza}
+
+Cada afirmación de este documento proviene de las siguientes fuentes verificables:
+
+\begin{table}[h]
+\centering\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{p{5.2cm} p{8.6cm}}
+\toprule
+\textbf{Sección} & \textbf{Evidencia utilizada} \\
+\midrule
+Arquitectura general, scraper y frontend &
+Entregables del scraper y frontend incluidos como evidencias de sistema en Fase 2;
+\texttt{package.json}, \texttt{app.routes.ts}, \texttt{supabase.service.ts},
+\texttt{api.service.ts}, Edge Functions y diagramas técnicos de Fase 2.
+Integración frontend--Supabase implementada y verificada en TypeScript
+(catálogo real directo, autenticación y OAuth preparado). \\
+Modelo de datos &
+Documentación de base de datos incluida en el entregable del scraper de Fase 2,
+modelo DBML, diccionario de tablas y
+\texttt{DB\_evento\_cultural.pdf} (Fase 1). \\
+Diagramas UML &
+Rutas y servicios reales del frontend; clases y patrones documentados del scraper;
+matriz MoSCoW de Fase 1. Los siete diagramas (01--07) comparten estándar visual,
+fueron pulidos y reexportados el 27-09-2026 y el ER (06) fue actualizado el 03-10-2026. \\
+Requisitos no funcionales &
+Matriz MoSCoW de requerimientos (Fase 1) y
+evidencia de código por requisito. \\
+Pruebas &
+Carpeta \texttt{tests/} del scraper (14 módulos, aproximadamente 1.900 líneas),
+sección ``Pruebas'' de su README y configuración Vitest del frontend. \\
+Docker &
+Inspección completa de ambos entregables (sin Dockerfile ni compose) y
+\texttt{CONTENIDO\_DEL\_REPOSITORIO.md}. \\
+Innovación &
+Design brief de Fase 1, matriz MoSCoW, tabla de fuentes del README del scraper y
+funcionalidad ``para ti'' del frontend. \\
+\bottomrule
+\end{tabular}
+\caption{Trazabilidad entre secciones del documento y evidencia del repositorio.}
+\label{tab:traza}
+\end{table}
+
+Los cambios y pendientes vigentes de Fase 3 se resumen en el anexo
+\nolinkurl{Novedades_desde_Fase2.md} de \texttt{Fase 3/Evidencias Grupales/} y en la bitácora
+\nolinkurl{REGISTRO_CAMBIOS_DOCUMENTACION.md} de la raíz.
+
+% ---------------------------------------------------------- REFERENCIAS
+\section*{Referencias}
+\addcontentsline{toc}{section}{Referencias}
+
+Este documento cita los siguientes estándares y fuentes primarias (formato,
+estándar/autor, nombre, versión o RFC y URL de consulta):
+
+\begin{enumerate}[leftmargin=1.6em, label=\textsuperscript{[\arabic*]}]
+    \item World Wide Web Consortium. \emph{Web Content Accessibility Guidelines (WCAG) 2.2}. W3C
+    Recommendation, oct. 2023. \url{https://www.w3.org/TR/WCAG22/}.
+    \item Hardt, D. (ed.). \emph{The OAuth 2.0 Authorization Framework}. RFC 6749, IETF, 2012.
+    \url{https://www.rfc-editor.org/rfc/rfc6749}.
+    \item Sakimura, N., Bradley, J. y Jones, M. \emph{Proof Key for Code Exchange} (PKCE).
+    RFC 7636, IETF, 2015. \url{https://www.rfc-editor.org/rfc/rfc7636}.
+    \item PostgreSQL Global Development Group. \emph{PostgreSQL Documentation: Row Security
+    Policies}. \url{https://www.postgresql.org/docs/current/ddl-rowsecurity.html}.
+    \item OpenStreetMap Foundation. \emph{Nominatim Usage Policy} (geocodificación de respaldo
+    del mapa). \url{https://operations.osmfoundation.org/policies/nominatim/}.
+    \item Proyecto Mermaid. \emph{Mermaid: documentación oficial} (herramienta utilizada para los diagramas propios 01--07). \url{https://mermaid.js.org/intro/}.
+    \item Google LLC (equipo Angular). \emph{Angular Style Guide} y documentación de
+    componentes standalone (v20--22). \url{https://angular.dev/style-guide}.
+    \item Ionic. \emph{Ionic Framework documentation} (v9) para navegación responsiva
+    móvil/escritorio. \url{https://ionicframework.com/docs}.
+    \item Supabase. \emph{Supabase documentation} (Row Level Security, Edge Functions y
+    Inicio de sesión con GoTrue). \url{https://supabase.com/docs}.
+    \item NVIDIA Corporation. \emph{NVIDIA NIM for microservices} (API de inferencia de OCR y
+    redacción). \url{https://www.nvidia.com/en-us/ai-data-science/products/nim-microservices/}.
+\end{enumerate}
+
+\end{document}

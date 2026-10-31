@@ -1,0 +1,51 @@
+[
+  {
+    "name": "frontend_tests",
+    "command": [
+      "npm.cmd",
+      "test",
+      "--",
+      "--watch=false"
+    ],
+    "cwd": "EventoCultural_Integrado\\EventoCultural_Integrado",
+    "start": "2026-10-31T05:20:29.254716",
+    "exit_code": 0
+  },
+  {
+    "name": "frontend_build",
+    "command": [
+      "npm.cmd",
+      "run",
+      "build"
+    ],
+    "cwd": "EventoCultural_Integrado\\EventoCultural_Integrado",
+    "start": "2026-10-31T05:21:10.547587",
+    "exit_code": 0
+  },
+  {
+    "name": "frontend_lint",
+    "command": [
+      "npm.cmd",
+      "run",
+      "lint"
+    ],
+    "cwd": "EventoCultural_Integrado\\EventoCultural_Integrado",
+    "start": "2026-10-31T05:21:48.350056",
+    "exit_code": 0
+  },
+  {
+    "name": "scraper_tests",
+    "command": [
+      "python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-v"
+    ],
+    "cwd": "tmp_scraper_repo",
+    "start": "2026-10-31T05:22:04.857670",
+    "exit_code": 0
+  }
+]
