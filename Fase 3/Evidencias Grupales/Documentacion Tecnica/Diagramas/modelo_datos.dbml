@@ -1,0 +1,184 @@
+// Copia documental integrada 03-11-2026. SQL local, no esquema remoto verificado.
+// Modelo de Base de Datos — Proyecto "Evento Cultural"
+// Pega este código en https://dbdiagram.io para generar el diagrama oficial
+
+Table sources {
+  id uuid [pk]
+  name text [not null]
+  website_url text
+  is_active boolean [not null, default: true]
+  last_seen_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table organizers {
+  id uuid [pk]
+  name text [not null]
+  entity_type text
+  last_seen_at timestamptz
+  is_blocked boolean [not null, default: false, note: 'Control administrativo privado']
+  blocked_reason text
+  blocked_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table communes {
+  id uuid [pk]
+  name text [not null]
+  region text
+  country text [not null, default: 'Chile']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table categories {
+  id uuid [pk]
+  name text [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table scrape_runs {
+  id uuid [pk, default: `gen_random_uuid()`]
+  started_at timestamptz [not null, default: `now()`]
+  finished_at timestamptz
+  status text [not null, note: 'running | succeeded | failed']
+  events_count integer [not null, default: 0]
+  error_message text
+  metadata jsonb [not null, default: `{}`]
+}
+
+Table events {
+  id uuid [pk]
+  external_key text [not null, unique]
+  source_id uuid [not null, ref: > sources.id]
+  organizer_id uuid [ref: > organizers.id]
+  commune_id uuid [ref: > communes.id]
+  title text [not null]
+  start_at timestamptz
+  end_at timestamptz
+  venue text
+  address text
+  city text
+  region text
+  country text [not null, default: 'Chile']
+  postal_code text
+  latitude double [note: 'PostgreSQL double precision; entre -90 y 90']
+  longitude double [note: 'PostgreSQL double precision; entre -180 y 180']
+  location text [not null]
+  location_precision text [not null, note: 'exact | coordinates | venue | commune | city | region | online | country']
+  location_source text [not null, note: 'source-data | source-default | deterministic-inference | nvidia-nim | geographic-fallback']
+  status text [not null, default: 'published', note: 'published | cancelled | draft | archived']
+  is_suppressed boolean [not null, default: false, note: 'Exclusión administrativa persistente']
+  suppression_reason text
+  suppressed_at timestamptz
+  audience text
+  is_free boolean
+  description text
+  price_text text
+  currency text [not null, default: 'CLP']
+  image_url text
+  source_url text
+  official_url text
+  extraction_method text
+  scraped_at timestamptz [not null, default: `now()`]
+  last_seen_at timestamptz [not null, default: `now()`]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table event_provenance {
+  event_id uuid [pk, ref: - events.id]
+  original_url text
+  source_description text
+  ocr_text text
+  is_rewritten boolean [not null, default: false]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table event_categories {
+  event_id uuid [ref: > events.id]
+  category_id uuid [ref: > categories.id]
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (event_id, category_id) [pk]
+  }
+}
+
+Table media_assets {
+  id uuid [pk]
+  event_id uuid [not null, ref: > events.id]
+  url text [not null]
+  media_type text [not null, default: 'image', note: 'image | video | audio | document']
+  is_primary boolean [not null, default: false]
+  created_at timestamptz [not null, default: `now()`]
+}
+
+Table profiles {
+  id uuid [pk, ref: - auth_users.id]
+  display_name text
+  role text [not null, default: 'visitor', note: 'visitor | editor | admin']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table catalog_staging {
+  run_id uuid [not null]
+  entity text [not null, note: 'sources | organizers | communes | categories | events | event_provenance | event_categories | media_assets']
+  chunk_index integer [not null, note: 'Mayor o igual que cero']
+  payload jsonb [not null, note: 'Arreglo JSON privado']
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (run_id, entity, chunk_index) [pk]
+    created_at
+  }
+}
+
+Table user_event_interactions {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null, ref: > auth_users.id]
+  event_id uuid [not null, ref: > events.id]
+  interaction_type text [not null, note: 'view_detail | open_source | open_official_site | interested | not_interested | share | report']
+  occurred_at timestamptz [not null, default: `now()`]
+  metadata jsonb [not null, default: `{}`]
+}
+
+Table reports {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null, ref: > auth_users.id]
+  event_id uuid [not null, ref: > events.id]
+  reason text [not null]
+  status text [not null, default: 'pending', note: 'pending | reviewed | resolved']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+// Tabla externa de Supabase Auth (no se crea, solo referenciada)
+Table auth_users {
+  id uuid [pk, note: 'Gestionada por Supabase Auth (auth.users)']
+}
+
+// Objetos no representables como tablas en DBML:
+// - vista public_event_catalog
+// - funciones set_updated_at(), handle_new_user(), match_existing_events(jsonb),
+//   is_organizer_blocked(uuid) y publish_staged_catalog(...)
+// - favorites fue eliminada por 20260924000100_user_recommendation_interactions.sql
+
+// Extension local de la aplicacion; auth_users es alias de auth.users.
+Table password_reset_tokens {
+  jti uuid [pk]
+  user_id uuid [not null, ref: > auth_users.id]
+  email text [not null]
+  expires_at timestamptz [not null]
+  used_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
+  indexes {
+    email
+    expires_at
+  }
+}
+// storage.buckets / storage.objects: migracion de avatars separada.

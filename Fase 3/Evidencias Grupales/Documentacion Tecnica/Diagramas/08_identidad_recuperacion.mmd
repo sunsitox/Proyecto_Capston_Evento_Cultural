@@ -1,0 +1,38 @@
+%%{init: {"theme":"neutral","themeVariables":{"fontFamily":"Arial","fontSize":"17px"}}}%%
+erDiagram
+ auth_users ||--o| profiles : perfil
+ auth_users ||--o{ user_event_interactions : registra
+ auth_users ||--o{ reports : reporta
+ auth_users ||--o{ password_reset_tokens : recupera
+ events ||--o{ user_event_interactions : recibe
+ events ||--o{ reports : recibe
+ auth_users { uuid id PK "Alias conceptual de auth.users" }
+ profiles {
+ uuid id PK,FK
+ text display_name
+ text role "visitor, editor, admin"
+ }
+ user_event_interactions {
+ uuid id PK
+ uuid user_id FK
+ uuid event_id FK
+ text interaction_type
+ timestamptz occurred_at
+ jsonb metadata
+ }
+ reports {
+ uuid id PK
+ uuid user_id FK
+ uuid event_id FK
+ text reason
+ text status
+ }
+ password_reset_tokens {
+ uuid jti PK
+ uuid user_id FK
+ text email
+ timestamptz expires_at
+ timestamptz used_at "nullable"
+ timestamptz created_at
+ }
+ events { uuid id PK }

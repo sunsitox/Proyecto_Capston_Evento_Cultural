@@ -1,4 +1,4 @@
-% Revisión documental de Fase 3: 31-10-2026.
+% Revisión documental de Fase 3: 03-11-2026.
 \section{Arquitectura general del sistema}
 \label{sec:arq}
 \subsection{Alcance y fuente de verdad}
@@ -13,7 +13,7 @@ verificación de extremo a extremo.
 \item \textbf{Recolección:} scraper Python independiente, con conectores, saneamiento,
 NVIDIA NIM selectivo y checkpoints SQLite. Su evidencia operativa conservada corresponde
 al ciclo del 11-10-2026; no constituye una nueva ejecución del scraper.
-\item \textbf{Persistencia:} Supabase/PostgreSQL, catálogo y perfiles con políticas RLS;
+\item \textbf{Persistencia:} Supabase/PostgreSQL, catálogo y perfiles con políticas RLS en migraciones locales;
 Supabase Auth para sesiones y Storage para avatares.
 \item \textbf{Cliente:} SPA Angular 22 e Ionic 9, con servicios TypeScript y signals.
 Consulta catálogo y autenticación mediante \texttt{@supabase/supabase-js}.
@@ -34,11 +34,12 @@ para Android. No se utiliza Docker en la estrategia adoptada.
 
 \subsection{Contratos y límites de confianza}
 \begin{longtable}{p{3.1cm}p{4.0cm}p{7.0cm}}
+\toprule Origen y destino & Contrato & Regla de acceso \\\midrule\endfirsthead
 \toprule Origen y destino & Contrato & Regla de acceso \\\midrule\endhead
 Cliente a Supabase & Catálogo mediante PostgREST; sesión mediante Auth & Clave pública y JWT del usuario; las políticas RLS gobiernan los datos. \\
 Registro a función Edge & Correo, contraseña y nombre & Crea cuenta confirmada mediante Admin API; luego el cliente inicia sesión. No comprueba la propiedad del buzón. \\
-Usuario a publicar-evento & Datos validados del evento y JWT & Identidad obtenida con getUser; crea evento draft y no acepta status/source\_id del cliente. \\
-Administrador a admin-eventos & Listado y acciones de moderación & Valida JWT, proveedor email y profiles.role=admin antes de utilizar privilegios de servicio. \\
+Usuario a publicar-evento & Datos validados del evento y JWT & Identidad obtenida con getUser y user\_metadata.rol=organizador (autodeclarado); crea draft y no acepta status/source\_id del cliente. No prueba propiedad estable de organizador. \\
+Administrador a admin-eventos & Listado y acciones de moderación & Valida JWT y profiles.role=admin; rechaza provider explícito distinto de email antes de utilizar privilegios de servicio. \\
 Recuperación a funciones Edge & Solicitud por correo y confirmación con token & JWT firmado y registro password\_reset\_tokens con caducidad y marca de uso; requiere migración y secretos. \\
 Servidor a correo & API de Resend & Clave privada en el entorno de funciones. Envío implementado no equivale a recepción demostrada. \\
 \bottomrule\end{longtable}
@@ -52,9 +53,13 @@ resultados de IA de eventos sin cambios. El límite configurado de NVIDIA es 40 
 no se presenta como una garantía contractual del proveedor.
 
 \begin{figure}[H]\centering
-\includegraphics[width=0.94\textwidth]{07_arquitectura_scraper.pdf}
-\caption{Pipeline del scraper conservado de la línea base; verificar su inventario vigente antes del cierre.}
+\includegraphics[width=0.85\textwidth,height=0.64\textheight,keepaspectratio]{07_arquitectura_scraper.pdf}
+\caption{Pipeline resumido contrastado con EventPipeline y el workflow local; no acredita ejecución actual.}
 \label{fig:scraper-arq}\end{figure}
+
+El flujo restaura checkpoints, extrae por conectores, compara cambios, enriquece selectivamente,
+sanea y deduplica, exporta y sincroniza mediante lotes/upserts; registra scrape\_runs.
+La configuración del workflow solicita 40 RPM a NVIDIA y separa extract/process; no garantiza la cuota del proveedor.
 
 El inventario de 21 fuentes permanentes y una estacional y las ejecuciones de CI
 corresponden a evidencia histórica. No se infiere que todas sigan disponibles hoy.
@@ -66,7 +71,7 @@ puntualidad: el desfase del run 25 sigue registrado como DEF-CI-001.
 \label{sec:frontend}
 \subsection{Stack y organización}
 Según \texttt{package.json}: Angular 22.0.1, Ionic 9, TypeScript 6,
-Capacitor 8, supabase-js 2, Leaflet 1.9.4, RxJS 7.8 y Vitest 4 con jsdom.
+Capacitor 8, supabase-js 2, Leaflet 1.9.4, RxJS 7.8 y Vitest \texttt{\textasciicircum{}4.0.8} con jsdom \texttt{\textasciicircum{}26.0.0} (rangos declarados, no versiones de ejecución).
 \texttt{core/} concentra modelos y servicios; \texttt{pages/} las pantallas;
 \texttt{features/home/} los layouts; y \texttt{layout/} la navegación adaptativa.
 Las versiones resueltas deben reproducirse con \texttt{package-lock.json}.
@@ -100,7 +105,7 @@ El perfil permite editar nombre, contraseña e imagen. Storage utiliza el bucket
 OAuth, y esta se utiliza si no hay imagen propia. La identidad reactiva alimenta perfil
 y navegación. Google OAuth tiene botón y callback implementados; su configuración remota
 y la recepción de correos no se certifican por inspección de código.
-La recuperación actual usa las funciones \texttt{reset-password-request/confirm} y
+La recuperación actual usa las funciones \texttt{reset-password-request} y \texttt{reset-password-confirm} y
 \texttt{/restablecer-contrasena?token=...}, no únicamente el flujo antiguo de GoTrue.
 
 \subsection{Administración y publicación}
@@ -108,12 +113,16 @@ Las rutas \texttt{/v00/admin/*} requieren \texttt{adminGuard}; no enlazarlas pú
 no constituye una medida de autorización. \texttt{AdminAuthService} consulta
 \texttt{profiles.role} y solo admite \texttt{admin}, con proveedor email: visitor,
 editor y Google son rechazados. El rol editable de metadata no es autoridad administrativa.
-La función \texttt{admin-eventos} repite las comprobaciones en el servidor.
+La función \texttt{admin-eventos} valida getUser y profiles.role en servidor.
+Su condición rechaza app\_metadata.provider cuando existe como cadena y difiere de email;
+no se declara una prueba ejecutada para identidades sin ese campo.
 El cliente cierra la sesión tras 10 minutos sin interacción, comprobados cada 15 segundos,
 y redirige al ingreso con aviso. La última actividad se reinicia al recargar; no es un
 timeout absoluto persistido ni una revocación impuesta por el servidor.
 
-La publicación autenticada crea un borrador mediante \texttt{publicar-evento};
+La publicación autenticada exige user\_metadata.rol=organizador, atributo de autoservicio,
+y vincula organizer\_id por nombre, no por una FK estable entre usuario y organizador.
+No se equipara ese atributo con el rol administrativo. Crea un borrador mediante \texttt{publicar-evento};
 \texttt{admin-eventos} implementa listado administrativo, publicación y supresión.
 El dashboard calcula métricas del catálogo cargado en el cliente: no equivale a analítica
 comercial ni a estadísticas certificadas de uso. La ocultación de fuentes en el navegador

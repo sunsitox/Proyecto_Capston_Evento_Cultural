@@ -1,96 +1,169 @@
-% Revisión de Fase 3, 31-10-2026.
 \section{Requisitos no funcionales}
 \label{sec:rnf}
-Se conserva la identificación RNF de la matriz MoSCoW. Implementación no equivale
-a cumplimiento medido: los estados siguientes se basan en código local y evidencia
-histórica identificada, no en una auditoría actual de producción.
-\begin{longtable}{p{1.6cm}p{2.1cm}p{10.5cm}}
-\toprule ID & Estado & Fundamento y brecha \\\midrule\endhead
-RNF-01 & Parcial & Interfaz de descubrimiento y cuenta implementada. Revalidar defectos de usabilidad del ciclo 11-10-2026. \\
-RNF-02 & Parcial & Navegación adaptativa y proyecto Capacitor con APK debug existente. Faltan pruebas nativas en dispositivo y regresión responsive. \\
-RNF-03 & Sin medición actual & El tiempo HTTP histórico no mide renderizado ni Core Web Vitals. Faltan volumen, concurrencia y métricas de interacción. \\
-RNF-04 & Parcial & Auth, funciones Edge, RLS y secretos de servidor. Registro principal sin verificación de propiedad del buzón; revisar abuso y exposición de datos. La presencia de políticas no acredita su eficacia remota. \\
-RNF-05 & Parcial & Guard y servidor exigen profiles.role=admin y proveedor email; visitor/editor/OAuth quedan fuera. Timeout de 10 min en cliente. Faltan pruebas negativas y de revocación. \\
-RNF-06 & Parcial & Vercel y evidencia histórica de CI. No se aporta medición de disponibilidad actual ni SLA; el scheduler puede retrasarse. \\
-RNF-07 & Diseño implementado & Paginación y upsert en componentes documentados. No se acredita capacidad bajo carga sin medición. \\
-RNF-08 & Parcial & Pipeline de saneamiento y deduplicación documentado; revisar muestra actual del catálogo y ubicaciones aproximadas. \\
-RNF-09 & Parcial & Servicios, pruebas Vitest, fuentes de diagramas y documentación versionable. Completar ejecución actual y trazabilidad de entrega. \\
-RNF-10 & Disponible & Contenido en español y regiones/comunas chilenas; revisión editorial final pendiente. \\
-RNF-11 & Parcial & Build web, configuración Vercel y Capacitor presentes; validar reproducción en entorno limpio. Docker no adoptado. \\
-RNF-12 & Parcial & Roles ARIA, foco y movimiento reducido en formularios. No se declara conformidad WCAG 2.2 completa sin auditoría y recorrido manual. \\
-\bottomrule
-\caption{Estado de los RNF al corte documental.}\label{tab:rnfestado}
-\end{longtable}
+Se mantienen RNF-01 a RNF-12 y sus enunciados/criterios de la matriz MoSCoW de Fase 3.
+Los criterios siguientes son \textbf{transcritos de esa matriz}, no umbrales nuevos ni
+resultados medidos. Su ratificación por el equipo/docente no consta en esta revisión.
+Las brechas de definición se señalan explícitamente; no se agregan propuestas de umbral.
 
-\subsection{Seguridad y limitaciones}
-La autenticación comprueba identidad; la autorización administrativa se decide con
-\texttt{profiles.role} y se repite en \texttt{admin-eventos}. Ocultar una ruta no
-la protege. La clave pública del navegador no es un secreto y exige políticas RLS
-correctas; \texttt{service\_role} no debe incorporarse al frontend, capturas ni Git.
-El registro sin verificación de correo es una decisión funcional: confirmar mediante
-Admin API no acredita que la persona controle el buzón. El correo de bienvenida no
-reemplaza esa comprobación. El cierre por inactividad es cliente y puede reiniciarse
-con recarga; no se describe como revocación de servidor.
+\subsection{RNF-01 — Interfaz clara e intuitiva}
+\textbf{Categoría / prioridad:} Usabilidad / Must have.\par
+\textbf{Enunciado:} La plataforma debe tener una interfaz simple y comprensible tanto para ciudadanos como para organizadores sin conocimientos técnicos.\par
+\textbf{Criterio de aceptación existente:} Se ejecuta una prueba de usabilidad con usuarios representativos y se registran hallazgos, severidad y acciones de mejora. La muestra y umbral de aprobación deben acordarse con el equipo.\par
+\textbf{Método y límite:} Prueba con usuarios representativos y registro de tareas/hallazgos. Muestra y umbral pendientes de definición.\par
+\textbf{Evidencia local / estado registrado:} Pendiente de validación. Acordar muestra/umbral y registrar prueba de usabilidad con usuarios representativos.\par
+\textbf{Referencia de implementación:} Documentacion Metodologica/\par
 
-Las notificaciones por correo tienen código en funciones, pero requieren configuración,
-recepción comprobada y, para recomendaciones periódicas, invocación programada verificable.
-La moderación de eventos está implementada; los reportes ciudadanos y la administración
-de organizadores no se dan por completos por existir tablas o rutas. La ocultación
-local de fuentes no cambia la ejecución del scraper. La estadística del dashboard es
-un cálculo del catálogo, no analítica comercial.
+\subsection{RNF-02 — Diseño responsive / multiplataforma}
+\textbf{Categoría / prioridad:} Compatibilidad / Must have.\par
+\textbf{Enunciado:} La interfaz web debe adaptarse correctamente a distintos tamaños de pantalla y funcionar de forma consistente entre la versión web y la móvil.\par
+\textbf{Criterio de aceptación existente:} Las vistas principales se renderizan correctamente de 320 px a escritorio; navegación de tab bar en móvil y barra superior en escritorio.\par
+\textbf{Método y límite:} Recorrido responsive de vistas principales a 320 px y escritorio, más matriz de navegadores y dispositivos. No ejecutado en esta revisión.\par
+\textbf{Evidencia local / estado registrado:} Parcial. Diseño responsive y navegación dual implementados. Falta matriz de navegadores/dispositivos y prueba de 320 px a escritorio.\par
+\textbf{Referencia de implementación:} src/app/layout/main-layout/; android/\par
+
+\subsection{RNF-03 — Tiempos de carga aceptables}
+\textbf{Categoría / prioridad:} Rendimiento / Should have.\par
+\textbf{Enunciado:} Las búsquedas y listados de eventos deben responder en tiempos razonables aun cuando la base de datos crezca.\par
+\textbf{Criterio de aceptación existente:} Con un catálogo de referencia de 1.000 eventos publicados, las consultas paginadas de listado y filtros deben medir p95 menor o igual a 2 segundos. La metodología y el entorno de prueba deben quedar registrados.\par
+\textbf{Método y límite:} Medición de consultas paginadas y filtros sobre catálogo de referencia; registrar entorno, volumen y distribución p95. No hay medición de aceptación actual.\par
+\textbf{Evidencia local / estado registrado:} Pendiente de medición. Paginación visual no equivale a paginación de consultas. Medir p95 $\leq$2 s con 1.000 eventos, entorno y metodología; no afirmar mejora sin medición.\par
+\textbf{Referencia de implementación:} src/app/core/services/eventos.service.ts; src/app/pages/calendario/calendario.page.ts\par
+
+\subsection{RNF-04 — Protección de datos de usuarios y organizadores}
+\textbf{Categoría / prioridad:} Seguridad / Must have.\par
+\textbf{Enunciado:} Las credenciales y datos personales de los usuarios deben almacenarse y transmitirse de forma segura.\par
+\textbf{Criterio de aceptación existente:} Las credenciales no se almacenan en el código; el transporte usa HTTPS y el acceso a datos respeta las políticas de fila.\par
+\textbf{Método y límite:} Inspección de cliente/build y HTTPS; pruebas de aislamiento RLS/Storage, registro y recuperación con cuentas distintas. Configuración remota no inspeccionada.\par
+\textbf{Evidencia local / estado registrado:} Parcial. Auth y funciones Edge presentes; panel sin credenciales demo. Verificar HTTPS, secretos fuera del cliente, aislamiento RLS/Storage y abuso del registro/reset. Registro sin verificación no acredita propiedad del buzón.\par
+\textbf{Referencia de implementación:} src/app/core/services/supabase.service.ts; supabase/functions/; supabase/migrations/20261024000100\_password\_reset\_tokens.sql\par
+
+\subsection{RNF-05 — Control de acceso por rol}
+\textbf{Categoría / prioridad:} Seguridad / Must have.\par
+\textbf{Enunciado:} El sistema debe distinguir permisos entre visitante, usuario registrado y administrador. El rol de organizador requiere un modelo de propiedad explícito antes de habilitar publicación o edición propia.\par
+\textbf{Criterio de aceptación existente:} Las acciones protegidas se validan por rol y por propiedad. No se declara control por organizador hasta implementar la relación entre cuentas y organizadores.\par
+\textbf{Método y límite:} Pruebas negativas sin sesión, visitor/editor/OAuth, cambio de rol y acceso directo a funciones; verificar propiedad. Pendiente ejecución registrada.\par
+\textbf{Evidencia local / estado registrado:} Parcial. El guard exige profiles.role=admin y proveedor email; rechaza visitor, editor y Google. En servidor, admin-eventos valida getUser y profiles.role, y rechaza app\_metadata.provider cuando existe como cadena y difiere de email; no hay prueba ejecutada para identidades sin ese campo. Publicación aún usa user\_metadata.rol de autoservicio: definir alcance de organizador y propiedad estable. Faltan pruebas negativas y aislamiento.\par
+\textbf{Referencia de implementación:} src/app/core/services/admin-auth.service.ts; src/app/pages/admin/admin.guard.ts; supabase/functions/admin-eventos/index.ts; supabase/functions/publicar-evento/index.ts\par
+
+\subsection{RNF-06 — Disponibilidad del servicio}
+\textbf{Categoría / prioridad:} Disponibilidad / Should have.\par
+\textbf{Enunciado:} El servicio debe mantenerse disponible de forma estable con la infraestructura definida: base de datos administrada en Supabase, web desplegada en Vercel y ejecuciones automatizadas en GitHub Actions.\par
+\textbf{Criterio de aceptación existente:} La web responde en el hosting definido y las ejecuciones automáticas se registran en scrape\_runs con su estado.\par
+\textbf{Método y límite:} Sondeos fechados de web y registros scrape\_runs/CI; ventana y umbral de disponibilidad no definidos. CI histórico no constituye SLA.\par
+\textbf{Evidencia local / estado registrado:} Parcial. Documentación registra runs \#18–\#25 en verde y DEF-CI-001 por horario fuera de ventana esperada. Verificar hosting vigente y monitoreo. Sin comprobación remota en esta revisión.\par
+\textbf{Referencia de implementación:} Documentacion Tecnica/secciones/03-rnf-pruebas-docker-innovacion.tex\par
+
+\subsection{RNF-07 — Soporte de crecimiento de datos}
+\textbf{Categoría / prioridad:} Escalabilidad / Should have.\par
+\textbf{Enunciado:} El modelo de datos y la arquitectura deben poder soportar un crecimiento sostenido en el número de eventos y organizadores sin degradar el servicio.\par
+\textbf{Criterio de aceptación existente:} Al crecer el catálogo, el pipeline pagina y sincroniza por lotes sin cargar respuestas completas en memoria; re-ejecutar no duplica registros.\par
+\textbf{Método y límite:} Carga incremental con medición de memoria y reejecución idempotente. Volumen, tolerancia y degradación admisible pendientes de definición.\par
+\textbf{Evidencia local / estado registrado:} Parcial. Diseño por lotes/upserts documentado; falta prueba de crecimiento, memoria y reejecución sin duplicados. Diseño no equivale a prueba de carga.\par
+\textbf{Referencia de implementación:} \nolinkurl{tmp_scraper_repo/}; \nolinkurl{src/app/core/services/eventos.service.ts}\par
+
+\subsection{RNF-08 — Consistencia y normalización de la información}
+\textbf{Categoría / prioridad:} Calidad de datos / Must have.\par
+\textbf{Enunciado:} La información proveniente de distintas fuentes públicas debe normalizarse en fechas, ubicaciones y categorías para evitar inconsistencias o duplicados.\par
+\textbf{Criterio de aceptación existente:} Eventos de distintas fuentes comparten fechas normalizadas, ubicación canónica y categorías; no se publican duplicados por URL original o clave compuesta.\par
+\textbf{Método y límite:} Muestras de distintas fuentes y comparación por URL/clave, fechas y ubicación. Muestra y tolerancia de defectos pendientes de definición.\par
+\textbf{Evidencia local / estado registrado:} Completado (implementación). Normalización/deduplicación implementadas; validar muestras actuales de fuentes y publicaciones de organizadores.\par
+\textbf{Referencia de implementación:} tmp\_scraper\_repo/; Documentacion Tecnica/secciones/02-datos-uml.tex\par
+
+\subsection{RNF-09 — Código mantenible y documentado}
+\textbf{Categoría / prioridad:} Mantenibilidad / Should have.\par
+\textbf{Enunciado:} El proyecto debe seguir buenas prácticas de desarrollo y mantener documentación mínima que permita a los tres integrantes del equipo dar mantención al sistema.\par
+\textbf{Criterio de aceptación existente:} El repositorio mantiene documentación actualizada y las pruebas se ejecutan con un comando estándar.\par
+\textbf{Método y límite:} Reproducción documental y comandos estándar en entorno identificado. Logs históricos disponibles; no prueban aptitud de mantenimiento por los tres integrantes.\par
+\textbf{Evidencia local / estado registrado:} Parcial. Documentación Fase 3 revisada al 31-10 y PDF regenerados. Antecedente 23/23 del 27-10 no reejecutado; ejecutar controles afectados y registrar commit de entrega autorizado.\par
+\textbf{Referencia de implementación:} package.json; Documentacion Tecnica/Documento\_Tecnico\_Capstone.pdf; Documentacion Metodologica/; Respuesta a la evaluación.docx\par
+
+\subsection{RNF-10 — Contenido en español y contexto chileno}
+\textbf{Categoría / prioridad:} Localización / Must have.\par
+\textbf{Enunciado:} La plataforma debe estar en español y considerar formatos de fecha, dirección y división administrativa (comuna/región) propios de Chile.\par
+\textbf{Criterio de aceptación existente:} Fechas, direcciones y divisiones administrativas siguen el formato chileno; la interfaz está en español.\par
+\textbf{Método y límite:} Revisión de textos, acentos, fechas es-CL, comunas/regiones y zonas horarias. Muestra editorial de aceptación pendiente.\par
+\textbf{Evidencia local / estado registrado:} Completado (implementación). UI en español y formato es-CL; revalidar acentos, divisiones administrativas y zona horaria de publicaciones.\par
+\textbf{Referencia de implementación:} src/app/pages/calendario/calendario.page.ts; src/app/core/services/geocodificacion.service.ts\par
+
+\subsection{RNF-11 — Despliegue reproducible}
+\textbf{Categoría / prioridad:} Portabilidad / Must have.\par
+\textbf{Enunciado:} El proyecto debe poder desplegarse de forma reproducible usando el stack definido (GitHub, GitHub Actions, Vercel, Capacitor/Android Studio), facilitando la integración continua entre los integrantes.\par
+\textbf{Criterio de aceptación existente:} El repositorio debe incluir Dockerfile(s), docker-compose, variables de entorno documentadas e instrucciones reproducibles de levantamiento para los componentes aplicables.\par
+\textbf{Método y límite:} Instalación y despliegue limpio según manual, y contraste con criterio Docker. Excepción docente no documentada; no cambiar el criterio para declarar cumplimiento.\par
+\textbf{Evidencia local / estado registrado:} Parcial (decisión docente pendiente). Criterio original exige Dockerfile y compose, ausentes por decisión del equipo. No se elimina para simular cumplimiento: acordar excepción docente o implementar artefactos; comprobar despliegue reproducible.\par
+\textbf{Referencia de implementación:} package.json; capacitor.config.ts; supabase/functions/; supabase/migrations/\par
+
+\subsection{RNF-12 — Buenas prácticas de accesibilidad web}
+\textbf{Categoría / prioridad:} Accesibilidad / Could have.\par
+\textbf{Enunciado:} La interfaz debería seguir criterios básicos de accesibilidad (contraste, tamaños de fuente, navegación por teclado) para ampliar su alcance a más usuarios.\par
+\textbf{Criterio de aceptación existente:} Auditoría WCAG 2.2 AA en vistas principales con contraste medido, teclado, foco visible y lector de pantalla. Errores con alert y éxitos con status; significado no dependiente solo del color; cierre etiquetado y tiempo suficiente para leer avisos.\par
+\textbf{Método y límite:} Auditoría automática y revisión manual de teclado, foco, contraste y lector. axe histórico contiene hallazgos; no se declara WCAG AA aprobada.\par
+\textbf{Evidencia local / estado registrado:} Parcial. Avisos con alert/status, fondo sólido, iconos y cierre accesible. Falta auditoría WCAG 2.2 AA, teclado y lector con contraste medido. Publicar redirige a los 1,8 s: no afirmar persistencia universal de avisos.\par
+\textbf{Referencia de implementación:} src/app/pages/login/login.page.html; src/app/pages/publicar-evento/publicar-evento.page.ts; src/app/pages/restablecer-contrasena/restablecer-contrasena.page.ts\par
 
 \section{Pruebas y evidencia}
 \label{sec:pruebas}
-\subsection{Resultados históricos conservados}
-El ciclo QA de Vercel del 11-10-2026 registra 13 escenarios: 6 aprobados,
-6 con observaciones y 1 fallido, con 13 defectos abiertos. Se conserva en
-\texttt{Evidencias\_QA\_Frontend\_2026-10-11} y en la matriz metodológica.
-No se cierran defectos sin una nueva ejecución.
-La evidencia de CI del scraper conserva cinco ejecuciones trazadas y el run 25
-funcional con dos artefactos; su inicio fuera de ventana se registró como DEF-CI-001.
-El inventario histórico describe 14 módulos de pruebas del scraper; no se certifica
-que ese conteo represente la rama actual.
+\subsection{Ejecuciones históricas, no regresión actual}
+En \nolinkurl{Documentacion Metodologica/Evidencias_QA_Fase3_2026-10-31/},
+controles.json registra comandos, directorios, inicio y exit\_code. frontend\_tests.log
+registra 25 aprobadas (4 archivos) y scraper\_tests.log 140 con OK; frontend\_build.log y
+frontend\_lint.log tienen código 0 según controles.json. Los archivos axe\_home.json y
+axe\_login.json conservan hallazgos de accesibilidad. Son resultados del 31-10-2026,
+no repetidos aquí. Los inicios de controles.json no incluyen zona horaria; el log frontend
+incluye 2026-10-31T08:20:45.391Z. No se inventa un SHA para esa ejecución.
 
-El anexo previo registra \texttt{ng test --watch=false} con 23/23 el 27-10-2026
-y builds anteriores. Son antecedentes, no resultados reproducidos en esta revisión
-documental. Los archivos actuales incluyen pruebas de recomendaciones, Supabase y
-acciones de interés. No se infiere cobertura de seguridad a partir de su existencia.
+El ciclo del 11-10-2026, \nolinkurl{Evidencias_QA_Frontend_2026-10-11/README.md},
+registra 13 escenarios (6 aprobados, 6 observados, 1 fallido) y 13 defectos; su evidencia
+es histórica. No se cierran por esta revisión. El antecedente 23/23 del 27-10 se conserva
+como declaración previa: no se usa como aceptación de la versión actual.
 
-\subsection{Plan incremental de cierre}
-El Plan de pruebas metodológico incorpora casos F3-01 a F3-10 con resultados
-\textbf{pendientes}. Incluyen registro/bienvenida, recuperación, perfil, roles,
-OAuth, inactividad, moderación, persistencia, Android y regresión.
-Los comandos previstos son \texttt{npm test -- --watch=false},
-\texttt{npm run build} y las pruebas focalizadas de cada integración.
-Una ejecución debe identificar versión, entorno, responsable y resultado real;
-la compilación de esta documentación únicamente acredita generación de entregables.
+\subsection{CI con referencias concretas}
+La carpeta \nolinkurl{Evidencias_CI_Scraper_2026-10-11/} conserva README y capturas:
+\begin{itemize}[leftmargin=1.3em]
+\item \url{https://github.com/sunsitox/sunsitox-Scraper_de_eventos_culturales/actions/runs/38127762874}:
+run 25, commit bd7a052, éxito y dos artefactos según registro histórico y
+\nolinkurl{screenshots/GitHub_scraper_run_25_success.png}.
+\item \url{https://github.com/sunsitox/sunsitox-Scraper_de_eventos_culturales/actions/runs/35942705644}:
+run 1, commit 0498e63, validación de fuentes según
+\nolinkurl{screenshots/GitHub_validacion_fuentes_run_1_success.png}.
+\item \nolinkurl{screenshots/GitHub_scraper_runs_scheduled.png}: antecedente de horarios;
+DEF-CI-001 permanece abierto respecto de inicio fuera de ventana, aunque el procesamiento
+terminase en éxito. El horario configurado no demuestra puntualidad.
+\end{itemize}
+No se volvió a consultar GitHub ni se descargaron sus artefactos en esta revisión.
+Estas referencias permiten auditar la afirmación histórica, no certificar ejecución actual.
 
-\section{Despliegue sin Docker}
+\subsection{Comandos de reproducción, no ejecutados en esta revisión}
+Los scripts frontend de package.json corresponden a ng test, ng build y ng lint:
+\begin{lstlisting}
+# Desde EventoCultural_Integrado/EventoCultural_Integrado
+npm test -- --watch=false
+npm run build
+npm run lint
+# Desde tmp_scraper_repo, como declara scrape-events.yml
+python -m unittest discover -s tests -v
+\end{lstlisting}
+Se mantienen guiones ASCII y texto monoespaciado. Cada futura ejecución debe registrar
+SHA o huellas de fuentes, entorno, fecha/zona, responsable, comando, resultado y artefactos
+sanitizados. Cantidad de pruebas no es cobertura; compilación no prueba RLS, OAuth,
+correo, moderación ni Android. Los casos incrementales F3-01 a F3-10 y la revisión de
+199 casos de la matriz no se convierten aquí en aprobados por existir implementación.
+
+\section{Despliegue sin Docker y brecha de aceptación}
 \label{sec:docker}
-La estrategia adoptada no utiliza Docker: el scraper se ejecuta mediante GitHub
-Actions, la SPA en Vercel y Android con Capacitor. Supabase es un servicio administrado.
-No se agrega un despliegue alternativo ni se declara Docker como implementado.
-Su adopción futura requeriría una decisión explícita de arquitectura y pruebas propias.
-El Manual técnico describe la reproducción del build y las dependencias de servidor.
+La estrategia documentada usa GitHub Actions para scraper, Vercel para SPA,
+Supabase administrado y Capacitor para Android. RNF-11 conserva un criterio que exige
+Dockerfile(s) y docker-compose para componentes aplicables. No se encontraron esos
+artefactos en las fuentes revisadas: hay una \textbf{brecha documental de aceptación},
+no una excepción docente demostrada. No se añade Docker ni se cambia código funcional.
+Despliegue efectivo, configuración de correo, RLS/Storage y funcionamiento nativo
+requieren evidencias independientes del build.
 
-\section{Innovación y alcance del MVP}
+\section{Innovación y límites del MVP}
 \label{sec:innovacion}
-El valor del proyecto es reunir fuentes culturales heterogéneas y conservar procedencia,
-normalización, deduplicación y vigencia en un catálogo consultable. El uso selectivo de
-NVIDIA NIM para OCR y enriquecimiento evita repetir trabajo sin cambios; los checkpoints
-permiten reanudar procesos. Las recomendaciones al ciudadano se basan en afinidad y
-señales explícitas; no se presentan como inferencia de un LLM.
-
-El prototipo académico depende de servicios externos y cuotas configuradas; no dispone
-de una infraestructura propia de inferencia. No se afirman ahorros, mejoras de latencia,
-usuarios activos ni cifras de eventos actuales sin medición fechada.
-El mapa diferencia coordenadas conocidas y ubicaciones aproximadas; esas aproximaciones
-no deben presentarse como direcciones exactas.
-
-\subsection{Sostenibilidad: propuesta futura}
-El MVP es gratuito y no implementa pagos, suscripciones, venta de datos personales ni
-comisiones por entradas. Un eventual contenido patrocinado exigiría validación legal,
-comercial y ética, identificación visible, separación de recomendaciones orgánicas y
-compatibilidad con las condiciones del hosting. No se certifican condiciones comerciales
-vigentes de un proveedor mediante este documento. Cualquier monetización queda fuera
-del alcance del cierre actual.
+La aportación es reunir fuentes heterogéneas en un catálogo con procedencia, normalización,
+deduplicación y vigencia; el scraper reutiliza checkpoints y enriquecimiento selectivo.
+Las recomendaciones del frontend se calculan por afinidad, no se describen como un LLM.
+No se cuantifican ahorro, latencia, usuarios o eventos vigentes sin medición fechada.
+El mapa puede usar ubicaciones aproximadas; no son coordenadas exactas certificadas.
+El MVP no acredita pagos ni monetización; propuestas comerciales quedan fuera de alcance.

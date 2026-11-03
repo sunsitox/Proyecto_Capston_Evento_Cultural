@@ -1,4 +1,4 @@
-%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial","fontSize":"16px","primaryColor":"#FBF7F2","primaryBorderColor":"#C9622D","lineColor":"#1F5C57"}}}%%
+%%{init: {"theme":"neutral","themeVariables":{"fontFamily":"Arial","fontSize":"18px"},"flowchart":{"htmlLabels":false,"wrappingWidth":260,"nodeSpacing":35,"rankSpacing":35}}}%%
 flowchart TB
   subgraph CLIENTE["Cliente Angular / Ionic"]
     ROUTER["Router + MainLayout<br/>Navbar / tabs"]
@@ -12,8 +12,8 @@ flowchart TB
     AUTH["Auth + Storage avatars"]
     DB["PostgreSQL / RLS"]
     REG["registrar-cuenta / admin-account"]
-    RESET["reset-password-request / confirm"]
-    PUB["publicar-evento<br/>Usuario autenticado → draft"]
+    RESET["reset-password-request<br/>reset-password-confirm"]
+    PUB["publicar-evento<br/>JWT + metadata organizador → draft"]
     MOD["admin-eventos<br/>JWT + proveedor email + rol admin"]
     EMAIL["recomendaciones-semanal"]
   end
