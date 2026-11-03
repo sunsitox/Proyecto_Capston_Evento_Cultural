@@ -83,7 +83,7 @@ Leaflet + OpenStreetMap (mapa interactivo con pines georreferenciados) y GitHub 
 \vfill
 {\large Versión 1.4 — revisión documental}\\[0.2cm]
 {\large 3 de noviembre de 2026}\\[0.4cm]
-{\small Copia revisada: original conservado sin modificaciones.\\
+{\small Revisión de documentación de Fase 3.\\
 Contraste de fuentes locales, migraciones y registros históricos.\\
 No certifica configuración remota ni funcionamiento actual de la aplicación.}\\[0.3cm]
 {\color{terracota}\rule{\textwidth}{2pt}}
@@ -115,14 +115,6 @@ de datos: el \textbf{scraper} (recolección y enriquecimiento de datos), la \tex
 datos} (catálogo canónico en Supabase/PostgreSQL) y el \textbf{frontend} (aplicación web y
 móvil), con \textbf{GitHub Actions} como automatización de la ejecución del scraper
 (ver Figura~\ref{fig:arq} en la Sección~\ref{sec:arq}).
-
-\subsection{Respuesta a la evaluación anterior}
-La planilla de Fase 2 registra 74/100 y nota 5,1. Los descuentos están en los indicadores
-3 (15/25), 4 (3/5), 5 (3/5), 6 (12/20) y 8 (6/10). No contiene observaciones narrativas
-específicas. Se corrigen precisión técnica, estado del producto, fuentes y trazabilidad;
-la entrega en Git y el dominio oral del equipo requieren evidencia adicional.
-El documento \emph{Respuesta a la evaluación.docx} vincula cada indicador con acciones
-sin prometer una nueva calificación. Código implementado no equivale a prueba aprobada.
 
 \input{secciones/01-arquitectura}
 \input{secciones/02-datos-uml}
@@ -204,13 +196,13 @@ sin commits o actas que la demuestren.
 \caption{Fuentes, versiones y alcance de la evidencia.}\label{tab:traza}\\
 \toprule Componente & Identificación y límite \\\midrule\endfirsthead
 \toprule Componente & Identificación y límite \\\midrule\endhead
-Frontend local & \nolinkurl{EventoCultural_Integrado/EventoCultural_Integrado/}; package.json 0.0.1. No contiene metadatos Git; SHA, rama y diferencias contra un commit no recuperables. Huellas de fuentes en \nolinkurl{Verificacion/fuentes.json}. \\
+Frontend local & \nolinkurl{EventoCultural_Integrado/EventoCultural_Integrado/}; package.json 0.0.1. No contiene metadatos Git; SHA, rama y diferencias contra un commit no recuperables. Huellas de la revisión inicial en \nolinkurl{Verificacion/fuentes.json}. \\
 Referencia frontend & \url{https://github.com/sunsitox/Proyecto_Capston_Evento_Cultural/tree/deploy/vercel-preview}. Referencia declarada por el equipo, no equivalencia verificada ni inspección de su HEAD remoto. \\
 Scraper local & \url{https://github.com/sunsitox/sunsitox-Scraper_de_eventos_culturales}; copia tmp\_scraper\_repo, rama local main, HEAD \nolinkurl{bd7a05228ab7e2f5831f393eff20ae89e3872037}, fecha del commit 03-10-2026 10:27:11 -03:00. No se actualizó el remoto. git status registra modificación local de .env.example; no se usa su contenido como evidencia de producción. \\
-Documento base & PDF y fuentes originales conservados en la carpeta superior; versión declarada 1.3 del 31-10-2026. Huellas previas en \nolinkurl{Verificacion/originales.json}. Revisión 1.4 del 03-11-2026. \\
+Documento base & Versión 1.3 del 31-10-2026. Huellas registradas antes de la consolidación en \nolinkurl{Verificacion/originales.json}. Revisión 1.4 del 03-11-2026. \\
 CI histórico & Run \#25, \nolinkurl{38127762874}, commit abreviado bd7a052; run \#1 de validación de fuentes, \nolinkurl{35942705644}, commit 0498e63. Registro y capturas consolidados el 11-10-2026 en la carpeta CI metodológica. No son ejecuciones de esta revisión. \\
 QA histórico & \nolinkurl{Evidencias_QA_Fase3_2026-10-31/controles.json} y logs: 25 frontend, 140 scraper, build/lint exit 0. No registran SHA ni huellas del código de esa ejecución: no se asegura identidad con las fuentes de hoy. \\
-Revisión actual & Inspección estática, consulta de dos fuentes oficiales, renderizado de diagramas y compilación de PDF. No se ejecutaron pruebas de aplicación ni consultas SQL remotas. \\
+Revisión actual & Inspección estática, consulta de fuentes oficiales, renderizado de diagramas y compilación de PDF. No se ejecutaron pruebas de aplicación ni consultas SQL remotas. \\
 \bottomrule\end{longtable}
 Las carpetas de evidencia son hermanas de Documentacion Tecnica, bajo Documentacion
 Metodologica. Los enlaces permanentes de CI y los archivos concretos se detallan en
@@ -264,6 +256,9 @@ estándar/autor, nombre, versión o RFC y URL de consulta):
     Consultado el 03-11-2026. \url{https://supabase.com/docs/guides/auth/sessions/pkce-flow}.
     \item Supabase. \emph{Supabase documentation} (Row Level Security, Edge Functions y
     Inicio de sesión con GoTrue). \url{https://supabase.com/docs}.
+    \item Vercel. \emph{Fair Use Guidelines}, apartado Commercial usage.
+    \label{ref:vercel-comercial} Consultado el 03-11-2026.
+    \url{https://vercel.com/docs/limits/fair-use-guidelines#commercial-usage}.
     \item NVIDIA Corporation. \emph{NVIDIA NIM for microservices} (API de inferencia de OCR y
     redacción). \url{https://www.nvidia.com/en-us/ai-data-science/products/nim-microservices/}.
 \end{enumerate}

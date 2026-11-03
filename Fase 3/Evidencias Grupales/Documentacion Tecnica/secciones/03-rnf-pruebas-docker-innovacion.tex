@@ -42,7 +42,7 @@ Las brechas de definición se señalan explícitamente; no se agregan propuestas
 \textbf{Enunciado:} El sistema debe distinguir permisos entre visitante, usuario registrado y administrador. El rol de organizador requiere un modelo de propiedad explícito antes de habilitar publicación o edición propia.\par
 \textbf{Criterio de aceptación existente:} Las acciones protegidas se validan por rol y por propiedad. No se declara control por organizador hasta implementar la relación entre cuentas y organizadores.\par
 \textbf{Método y límite:} Pruebas negativas sin sesión, visitor/editor/OAuth, cambio de rol y acceso directo a funciones; verificar propiedad. Pendiente ejecución registrada.\par
-\textbf{Evidencia local / estado registrado:} Parcial. El guard exige profiles.role=admin y proveedor email; rechaza visitor, editor y Google. En servidor, admin-eventos valida getUser y profiles.role, y rechaza app\_metadata.provider cuando existe como cadena y difiere de email; no hay prueba ejecutada para identidades sin ese campo. Publicación aún usa user\_metadata.rol de autoservicio: definir alcance de organizador y propiedad estable. Faltan pruebas negativas y aislamiento.\par
+\textbf{Evidencia local / estado registrado:} Parcial. El guard exige profiles.role=admin y rechaza un proveedor no vacío distinto de email. El cliente usa email como valor de respaldo si el campo no es una cadena. En servidor, admin-eventos valida getUser y profiles.role, y rechaza app\_metadata.provider cuando existe como cadena y difiere de email; no hay prueba ejecutada para identidades sin ese campo. Publicación aún usa user\_metadata.rol de autoservicio: definir alcance de organizador y propiedad estable. Faltan pruebas negativas y aislamiento.\par
 \textbf{Referencia de implementación:} src/app/core/services/admin-auth.service.ts; src/app/pages/admin/admin.guard.ts; supabase/functions/admin-eventos/index.ts; supabase/functions/publicar-evento/index.ts\par
 
 \subsection{RNF-06 — Disponibilidad del servicio}
@@ -75,7 +75,7 @@ Las brechas de definición se señalan explícitamente; no se agregan propuestas
 \textbf{Criterio de aceptación existente:} El repositorio mantiene documentación actualizada y las pruebas se ejecutan con un comando estándar.\par
 \textbf{Método y límite:} Reproducción documental y comandos estándar en entorno identificado. Logs históricos disponibles; no prueban aptitud de mantenimiento por los tres integrantes.\par
 \textbf{Evidencia local / estado registrado:} Parcial. Documentación Fase 3 revisada al 31-10 y PDF regenerados. Antecedente 23/23 del 27-10 no reejecutado; ejecutar controles afectados y registrar commit de entrega autorizado.\par
-\textbf{Referencia de implementación:} package.json; Documentacion Tecnica/Documento\_Tecnico\_Capstone.pdf; Documentacion Metodologica/; Respuesta a la evaluación.docx\par
+\textbf{Referencia de implementación:} package.json; Documentacion Tecnica/Documento\_Tecnico\_Capstone.pdf; Documentacion Metodologica/\par
 
 \subsection{RNF-10 — Contenido en español y contexto chileno}
 \textbf{Categoría / prioridad:} Localización / Must have.\par
@@ -166,4 +166,36 @@ deduplicación y vigencia; el scraper reutiliza checkpoints y enriquecimiento se
 Las recomendaciones del frontend se calculan por afinidad, no se describen como un LLM.
 No se cuantifican ahorro, latencia, usuarios o eventos vigentes sin medición fechada.
 El mapa puede usar ubicaciones aproximadas; no son coordenadas exactas certificadas.
-El MVP no acredita pagos ni monetización; propuestas comerciales quedan fuera de alcance.
+El MVP opera como catálogo gratuito. La propuesta de ingresos de Fase 2 se
+documenta en la subsección~\ref{subsec:modelo-negocio}.
+
+\subsection{Sostenibilidad y propuesta futura de ingresos}
+\label{subsec:modelo-negocio}
+
+La fuente de ingresos propuesta en Fase 2 es el cobro a \textbf{organizadores
+verificados} por dar visibilidad adicional a sus eventos. Por ejemplo, un
+organizador podría pagar por destacar una actividad durante una campaña de
+duración definida. Los ingresos se destinarían a cubrir alojamiento, operación
+del catálogo, mantenimiento y soporte. El precio y la demanda tendrían que
+validarse antes de decidir si el modelo es viable.
+
+El descubrimiento, la búsqueda y los filtros seguirían siendo gratuitos. Cada
+espacio pagado llevaría una etiqueta visible de contenido patrocinado y se
+mostraría separado de las recomendaciones por afinidad. Hoy las fichas enlazan a
+la inscripción o a la fuente oficial cuando el enlace está disponible. Las
+reservas o compras se realizan en el sitio externo y el catálogo no cobra
+comisiones por esos enlaces.
+
+La etapa académica funciona sin cobros, anuncios ni patrocinios comerciales.
+El plan gratuito \textbf{Hobby} de Vercel se limita al uso personal y no
+comercial según su guía de uso~\ref{ref:vercel-comercial}. Activar la promoción
+pagada exigiría primero un plan de Vercel que admita uso comercial o un
+alojamiento alternativo compatible. La propuesta queda fuera de la
+implementación del MVP.
+
+La app permite activar el perfil de organizador por autoservicio y enviar
+borradores sujetos a moderación. Antes de un piloto comercial se necesitarían
+verificación de organizadores, una relación de propiedad entre la cuenta y sus
+eventos, métricas de audiencia y un proceso de contratación, cobro y soporte.
+Las comisiones por entradas, las suscripciones y la comercialización de datos
+personales quedan fuera del modelo propuesto para una primera etapa.

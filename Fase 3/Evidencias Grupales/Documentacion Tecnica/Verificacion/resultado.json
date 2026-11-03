@@ -1,10 +1,24 @@
 {
   "paginas": 26,
-  "originales": "huellas coincidentes",
-  "compilacion": "exit 0; sin Overfull ni referencias indefinidas/duplicadas",
-  "revision_visual": "26 páginas renderizadas e inspeccionadas",
+  "originales": "Huellas históricas de la versión 1.3 conservadas en originales.json.",
+  "compilacion": "Código de salida 0. Sin avisos de desbordamiento ni referencias indefinidas o duplicadas.",
+  "revision_visual": "26 páginas renderizadas y comparadas. Inspección visual de las 7 páginas modificadas.",
   "pruebas_aplicacion": "no ejecutadas",
   "esquema_remoto": "no inspeccionado",
-  "pdf_sha256": "291d712df97d366ead6bc980c725df64004ad4535b458065970af11e7972c43d",
-  "zip_archivos": 31
+  "pdf_sha256": "393a565a7e375c16ddecb59efe6cfeada18f53fcdaaea56cbebdcadf552483df",
+  "zip_archivos": 38,
+  "fecha": "03-11-2026",
+  "contraste_fuentes": {
+    "archivos": 163,
+    "coincidentes": 162,
+    "diferencias": [
+      "EventoCultural_Integrado\\EventoCultural_Integrado\\src\\app\\pages\\detalle-evento\\detalle-evento.page.ts"
+    ]
+  },
+  "cambios": [
+    "Sección 10.1 con fuente de ingresos de Fase 2, destino de los ingresos y condición de uso no comercial de Vercel Hobby.",
+    "Contraste del perfil de organizador y las comprobaciones de proveedor del panel con el código local.",
+    "Actualización del índice técnico y de los registros de verificación.",
+    "Retiro del apartado de evaluación anterior y de la referencia al documento de evaluación en RNF-09 y el índice técnico."
+  ]
 }

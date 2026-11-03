@@ -111,8 +111,10 @@ La recuperación actual usa las funciones \texttt{reset-password-request} y \tex
 \subsection{Administración y publicación}
 Las rutas \texttt{/v00/admin/*} requieren \texttt{adminGuard}; no enlazarlas públicamente
 no constituye una medida de autorización. \texttt{AdminAuthService} consulta
-\texttt{profiles.role} y solo admite \texttt{admin}, con proveedor email: visitor,
-editor y Google son rechazados. El rol editable de metadata no es autoridad administrativa.
+\texttt{profiles.role} y exige \texttt{admin}. Rechaza un proveedor no vacío
+distinto de \texttt{email}, como Google. El cliente usa \texttt{email} como
+valor de respaldo si el campo de proveedor no es una cadena. La metadata
+editable de la cuenta se usa para el perfil de organizador.
 La función \texttt{admin-eventos} valida getUser y profiles.role en servidor.
 Su condición rechaza app\_metadata.provider cuando existe como cadena y difiere de email;
 no se declara una prueba ejecutada para identidades sin ese campo.
