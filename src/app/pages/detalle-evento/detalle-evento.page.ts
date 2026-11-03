@@ -1,4 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -61,7 +63,17 @@ export class DetalleEventoPage {
   /** Estado de carga: activa el skeleton de la ficha. */
   readonly cargando = this.eventosService.cargando;
 
-  private readonly eventoId = this.route.snapshot.paramMap.get('id') ?? '';
+  /**
+   * El id reacciona a los cambios de parámetro: navegar de una ficha a
+   * otra (/evento/A → /evento/B) reutiliza este componente y, si el id
+   * se leyera una sola vez (snapshot), la ficha quedaría pegada al
+   * evento anterior. Con paramMap observado, los enlaces a otros
+   * eventos (similares, mapa, etc.) navegan de verdad.
+   */
+  private readonly eventoId = toSignal(
+    this.route.paramMap.pipe(map((params) => params.get('id') ?? '')),
+    { initialValue: this.route.snapshot.paramMap.get('id') ?? '' }
+  );
 
   /** Ubicación resuelta por respaldo (Nominatim) para eventos sin
    *  coordenadas en la base de datos: mejora el mapa embebido y «Cómo
@@ -84,7 +96,7 @@ export class DetalleEventoPage {
   }
 
   readonly evento = computed(() =>
-    this.eventosService.obtenerPorId(this.eventoId)
+    this.eventosService.obtenerPorId(this.eventoId())
   );
 
   /**
