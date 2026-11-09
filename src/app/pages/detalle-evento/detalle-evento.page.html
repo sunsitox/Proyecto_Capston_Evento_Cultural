@@ -1,5 +1,8 @@
-@if (cargando()) {
-  <!-- Skeleton con la estructura final: evita saltos visuales -->
+@if (cargando() || (!evento() && !cargaCompleta())) {
+  <!-- Skeleton con la estructura final: evita saltos visuales.
+    Se mantiene también cuando el primer lote ya pintó pero el evento
+    aún no llega (carga progresiva por lotes): así no parpadea el
+    "No encontramos este evento" unos segundos antes de aparecer. -->
   <app-evento-detail-skeleton></app-evento-detail-skeleton>
 } @else if (evento(); as ev) {
   <!-- Evento vencido: los datos rotan; se ofrece alternativas vigentes -->

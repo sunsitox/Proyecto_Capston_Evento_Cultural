@@ -86,6 +86,10 @@ export class EventosService {
   private readonly _filtros = signal<FiltrosEventos>({ ...FILTROS_INICIALES });
   private readonly _ordenPor = signal<OrdenEventos>('fecha');
   private readonly _cargando = signal<boolean>(false);
+  /** Carga progresiva en curso: el primer lote ya pintó pero faltan lotes.
+   *  La ficha de evento lo usa para no mostrar "no encontrado" antes de
+   *  que llegue el lote que trae su evento. */
+  private readonly _cargaCompleta = signal<boolean>(false);
   private readonly _error = signal<string | null>(null);
   /** Promesa de la carga en curso (evita descargas simultáneas entre páginas). */
   private cargaEnCurso?: Promise<void>;
@@ -100,6 +104,7 @@ export class EventosService {
   readonly filtros = this._filtros.asReadonly();
   readonly ordenPor = this._ordenPor.asReadonly();
   readonly cargando = this._cargando.asReadonly();
+  readonly cargaCompleta = this._cargaCompleta.asReadonly();
   readonly error = this._error.asReadonly();
 
   /** Fecha ISO local de hoy (yyyy-mm-dd). */
@@ -559,6 +564,7 @@ export class EventosService {
 
   private async descargarCatalogo(): Promise<void> {
     this._cargando.set(true);
+    this._cargaCompleta.set(false);
     this._error.set(null);
     const acumulados: Evento[] = [];
     let hayPrimerLote = false;
@@ -601,6 +607,7 @@ export class EventosService {
       if (!hayPrimerLote) await this.mostrarMock();
     } finally {
       this._cargando.set(false);
+      this._cargaCompleta.set(true);
     }
   }
 

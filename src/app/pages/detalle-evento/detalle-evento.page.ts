@@ -63,6 +63,11 @@ export class DetalleEventoPage {
   /** Estado de carga: activa el skeleton de la ficha. */
   readonly cargando = this.eventosService.cargando;
 
+  /** Catálogo completo (todos los lotes). Solo con esto en true el
+   *  "No encontramos este evento" es definitivo; antes es solo que el
+   *  lote de ese evento aún no llegó. */
+  readonly cargaCompleta = this.eventosService.cargaCompleta;
+
   /**
    * El id reacciona a los cambios de parámetro: navegar de una ficha a
    * otra (/evento/A → /evento/B) reutiliza este componente y, si el id
