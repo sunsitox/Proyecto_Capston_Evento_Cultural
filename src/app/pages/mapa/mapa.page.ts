@@ -28,7 +28,23 @@ let moduloLeaflet: typeof L | null = null;
 async function cargarLeaflet(): Promise<typeof L | null> {
   if (moduloLeaflet) return moduloLeaflet;
   try {
-    moduloLeaflet = (await import('leaflet')) as typeof L;
+    const modulo = (await import('leaflet')) as unknown as Record<string, unknown>;
+    /**
+     * Interop del import() dinámico de un paquete CommonJS:
+     *  - en `ng serve` (Vite) el namespace trae la API con nombre (`map`,
+     *    `tileLayer`, ...);
+     *  - en el build de producción (Rollup/esbuild) SOLO llega `default`.
+     * Sin esta normalización `L.map` era undefined y el mapa salía vacío
+     * con «TypeError: a.map is not a function» sólo en el sitio desplegado
+     * y en la APK (que usan el build de producción).
+     */
+    const candidato = (
+      typeof modulo['map'] === 'function'
+        ? modulo
+        : (modulo['default'] ?? (globalThis as Record<string, unknown>)['L'])
+    ) as typeof L | undefined;
+    if (typeof candidato?.map !== 'function') return null;
+    moduloLeaflet = candidato;
     return moduloLeaflet;
   } catch {
     return null; // sin red/chunk: la página renderiza sin mapa
