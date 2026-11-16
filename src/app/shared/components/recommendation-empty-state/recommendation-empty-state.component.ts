@@ -364,16 +364,28 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
     }
 
     .ec-onb__punto {
-      width: 10px;
-      height: 10px;
+      /* Zona táctil de 28px con punto visual de 10px (mínimo táctil). */
+      width: 28px;
+      height: 28px;
       padding: 0;
       border: none;
-      border-radius: 50%;
-      background: var(--ec-border);
+      background: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
       transition: background var(--ec-duration-fast, 0.15s) var(--ec-ease, ease);
 
-      &--activo {
+      &::after {
+        content: '';
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--ec-border);
+        transition: background var(--ec-duration-fast, 0.15s) var(--ec-ease, ease);
+      }
+
+      &--activo::after {
         background: var(--ec-primary);
         transform: scale(1.15);
       }
@@ -421,7 +433,7 @@ import { CATEGORIAS } from '../../../data/mock-eventos';
     }
 
     .ec-chip {
-      min-height: 40px;
+      min-height: var(--ec-touch-target, 44px);
       padding: 0 14px;
       border: 1px solid var(--ec-border-light);
       border-radius: var(--ec-radius-full, 999px);

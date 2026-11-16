@@ -272,7 +272,7 @@ a {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 36px;
+  min-height: var(--ec-touch-target, 44px);
   padding: 6px 14px;
   border-radius: var(--ec-radius-full);
   border: var(--ec-border-width) solid var(--ec-border);
@@ -444,7 +444,7 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 40px;
+  min-height: var(--ec-touch-target, 44px);
   padding: 6px 14px;
   background: transparent;
   border: var(--ec-border-width) solid var(--ec-border);

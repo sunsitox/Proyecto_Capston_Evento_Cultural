@@ -79,7 +79,14 @@ import { IonIcon } from '@ionic/angular';
       position: fixed;
       left: 0;
       right: 0;
-      bottom: 0;
+      /* Móvil: la tab bar (57px, medida como --ec-tabbar-h por
+         MainLayoutComponent) vive en el shell y tapa cualquier
+         elemento fijo pegado al fondo, ya que el sheet queda dentro
+         del outlet (otro contexto de apilamiento). Sin este
+         desplazamiento el pie del panel (Aplicar/Limpiar) quedaba
+         inalcanzable: el dedo golpeaba la tab bar y cambiaba de
+         pestaña en vez de aplicar los filtros. */
+      bottom: var(--ec-tabbar-h, 0px);
       max-width: 640px;
       margin: 0 auto;
       max-height: min(86vh, 720px);

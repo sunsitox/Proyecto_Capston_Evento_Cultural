@@ -22,7 +22,9 @@ import {
   navigateOutline, sparklesOutline, sparkles, ellipsisVertical,
   chevronBackOutline, chevronDownOutline, todayOutline, calendarClearOutline, refreshOutline,
   cloudOfflineOutline, location, globeOutline, personAddOutline,
-  ellipseOutline, checkmarkCircleOutline, pauseOutline, warningOutline
+  ellipseOutline, checkmarkCircleOutline, pauseOutline, warningOutline,
+  alertCircleOutline, cameraOutline, giftOutline,
+  pencilOutline, pieChartOutline
 } from 'ionicons/icons';
 import { routes } from './app.routes';
 import { PersistenciaRecomendaciones } from './core/services/recomendacion-persistencia';
@@ -73,7 +75,9 @@ export const appConfig: ApplicationConfig = {
           navigateOutline, sparklesOutline, sparkles, ellipsisVertical,
           chevronBackOutline, chevronDownOutline, todayOutline, calendarClearOutline, refreshOutline,
           cloudOfflineOutline, location, globeOutline, personAddOutline,
-          ellipseOutline, checkmarkCircleOutline, pauseOutline, warningOutline
+          ellipseOutline, checkmarkCircleOutline, pauseOutline, warningOutline,
+          alertCircleOutline, cameraOutline, giftOutline,
+          pencilOutline, pieChartOutline
         });
       }
     },

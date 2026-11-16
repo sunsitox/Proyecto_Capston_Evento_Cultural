@@ -1,0 +1,1 @@
+import {G as Go}from'./chunk-Bo8vc5Q2.js';import'./main-KLEI24HP.js';var chunkZ5V5CRWQ = Go();export{chunkZ5V5CRWQ as default};
