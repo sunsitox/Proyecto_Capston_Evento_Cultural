@@ -551,8 +551,9 @@ export class MapaPage implements OnDestroy {
           }
         }
         const pos = await Geolocation.getCurrentPosition({
-          enableHighAccuracy: false,
-          timeout: 15000
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 20000
         });
         coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
       } else if (typeof navigator !== 'undefined' && navigator.geolocation) {
@@ -570,7 +571,7 @@ export class MapaPage implements OnDestroy {
                 }
                 rechazar(err);
               },
-              { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 }
+              { enableHighAccuracy: true, timeout: 20_000, maximumAge: 0 }
             );
           }
         );
