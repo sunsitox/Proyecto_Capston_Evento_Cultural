@@ -206,12 +206,10 @@ export class MapaPage implements OnDestroy {
    * Sin posición, equivale a los vigentes filtrados.
    */
   readonly eventosEnRadio = computed<Evento[]>(() => {
-    const pos = this.posicionUsuario();
-    if (!pos) return this.eventosFiltrados();
-    const radio = this.radioKm();
-    return this.eventosFiltrados().filter(
-      (e) => !!e.coordenadas && this.distanciaKm(pos, e.coordenadas!) <= radio
-    );
+    if (!this.posicionUsuario()) return this.eventosFiltrados();
+    // Compartir el radio y las coordenadas exactas o de respaldo del mapa.
+    // Usar pines, no pinesEnVista: la lista no depende del encuadre ni del tope de dibujo.
+    return this.pines();
   });
 
   /** Pines del mapa: coordenadas exactas de la BD y, además, coordenadas
