@@ -1,5 +1,6 @@
 import { ApiService } from '../../core/services/api.service';
-import { Component, inject, signal } from '@angular/core';
+import type { MiEventoOrganizador } from '../../core/services/supabase.service';
+import { Component, effect, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -59,7 +60,8 @@ type CampoPublicar =
   styleUrl: './publicar-evento.page.scss'
 })
 export class PublicarEventoPage {
-  readonly categorias = CATEGORIAS;
+  readonly categorias = signal<string[]>([...CATEGORIAS]);
+  private fechasOriginales: { inicio: string; fin: string | null } | null = null;
   readonly comunas = COMUNAS;
   readonly modalidades = MODALIDADES;
   readonly publicos = PUBLICOS;
@@ -68,6 +70,10 @@ export class PublicarEventoPage {
   readonly activandoOrganizador = signal(false);
   readonly errorServidor = signal<string | null>(null);
   readonly api = inject(ApiService);
+  /** Eventos creados por esta cuenta (CP-F3-OWN-001). */
+  readonly misEventos = signal<MiEventoOrganizador[]>([]);
+  /** Id del evento en edición (null = creación). */
+  readonly editandoId = signal<string | null>(null);
 
   private readonly fb = inject(FormBuilder);
   private readonly eventosService = inject(EventosService);
@@ -79,9 +85,10 @@ export class PublicarEventoPage {
     fecha: [new Date().toISOString(), Validators.required],
     fechaTermino: [''],
     hora: ['12:00'],
+    horaTermino: ['12:00', Validators.required],
     modalidad: ['Presencial' as string, Validators.required],
     publico: ['Todo público'],
-    categoria: [null as string | null, Validators.required],
+    categoria: [[] as string[], Validators.required],
     comuna: [null as string | null, Validators.required],
     direccion: ['', Validators.required],
     accesibilidad: [''],
@@ -92,6 +99,76 @@ export class PublicarEventoPage {
     paginaOficial: [''],
     gratuito: [true]
   });
+
+  constructor() {
+    // Carga recientes cuando la sesión restaura el rol organizador
+    // (es asíncrono: en ngOnInit aún puede ser false).
+    effect(() => {
+      if (this.api.sesionLista() && this.api.esOrganizador()) {
+        void this.cargarMisEventos();
+      }
+    });
+  }
+
+  /** Carga la lista de eventos propios (solo organizadores). */
+  async cargarMisEventos(): Promise<void> {
+    if (!this.api.esOrganizador()) return;
+    try {
+      this.misEventos.set(await this.api.listarMisEventos());
+    } catch {
+      /* la lista es auxiliar: el crear/editar sigue disponible */
+    }
+  }
+
+  /** Pone un evento propio en el formulario con todos sus campos. */
+  editarEvento(evento: MiEventoOrganizador): void {
+    const inicio = evento.start_at ?? '';
+    const comuna = Array.isArray(evento.communes)
+      ? (evento.communes[0]?.name ?? null)
+      : (evento.communes?.name ?? null);
+    const categoria = [...new Set((evento.event_categories ?? []).flatMap(rel => {
+      const categorias = Array.isArray(rel.categories) ? rel.categories : [rel.categories];
+      return categorias.flatMap(cat => cat?.name ? [cat.name] : []);
+    }))];
+    this.categorias.set([...new Set([...CATEGORIAS, ...categoria])]);
+    this.fechasOriginales = { inicio, fin: evento.end_at ?? null };
+    this.editandoId.set(evento.id);
+    this.formulario.patchValue({
+      titulo: evento.title,
+      descripcion: evento.description ?? '',
+      fecha: inicio.length >= 10 ? inicio.slice(0, 10) : new Date().toISOString().slice(0, 10),
+      fechaTermino: evento.end_at ? evento.end_at.slice(0, 10) : '',
+      hora: inicio.length >= 16 ? inicio.slice(11, 16) : '12:00',
+      horaTermino: evento.end_at ? evento.end_at.slice(11, 16) : '12:00',
+      modalidad: evento.location_precision === 'online' ? 'Virtual' : 'Presencial',
+      publico: evento.audience ?? 'Todo público',
+      categoria,
+      comuna,
+      direccion: evento.address || evento.venue || '',
+      accesibilidad: '',
+      inscripcion: '',
+      precio: evento.price_text ?? '',
+      imagenUrl: evento.image_url ?? '',
+      enlaceInscripcion: '',
+      paginaOficial: evento.official_url ?? '',
+      gratuito: evento.is_free !== false
+    });
+    this.enviado.set(false);
+    this.errorServidor.set(null);
+    document.getElementById('ec-publish-form')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  /** Elimina un evento propio (con confirmación). */
+  async eliminarMiEvento(eventoId: string): Promise<void> {
+    if (!window.confirm('¿Eliminar este evento definitivamente?')) return;
+    try {
+      await this.api.eliminarEvento(eventoId);
+      if (this.editandoId() === eventoId) this.editandoId.set(null);
+      await this.cargarMisEventos();
+    } catch (e: unknown) {
+      this.errorServidor.set((e as { message?: string }).message || 'No se pudo eliminar el evento.');
+    }
+  }
 
   /**
    * Autoservicio desde el bloqueo por rol: pasa la cuenta a organizador.
@@ -177,8 +254,8 @@ export class PublicarEventoPage {
       comuna: valores.comuna!,
       region: 'Metropolitana',
       modalidad: (valores.modalidad || 'Presencial') as Evento['modalidad'],
-      categoria: valores.categoria as Evento['categoria'],
-      categorias: [valores.categoria as Evento['categoria']],
+      categoria: valores.categoria![0] as Evento['categoria'],
+      categorias: valores.categoria as Evento['categoria'][],
       organizador: 'Tu organización',
       precio: valores.gratuito ? '' : (valores.precio || 'Con costo'),
       gratuito: !!valores.gratuito,
@@ -192,15 +269,18 @@ export class PublicarEventoPage {
       estado: 'proximo'
     };
 
+    // Si no se cambió fecha/hora, mantener también segundos, fracción y zona.
+    const fechaHora = (fecha: string, hora: string, original: string | null): string =>
+      original && original.slice(0, 10) === fecha && original.slice(11, 16) === hora
+        ? original : `${fecha}T${hora}:00`;
     try {
-      // INSERT directo a Supabase con el JWT del usuario (RLS gobierna la
-      // escritura). Sin la política INSERT publique, PostgREST responde 403 y
-      // aquí se explica al organizador por qué.
-      await this.eventosService.publicarSupabase({
+      const borrador = {
         title: nuevoEvento.titulo,
         description: nuevoEvento.descripcion,
-        start_at: `${nuevoEvento.fecha}T${nuevoEvento.hora}:00`,
-        end_at: nuevoEvento.fechaTermino ? `${nuevoEvento.fechaTermino}T${nuevoEvento.hora}:00` : null,
+        start_at: fechaHora(nuevoEvento.fecha, nuevoEvento.hora!, this.fechasOriginales?.inicio ?? null),
+        end_at: nuevoEvento.fechaTermino
+          ? fechaHora(nuevoEvento.fechaTermino.slice(0, 10), valores.horaTermino!, this.fechasOriginales?.fin ?? null)
+          : null,
         address: nuevoEvento.direccion,
         venue: nuevoEvento.direccion,
         is_free: nuevoEvento.gratuito,
@@ -210,8 +290,18 @@ export class PublicarEventoPage {
         comuna: nuevoEvento.comuna,
         modalidad: nuevoEvento.modalidad,
         official_url: valores.paginaOficial?.trim() ? valores.paginaOficial!.trim() : undefined,
-        categories: [nuevoEvento.categoria]
-      });
+        categories: valores.categoria!
+      };
+      // CP-F3-OWN-001: si hay evento en edición, se actualiza el propio
+      // (la Edge Function verifica la titularidad por external_key).
+      const editando = this.editandoId();
+      if (editando) {
+        await this.api.actualizarEvento(editando, borrador);
+        this.editandoId.set(null);
+      } else {
+        await this.eventosService.publicarSupabase(borrador);
+      }
+      await this.cargarMisEventos();
       await this.eventosService.cargarEventos();
       this.enviado.set(true);
       setTimeout(() => this.router.navigateByUrl('/home'), 1800);

@@ -79,4 +79,24 @@ export class ApiService {
   async eliminarCuenta(): Promise<void> {
     return this.supabase.eliminarCuenta();
   }
+
+  /** Reporta un evento (CP-AUT-009, requiere sesión). */
+  reportarEvento(eventId: string, motivo: string): Promise<void> {
+    return this.supabase.reportarEvento(eventId, motivo);
+  }
+
+  /** Eventos propios del organizador (CP-F3-OWN-001). */
+  listarMisEventos() {
+    return this.supabase.listarMisEventos();
+  }
+
+  /** Edita un evento propio (CP-F3-OWN-001). */
+  actualizarEvento(eventId: string, draft: Parameters<SupabaseService['publicarEvento']>[0]) {
+    return this.supabase.actualizarEvento(eventId, draft);
+  }
+
+  /** Elimina un evento propio (CP-F3-OWN-001). */
+  eliminarEvento(eventId: string): Promise<void> {
+    return this.supabase.eliminarEvento(eventId);
+  }
 }

@@ -276,6 +276,19 @@
                 Compartir
               </ion-button>
 
+              @if (api.estaAutenticado()) {
+                <ion-button
+                  expand="block"
+                  fill="clear"
+                  class="ec-report-btn"
+                  [disabled]="reporteEnviado()"
+                  (click)="reportar()"
+                >
+                  <ion-icon slot="start" name="flag-outline" aria-hidden="true"></ion-icon>
+                  {{ reporteEnviado() ? 'Reporte enviado' : 'Reportar evento' }}
+                </ion-button>
+              }
+
               @if (ev.modalidad !== 'Virtual') {
                 <a
                   class="ec-maps-link"
@@ -344,4 +357,23 @@
   position="bottom"
   color="primary"
   (didDismiss)="enlaceCopiado.set(false)"
+></ion-toast>
+
+<ion-toast
+  [isOpen]="reporteEnviado()"
+  message="Gracias, enviamos tu reporte al equipo"
+  duration="2200"
+  position="bottom"
+  color="primary"
+  (didDismiss)="reporteEnviado.set(false)"
+></ion-toast>
+
+<!-- CP-F3-RPT-002: motivo corto o fallo de envío ya no pasan en silencio. -->
+<ion-toast
+  [isOpen]="!!avisoReporte()"
+  [message]="avisoReporte()"
+  duration="3200"
+  position="bottom"
+  color="danger"
+  (didDismiss)="avisoReporte.set('')"
 ></ion-toast>

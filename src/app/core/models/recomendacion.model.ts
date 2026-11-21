@@ -77,6 +77,11 @@ export interface UserPreferences {
   alcance: 'comuna' | 'region' | 'pais';
   /** Momentos del día preferidos para asistir (vacío = cualquiera). */
   momentos: ('manana' | 'tarde' | 'noche')[];
+  /**
+   * Consentimiento opt-in para el correo semanal de recomendaciones
+   * (CP-F3-NOT-001). Solo se envía correo si es `true` (ausente = `false`).
+   */
+  correoSemanal?: boolean;
 }
 
 export const PREFERENCIAS_INICIALES: UserPreferences = {
@@ -87,7 +92,8 @@ export const PREFERENCIAS_INICIALES: UserPreferences = {
   modalidades: [],
   accesibilidad: false,
   alcance: 'pais',
-  momentos: []
+  momentos: [],
+  correoSemanal: false
 };
 
 /**

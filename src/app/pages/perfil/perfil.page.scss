@@ -369,6 +369,42 @@
   }
 }
 
+// ---------- Descarga de la app Android ----------
+
+.ec-perfil-apk {
+  padding: var(--ec-space-md);
+  border: var(--ec-border-width) solid var(--ec-border);
+  border-radius: var(--ec-radius-md);
+  background: var(--ec-surface-alt, var(--ec-surface));
+
+  strong {
+    color: var(--ec-text);
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    min-height: var(--ec-touch-target);
+    padding: 8px 16px;
+    border: var(--ec-border-width) solid var(--ec-primary);
+    border-radius: var(--ec-radius-full);
+    color: var(--ec-primary);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      background: var(--ec-primary-wash);
+    }
+
+    &:focus-visible {
+      outline: var(--ec-focus-ring-width) solid var(--ec-focus);
+      outline-offset: 2px;
+    }
+  }
+}
+
 // ---------- Zona de peligro (eliminar cuenta) ----------
 
 .ec-perfil-peligro {

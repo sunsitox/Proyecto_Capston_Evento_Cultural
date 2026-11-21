@@ -6,11 +6,13 @@ import { Router } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
+  AlertController,
   IonIcon,
   IonButton,
   IonButtons,
   IonToast
 } from '@ionic/angular';
+import { ApiService } from '../../core/services/api.service';
 import { EventosService } from '../../core/services/eventos.service';
 import { RecomendacionService } from '../../core/services/recomendacion.service';
 import { GeocodificacionService } from '../../core/services/geocodificacion.service';
@@ -56,7 +58,12 @@ export class DetalleEventoPage {
   private readonly recomendacion = inject(RecomendacionService);
   private readonly geocodificacion = inject(GeocodificacionService);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly alertas = inject(AlertController);
+  readonly api = inject(ApiService);
   private readonly router = inject(Router);
+  readonly reporteEnviado = signal(false);
+  /** Aviso de validación o de fallo al reportar (CP-F3-RPT-002). */
+  readonly avisoReporte = signal('');
 
   readonly enlaceCopiado = signal(false);
 
@@ -309,6 +316,58 @@ export class DetalleEventoPage {
       } catch {
         /* sin permisos de clipboard, lo dejamos silencioso */
       }
+    }
+  }
+
+  /**
+   * Reportar evento (CP-AUT-009, RF-12/HU-13): diálogo con motivo;
+   * inserta en `reports` vía ApiService (RLS: solo sus propios reportes).
+   */
+  async reportar(): Promise<void> {
+    const ev = this.evento();
+    if (!ev || this.reporteEnviado()) return;
+    const aviso = await this.alertas.create({
+      header: 'Reportar este evento',
+      message: 'Cuéntanos qué problema tiene (datos incorrectos, evento cancelado, información engañosa…). El equipo lo revisa.',
+      inputs: [
+        {
+          name: 'motivo',
+          type: 'textarea',
+          placeholder: 'Motivo del reporte (mínimo 10 caracteres)',
+          attributes: { rows: 3 }
+        }
+      ],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Enviar reporte',
+          role: 'confirm',
+          handler: (datos: Record<string, string>) => {
+            const motivo = String(datos['motivo'] ?? '').trim();
+            if (motivo.length < 10) {
+              // El diálogo sigue abierto y el visitante ve por qué no se envió.
+              this.avisoReporte.set('El motivo debe tener al menos 10 caracteres.');
+              return false;
+            }
+            void this.enviarReporte(ev.id, motivo);
+            return true;
+          }
+        }
+      ]
+    });
+    await aviso.present();
+  }
+
+  private async enviarReporte(eventId: string, motivo: string): Promise<void> {
+    try {
+      await this.api.reportarEvento(eventId, motivo);
+      this.reporteEnviado.set(true);
+    } catch (error) {
+      this.avisoReporte.set(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo enviar el reporte. Intenta de nuevo.'
+      );
     }
   }
 }

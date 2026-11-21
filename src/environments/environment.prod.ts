@@ -20,6 +20,9 @@ export const environment = {
   // Moderación de eventos desde el panel (ver environment.ts).
   adminEventosEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/admin-eventos',
 
+  // Ocultación global de páginas de origen (tabla source_visibility).
+  adminFuentesEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/admin-fuentes',
+
   // Publicación de eventos vía Edge Function (ver environment.ts).
   publicarEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/publicar-evento',
 

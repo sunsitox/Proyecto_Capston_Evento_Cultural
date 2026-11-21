@@ -1,0 +1,1 @@
+import {G as Go}from'./chunk-UJaa4SOO.js';import'./main-PVN2E5G6.js';var chunkZ5V5CRWQ = Go();export{chunkZ5V5CRWQ as default};

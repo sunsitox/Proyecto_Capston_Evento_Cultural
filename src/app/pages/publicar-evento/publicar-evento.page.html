@@ -216,10 +216,21 @@
           <div class="ec-field">
             <ion-item class="ec-input" lines="none">
               <ion-input
-                label="Fecha de término — opcional (multi-día)"
+                label="Fecha de término — opcional"
                 labelPlacement="stacked"
                 type="date"
                 formControlName="fechaTermino"
+              ></ion-input>
+            </ion-item>
+          </div>
+
+          <div class="ec-field">
+            <ion-item class="ec-input" lines="none">
+              <ion-input
+                label="Hora de término"
+                labelPlacement="stacked"
+                type="time"
+                formControlName="horaTermino"
               ></ion-input>
             </ion-item>
           </div>
@@ -301,14 +312,15 @@
               lines="none"
             >
               <ion-select
-                label="Categoría"
+                label="Categorías"
+                [multiple]="true"
                 labelPlacement="stacked"
-                placeholder="Selecciona una categoría"
+                placeholder="Selecciona categorías"
                 formControlName="categoria"
                 [attr.aria-invalid]="!!errorPara('categoria')"
                 aria-describedby="ec-pub-cat-err"
               >
-                @for (categoria of categorias; track categoria) {
+                @for (categoria of categorias(); track categoria) {
                   <ion-select-option [value]="categoria">{{ categoria }}</ion-select-option>
                 }
               </ion-select>
@@ -441,5 +453,27 @@
         encuentran datos confiables de municipalidades y organizadores.
       </p>
     </form>
+
+    @if (editandoId()) {
+      <p class="ec-publish-note" role="status">
+        Estás editando uno de tus eventos: al enviar se guardan los cambios
+        sobre el mismo evento.
+      </p>
+    }
+
+    @if (misEventos().length) {
+      <section class="ec-mis-eventos" aria-labelledby="ec-mis-eventos-title">
+        <h2 id="ec-mis-eventos-title">Mis eventos</h2>
+        <ul>
+          @for (ev of misEventos(); track ev.id) {
+            <li>
+              <span>{{ ev.title }} — {{ ev.status }}</span>
+              <ion-button fill="clear" size="small" (click)="editarEvento(ev)">Editar</ion-button>
+              <ion-button fill="clear" size="small" color="danger" (click)="eliminarMiEvento(ev.id)">Eliminar</ion-button>
+            </li>
+          }
+        </ul>
+      </section>
+    }
   }
 </div>

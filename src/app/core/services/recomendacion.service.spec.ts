@@ -256,6 +256,13 @@ describe('RecomendacionService', () => {
       );
     });
 
+    it('persiste el consentimiento del correo semanal (opt-in, CP-F3-NOT-001)', () => {
+      servicioConCuenta.guardarPreferencias({ correoSemanal: true });
+
+      expect(cuenta.preferenciasEnCuenta?.correoSemanal).toBe(true);
+      expect(servicioConCuenta.preferencias().correoSemanal).toBe(true);
+    });
+
     it('reiniciar intereses limpia también el historial de la cuenta', () => {
       servicioConCuenta.registrarSenal('me_interesa', 'evento-1');
       servicioConCuenta.reiniciarVisita();

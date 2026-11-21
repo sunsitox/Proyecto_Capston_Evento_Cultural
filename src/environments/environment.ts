@@ -24,6 +24,9 @@ export const environment = {
   // visibilidad pública con service_role; ver admin-eventos.service.ts).
   adminEventosEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/admin-eventos',
 
+  // Ocultación global de páginas de origen (tabla source_visibility).
+  adminFuentesEdgeFunctionUrl: 'https://ngwkehuewmjykiiujqic.supabase.co/functions/v1/admin-fuentes',
+
   // Publicación de eventos (INSERT lo hace la Edge Function con service role:
   // la tabla exige external_key/source_id que el cliente no puede generar y
   // el constraint de status no admite 'pending_review'; ver la función).

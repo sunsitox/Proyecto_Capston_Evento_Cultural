@@ -27,6 +27,26 @@ export interface UsuarioSesion {
   proveedor?: string;
 }
 
+/** Evento propio devuelto por la Edge `publicar-evento` (acción `listar_mios`). */
+export interface MiEventoOrganizador {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  start_at: string | null;
+  end_at: string | null;
+  venue: string | null;
+  address: string | null;
+  is_free: boolean | null;
+  price_text: string | null;
+  image_url: string | null;
+  official_url: string | null;
+  audience: string | null;
+  location_precision: string | null;
+  communes?: { name: string }[] | { name: string } | null;
+  event_categories?: { categories?: { name: string } | { name: string }[] | null }[] | null;
+}
+
 /** Fila cruda de la tabla `events` (esquema del pipeline del scraper). */
 export interface EventoRaw {
   id: string;
@@ -658,6 +678,28 @@ export class SupabaseService {
     return { eventos, comunas, total: eventos.length };
   }
 
+  // ------------------------------------------------------------------
+  // Ocultación global de páginas de origen (CP-F3-ADM-005)
+  // ------------------------------------------------------------------
+
+  /**
+   * Nombres de las páginas ocultas para TODO el sitio.
+   *
+   * `source_visibility` tiene RLS de lectura pública; la escritura vive solo
+   * en la Edge Function `admin-fuentes` (service_role). Así cualquier
+   * visitante filtra su catálogo con la misma nómina.
+   */
+  async fuentesOcultas(): Promise<string[]> {
+    const { data, error } = await this.cliente
+      .from('source_visibility')
+      .select('source_name')
+      .eq('hidden', true);
+    if (error) throw new Error('No se pudo leer la ocultación de páginas.');
+    return ((data ?? []) as { source_name: string }[])
+      .map((fila) => fila.source_name)
+      .filter((nombre) => typeof nombre === 'string' && nombre.trim() !== '');
+  }
+
   /**
    * Publicación de eventos vía Edge Function `publicar-evento`.
    *
@@ -726,5 +768,101 @@ export class SupabaseService {
     if (!respuesta.ok || !datos) {
       throw new Error(datos?.error || 'No se pudo guardar el evento. Intenta de nuevo.');
     }
+  }
+
+  // ------------------------------------------------------------------
+  // Reportar evento (CP-AUT-009)
+  // ------------------------------------------------------------------
+
+  /**
+   * Reporta un evento con el motivo dado (tabla `reports`, RLS: el usuario
+   * solo inserta sus propias filas con user_id = auth.uid()).
+   * Requiere sesión; el revisor lo ve con service_role.
+   */
+  async reportarEvento(eventId: string, motivo: string): Promise<void> {
+    const { data: sesion } = await this.cliente.auth.getSession();
+    const usuario = sesion.session?.user;
+    if (!usuario) throw new Error('Inicia sesión para reportar un evento.');
+    const razon = motivo.trim();
+    if (razon.length < 10) {
+      throw new Error('Cuéntanos el motivo con al menos 10 caracteres.');
+    }
+    const { error } = await this.cliente.from('reports').insert({
+      user_id: usuario.id,
+      event_id: eventId,
+      reason: razon.slice(0, 1000)
+    });
+    if (error) {
+      throw new Error('No se pudo enviar el reporte. Intenta de nuevo.');
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Mis eventos: editar / eliminar propios (CP-F3-OWN-001)
+  // ------------------------------------------------------------------
+
+  private async llamarPublicar(
+    cuerpo: Record<string, unknown>
+  ): Promise<unknown> {
+    const { data: sesion } = await this.cliente.auth.getSession();
+    if (!sesion.session?.user) {
+      throw new Error('Se requiere sesión de organizador.');
+    }
+    const respuesta = await fetch(environment.publicarEdgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sesion.session.access_token}`
+      },
+      body: JSON.stringify(cuerpo)
+    });
+    const datos = (await respuesta.json().catch(() => null)) as
+      | { error?: string; eventos?: unknown[]; mensaje?: string }
+      | null;
+    if (!respuesta.ok || !datos) {
+      throw new Error(
+        (datos as { error?: string } | null)?.error ||
+          'No se pudo completar la operación. Intenta de nuevo.'
+      );
+    }
+    return datos;
+  }
+
+  /** Eventos propios del organizador (draft + publicados), créados por él. */
+  async listarMisEventos(): Promise<MiEventoOrganizador[]> {
+    const datos = (await this.llamarPublicar({ accion: 'listar_mios' })) as {
+      eventos: MiEventoOrganizador[];
+    };
+    return datos.eventos ?? [];
+  }
+
+  /** Edita un evento propio (la Edge Function verifica la titularidad). */
+  async actualizarEvento(
+    eventoId: string,
+    draft: Parameters<SupabaseService['publicarEvento']>[0]
+  ): Promise<void> {
+    await this.llamarPublicar({
+      accion: 'actualizar',
+      evento_id: eventoId,
+      titulo: draft.title,
+      descripcion: draft.description,
+      start_at: draft.start_at,
+      end_at: draft.end_at,
+      venue: draft.venue,
+      address: draft.address,
+      comuna: draft.comuna ?? null,
+      modalidad: draft.modalidad ?? null,
+      is_free: draft.is_free,
+      price_text: draft.price_text,
+      image_url: draft.image_url,
+      official_url: draft.official_url ?? null,
+      audience: draft.audience,
+      categories: draft.categories
+    });
+  }
+
+  /** Elimina un evento propio (la Edge Function verifica la titularidad). */
+  async eliminarEvento(eventoId: string): Promise<void> {
+    await this.llamarPublicar({ accion: 'eliminar', evento_id: eventoId });
   }
 }

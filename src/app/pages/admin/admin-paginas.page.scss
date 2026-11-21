@@ -29,6 +29,11 @@
     &:hover {
       background: rgba(90, 77, 66, 0.08);
     }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
   }
 
   .btn--peligro {
@@ -39,6 +44,27 @@
       background: rgba(179, 38, 30, 0.08);
     }
   }
+}
+
+// Resultado del cambio confirmado por el servidor.
+.aviso-error,
+.aviso-ok {
+  margin: 10px 0 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.aviso-error {
+  color: var(--ec-danger);
+  background: rgba(179, 38, 30, 0.08);
+  border: 1px solid rgba(179, 38, 30, 0.3);
+}
+
+.aviso-ok {
+  color: var(--ec-success-strong, #1e6b3a);
+  background: rgba(30, 107, 58, 0.08);
+  border: 1px solid rgba(30, 107, 58, 0.25);
 }
 
 .ec-admin-paginas__fila {

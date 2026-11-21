@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { IonIcon, IonButton, IonItem, IonLabel } from '@ionic/angular';
+import { IonCheckbox, IonIcon, IonButton, IonItem, IonLabel } from '@ionic/angular';
 import { RecomendacionService } from '../../core/services/recomendacion.service';
 import { ApiService } from '../../core/services/api.service';
 import { PasswordRulesValidator } from '../../shared/validators/password-rules.validator';
@@ -13,7 +13,7 @@ import { RecommendationEmptyStateComponent } from '../../shared/components/recom
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [RouterLink, FormsModule, ReactiveFormsModule, IonIcon, IonButton, IonItem, IonLabel, RecommendationEmptyStateComponent],
+  imports: [RouterLink, FormsModule, ReactiveFormsModule, IonCheckbox, IonIcon, IonButton, IonItem, IonLabel, RecommendationEmptyStateComponent],
   templateUrl: './perfil.page.html',
   styleUrl: './perfil.page.scss'
 })
@@ -206,6 +206,11 @@ export class PerfilPage {
    * selección; aquí sólo llevamos a la persona a la página Para ti (antes el
    * botón guardaba sin navegar y parecía no hacer nada).
    */
+  /** Consentimiento opt-in del correo semanal (CP-F3-NOT-001). */
+  onCorreoSemanal(activado: boolean): void {
+    this.recomendacion.guardarPreferencias({ correoSemanal: activado });
+  }
+
   verRecomendaciones(): void {
     void this.router.navigateByUrl('/para-ti');
   }

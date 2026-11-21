@@ -35,6 +35,33 @@ export interface FiltrosEventos {
   accesible: boolean;
 }
 
+/**
+ * Rango aproximado de Chile continental + territorio insular (incluye
+ * Juan Fernández ~-78,8 y Rapa Nui ~-109,2). Coordenadas fuera de este
+ * rectángulo se descartan (CP-MAP-008): datos erróneos del catálogo
+ * nunca llegan al mapa.
+ */
+export const RANGO_CHILE = {
+  latMin: -56,
+  latMax: -17,
+  lngMin: -110,
+  lngMax: -66
+} as const;
+
+/** true si la coordenada cae dentro del rango aproximado de Chile. */
+export function esCoordenadaChile(lat: number, lng: number): boolean {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat !== 0 &&
+    lng !== 0 &&
+    lat >= RANGO_CHILE.latMin &&
+    lat <= RANGO_CHILE.latMax &&
+    lng >= RANGO_CHILE.lngMin &&
+    lng <= RANGO_CHILE.lngMax
+  );
+}
+
 export const FILTROS_INICIALES: FiltrosEventos = {
   texto: '',
   categorias: [],
@@ -141,43 +168,40 @@ export class EventosService {
   readonly catalogoCompleto = computed(() => this._eventos());
 
   /**
-   * Páginas (fuentes de extracción) ocultas por el administrador.
+   * Páginas (fuentes de extracción) ocultas para TODO el sitio.
    *
-   * Se guardan en localStorage del navegador donde se administran: la
-   * ocultación ya es efectiva para todo el catálogo en ese entorno. Para
-   * aplicarla a todos los visitantes conviene una tabla en Supabase con Edge
-   * Function (service_role), igual que las preferencias agregadas.
+   * La nómina es global y vive en Supabase (`source_visibility`); se cachea
+   * en localStorage para el primer pintado y como respaldo si no hay red.
    */
   private readonly _fuentesOcultas = signal<Set<string>>(EventosService.leerFuentesOcultas());
 
   /** Nombres de fuente excluidos del catálogo. */
   readonly fuentesOcultas = this._fuentesOcultas.asReadonly();
 
-  /** Oculta o vuelve a mostrar una página/fuente en todo el catálogo. */
-  ocultarFuente(fuente: string, ocultar: boolean): void {
-    if (!fuente || !fuente.trim()) return;
-    const lista = new Set(this._fuentesOcultas());
-    if (ocultar) lista.add(fuente);
-    else lista.delete(fuente);
+  /**
+   * Reemplaza la nómina con la del servidor (fuente de verdad) y actualiza
+   * la caché local. La usa la carga del catálogo y el panel tras guardar.
+   */
+  aplicarFuentesOcultasDesdeServidor(fuentes: readonly string[]): void {
+    const lista = new Set(fuentes.filter((f) => !!f && f.trim() !== ''));
     this._fuentesOcultas.set(lista);
+    EventosService.guardarFuentesOcultas(lista);
+  }
+
+  /** Lee la nómina global; si falla, mantiene la copia local. */
+  private async sincronizarFuentesOcultas(): Promise<void> {
     try {
-      localStorage.setItem(EVENTOS_FUENTES_OCULTAS, JSON.stringify([...lista]));
+      this.aplicarFuentesOcultasDesdeServidor(await this.supabase.fuentesOcultas());
     } catch {
-      /* sin almacenamiento disponible, el ajuste vive solo en memoria */
+      /* sin red o sin tabla: seguimos con la caché local */
     }
   }
 
-  /**
-   * Reemplaza la nómina COMPLETA de páginas ocultas de una vez (acción de
-   * lote "activar todo / desactivar todo"): una sola escritura persistente.
-   */
-  definirFuentesOcultas(fuentes: readonly string[]): void {
-    const lista = new Set(fuentes.filter((f) => f && f.trim()));
-    this._fuentesOcultas.set(lista);
+  private static guardarFuentesOcultas(fuentes: Set<string>): void {
     try {
-      localStorage.setItem(EVENTOS_FUENTES_OCULTAS, JSON.stringify([...lista]));
+      localStorage.setItem(EVENTOS_FUENTES_OCULTAS, JSON.stringify([...fuentes]));
     } catch {
-      /* sin almacenamiento disponible, el ajuste vive solo en memoria */
+      /* sin almacenamiento disponible: el estado vive solo en memoria */
     }
   }
 
@@ -566,6 +590,9 @@ export class EventosService {
     this._cargando.set(true);
     this._cargaCompleta.set(false);
     this._error.set(null);
+    // Nómina global ANTES del primer lote: ningún visitante ve un evento de
+    // una página oculta, ni siquiera durante el pintado progresivo.
+    await this.sincronizarFuentesOcultas();
     const acumulados: Evento[] = [];
     let hayPrimerLote = false;
     try {
@@ -656,10 +683,8 @@ export class EventosService {
     const categorias = e.categorias.filter((c) => c && c.trim() !== '');
     const lat = Number(e.latitude);
     const lng = Number(e.longitude);
-    const coordenadas =
-      Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0
-        ? { lat, lng }
-        : undefined;
+    // CP-MAP-008: fuera del rango de Chile se descartan (sin pin).
+    const coordenadas = esCoordenadaChile(lat, lng) ? { lat, lng } : undefined;
     const enlace = enlaceEspecifico(e.official_url, e.source_url);
     const inicio = (e.start_at || '').slice(0, 10);
     let termino = (e.end_at || '').slice(0, 10);

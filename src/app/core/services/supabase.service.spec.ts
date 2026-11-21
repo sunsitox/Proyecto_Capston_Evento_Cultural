@@ -174,4 +174,91 @@ describe('SupabaseService · rol de la cuenta', () => {
     await expect(servicio.publicarEvento(borrador)).rejects.toThrow(/organizador/i);
     expect(mocks.insert).not.toHaveBeenCalled();
   });
+
+  it('reportarEvento inserta en reports con el user_id de la sesión (CP-AUT-009)', async () => {
+    mocks.getSession.mockResolvedValue({
+      data: { session: { access_token: 'tok', user: usuarioCrudo('usuario') } }
+    });
+    mocks.from.mockReturnValue({ insert: mocks.insert });
+    mocks.insert.mockResolvedValue({ error: null });
+    const servicio = crearServicio();
+
+    await servicio.reportarEvento('ev-1', 'Los datos del evento son incorrectos.');
+
+    expect(mocks.from).toHaveBeenCalledWith('reports');
+    expect(mocks.insert).toHaveBeenCalledWith({
+      user_id: 'u-1',
+      event_id: 'ev-1',
+      reason: 'Los datos del evento son incorrectos.'
+    });
+  });
+
+  it('reportarEvento exige sesión', async () => {
+    mocks.getSession.mockResolvedValue({ data: { session: null } });
+    const servicio = crearServicio();
+    await expect(
+      servicio.reportarEvento('ev-1', 'Motivo suficientemente largo')
+    ).rejects.toThrow(/Inicia sesión/);
+    expect(mocks.insert).not.toHaveBeenCalled();
+  });
+
+  it('reportarEvento exige motivo de al menos 10 caracteres', async () => {
+    mocks.getSession.mockResolvedValue({
+      data: { session: { access_token: 'tok', user: usuarioCrudo('usuario') } }
+    });
+    const servicio = crearServicio();
+    await expect(servicio.reportarEvento('ev-1', 'corto')).rejects.toThrow(/10 caracteres/);
+    expect(mocks.insert).not.toHaveBeenCalled();
+  });
+
+  it('listarMisEventos pide accion listar_mios a la Edge Function (CP-F3-OWN-001)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ eventos: [{ id: 'ev-1', title: 'Feria', status: 'draft', start_at: null }] }), { status: 200 })
+      )
+    );
+    mocks.getSession.mockResolvedValue({
+      data: { session: { access_token: 'tok-123', user: usuarioCrudo('organizador') } }
+    });
+    const servicio = crearServicio();
+
+    const lista = await servicio.listarMisEventos();
+
+    expect(lista).toHaveLength(1);
+    const cuerpo = JSON.parse((fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+    expect(cuerpo).toMatchObject({ accion: 'listar_mios' });
+  });
+
+  it('eliminarEvento envía accion eliminar con el evento_id', async () => {
+    const fetchStub = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ mensaje: 'Evento eliminado.' }), { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchStub);
+    mocks.getSession.mockResolvedValue({
+      data: { session: { access_token: 'tok-123', user: usuarioCrudo('organizador') } }
+    });
+    const servicio = crearServicio();
+
+    await servicio.eliminarEvento('ev-9');
+
+    const cuerpo = JSON.parse(fetchStub.mock.calls[0][1].body);
+    expect(cuerpo).toMatchObject({ accion: 'eliminar', evento_id: 'ev-9' });
+  });
+
+  it('actualizarEvento envía accion actualizar con el borrador', async () => {
+    const fetchStub = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ mensaje: 'Evento actualizado.' }), { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchStub);
+    mocks.getSession.mockResolvedValue({
+      data: { session: { access_token: 'tok-123', user: usuarioCrudo('organizador') } }
+    });
+    const servicio = crearServicio();
+
+    await servicio.actualizarEvento('ev-9', borrador);
+
+    const cuerpo = JSON.parse(fetchStub.mock.calls[0][1].body);
+    expect(cuerpo).toMatchObject({ accion: 'actualizar', evento_id: 'ev-9', titulo: 'Feria de prueba' });
+  });
 });

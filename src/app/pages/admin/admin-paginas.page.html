@@ -18,7 +18,7 @@
           <h1>Páginas de origen</h1>
           <p>
             Sitios de los que se extrae la información · {{ totalFuentes() }} páginas ·
-            {{ totalOcultas() }} ocultas en la sesión
+            {{ totalOcultas() }} ocultas para todos los visitantes
           </p>
         </div>
       </div>
@@ -28,10 +28,20 @@
       <div class="ec-admin-paginas__cabecera">
         <h2>Páginas de extracción</h2>
         <div class="acciones">
-          <button type="button" class="btn" (click)="mostrarTodas()">
+          <button
+            type="button"
+            class="btn"
+            [disabled]="guardando()"
+            (click)="mostrarTodas()"
+          >
             Activar todo
           </button>
-          <button type="button" class="btn btn--peligro" (click)="ocultarTodas()">
+          <button
+            type="button"
+            class="btn btn--peligro"
+            [disabled]="guardando()"
+            (click)="ocultarTodas()"
+          >
             Desactivar todo
           </button>
         </div>
@@ -39,9 +49,15 @@
       <p class="intro">
         Cada fila es una página desde la que llega información de eventos. El switch
         controla si sus eventos se muestran en el catálogo: al ocultarla, sus eventos
-        desaparecen <strong>de todo el sitio</strong> (dashboard, búsqueda, mapa,
-        calendario y fichas) sin borrar los datos.
+        desaparecen <strong>de todo el sitio y para todos los visitantes</strong>
+        (dashboard, búsqueda, mapa, calendario y fichas) sin borrar los datos.
       </p>
+
+      @if (error()) {
+        <p class="aviso-error" role="alert">{{ error() }}</p>
+      } @else if (aviso()) {
+        <p class="aviso-ok" role="status">{{ aviso() }}</p>
+      }
 
       @for (f of fuentes(); track f.nombre) {
         <div class="ec-admin-paginas__fila" [class.oculta]="f.oculta">
@@ -59,6 +75,7 @@
               type="checkbox"
               role="switch"
               [checked]="!f.oculta"
+              [disabled]="guardando()"
               [attr.aria-label]="'Página ' + f.nombre + (f.oculta ? ' (oculta)' : ' (visible)')"
               (change)="alternar(f)"
             />
@@ -76,12 +93,11 @@
     <article class="ec-admin-dash__tarjeta ec-admin-dash__nota">
       <h2>Alcance de la ocultación</h2>
       <p>
-        Por ahora el ajuste se guarda <strong>en este navegador</strong>
-        (localStorage): el filtro ya es efectivo en el catálogo de este entorno,
-        tanto en el panel como en el sitio público. Para que aplique a todos los
-        visitantes conviene persistir la nómina de páginas ocultas en una tabla de
-        Supabase con una <strong>Edge Function de service_role</strong> (igual que
-        las preferencias agregadas) y crear un RLS de lectura pública.
+        La nómina se guarda en Supabase (<code>source_visibility</code>) y la lee
+        cada visitante al cargar el catálogo: ocultar una página la retira del
+        sitio <strong>para todos</strong>, en cualquier navegador o dispositivo,
+        sin borrar los datos. Los visitantes que ya tienen la página abierta la
+        dejan de ver en la siguiente carga del catálogo.
       </p>
     </article>
   </div>

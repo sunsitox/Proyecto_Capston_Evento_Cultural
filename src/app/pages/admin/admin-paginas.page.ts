@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { AdminSidebarComponent } from './admin-sidebar.component';
 import { AdminUiService } from './admin-ui.service';
+import { AdminFuentesService } from '../../core/services/admin-fuentes.service';
 import { EventosService } from '../../core/services/eventos.service';
 import { Evento } from '../../core/models/evento.model';
 
@@ -19,10 +20,10 @@ interface FuenteInfo {
  * Sección "Páginas" del panel: páginas de las que se extrae la información de
  * eventos, cada una con un switch para ocultarla del catálogo.
  *
- * La ocultación se guarda en el navegador donde se administra (localStorage)
- * y ya filtra el catálogo completo de ese entorno (sitio público incluido).
- * Para aplicarla a todos los visitantes conviene persistir la nómina en una
- * tabla de Supabase con Edge Function de service_role.
+ * La nómina es GLOBAL (CP-F3-ADM-005): vive en la tabla `source_visibility` y
+ * la escribe la Edge Function `admin-fuentes` con service_role. Todos los
+ * visitantes la leen al cargar el catálogo, así que el cambio aplica al sitio
+ * completo y no solo al navegador del administrador.
  */
 @Component({
   selector: 'app-admin-paginas',
@@ -34,9 +35,15 @@ interface FuenteInfo {
 })
 export class AdminPaginasPage {
   private readonly eventosService = inject(EventosService);
+  private readonly adminFuentes = inject(AdminFuentesService);
 
   /** Estado de interfaz compartido (drawer con el botón ☰). */
   readonly ui = inject(AdminUiService);
+
+  /** Cambio en curso: deshabilita switches y acciones de lote. */
+  readonly guardando = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly aviso = signal<string | null>(null);
 
   /**
    * Páginas detectadas en el CATÁLOGO COMPLETO (no solo el vigente): así una
@@ -74,22 +81,55 @@ export class AdminPaginasPage {
   readonly totalFuentes = computed(() => this.fuentes().length);
   readonly totalOcultas = computed(() => this.fuentes().filter((f) => f.oculta).length);
 
-  /** Alterna el switch de una página: oculta ↔ visible. */
-  alternar(fuente: FuenteInfo): void {
-    this.eventosService.ocultarFuente(fuente.nombre, !fuente.oculta);
+  /** Alterna el switch de una página: oculta ↔ visible para todo el sitio. */
+  async alternar(fuente: FuenteInfo): Promise<void> {
+    const mensaje = fuente.oculta
+      ? `Página «${fuente.nombre}» visible para todos los visitantes.`
+      : `Página «${fuente.nombre}» oculta para todos los visitantes.`;
+    await this.ejecutar(
+      () => this.adminFuentes.definir(fuente.nombre, !fuente.oculta),
+      mensaje
+    );
   }
 
-  /** Botón "Activar todo": quita todas las ocultaciones de una vez. */
-  mostrarTodas(): void {
-    this.eventosService.definirFuentesOcultas([]);
+  /** Botón "Activar todo": vuelve a mostrar todas las páginas del catálogo. */
+  async mostrarTodas(): Promise<void> {
+    await this.ejecutar(
+      () => this.adminFuentes.definirTodas(this.fuentes().map((f) => f.nombre), false),
+      'Todas las páginas quedaron visibles para todos los visitantes.'
+    );
+  }
+
+  /** Botón "Desactivar todo": oculta todas las páginas listadas. */
+  async ocultarTodas(): Promise<void> {
+    await this.ejecutar(
+      () => this.adminFuentes.definirTodas(this.fuentes().map((f) => f.nombre), true),
+      'Todas las páginas quedaron ocultas para todos los visitantes.'
+    );
   }
 
   /**
-   * Botón "Desactivar todo": oculta todas las páginas listadas de una vez.
-   * Nota: si luego aparece una página nueva en el catálogo, entra visible
-   * (la nómina describe las páginas conocidas al momento).
+   * Ejecuta el cambio en la Edge Function y aplica la nómina devuelta por el
+   * servidor: la interfaz nunca inventa el estado, lo confirma contra la BD.
    */
-  ocultarTodas(): void {
-    this.eventosService.definirFuentesOcultas(this.fuentes().map((f) => f.nombre));
+  private async ejecutar(
+    accion: () => Promise<string[]>,
+    mensaje: string
+  ): Promise<void> {
+    if (this.guardando()) return;
+    this.guardando.set(true);
+    this.error.set(null);
+    this.aviso.set(null);
+    try {
+      const ocultas = await accion();
+      this.eventosService.aplicarFuentesOcultasDesdeServidor(ocultas);
+      this.aviso.set(mensaje);
+    } catch (e) {
+      this.error.set(
+        e instanceof Error ? e.message : 'No se pudo guardar el cambio. Intenta de nuevo.'
+      );
+    } finally {
+      this.guardando.set(false);
+    }
   }
 }
