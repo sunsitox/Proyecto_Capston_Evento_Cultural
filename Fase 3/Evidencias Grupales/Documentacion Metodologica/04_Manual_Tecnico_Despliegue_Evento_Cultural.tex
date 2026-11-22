@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{estilo_capstone}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \setlength{\emergencystretch}{3em}
 \sloppy
 \titulo{Manual técnico y de despliegue — Evento Cultural}
@@ -45,16 +46,25 @@ El catálogo de demostración de respaldo debe distinguirse del catálogo remoto
 configuración pública puede terminar en el bundle del navegador.
 \item Verificar políticas RLS, perfiles y permisos por usuario. El rol administrativo
 se consulta en \code{public.profiles.role}, no se concede mediante metadata editable.
-\item Aplicar de manera controlada las migraciones necesarias, incluida
-\code{20261024000100\_password\_reset\_tokens.sql}. Contrastar el esquema real con
-las migraciones antes de modificarlas; documentar respaldo y resultado.
-\item Preparar Storage \code{avatars} y sus políticas de propiedad para imágenes.
+\item Aplicar de manera controlada las migraciones del repositorio; al 22-11-2026 el
+proyecto tiene aplicadas, entre otras, \code{20261024000100\_password\_reset\_tokens.sql},
+\code{20261024000200\_avatars\_bucket.sql}, \code{20261121000100\_source\_visibility.sql}
+y las funciones atómicas \code{20261121000200\_update\_organizer\_event\_atomic.sql} y
+\code{20261121000300\_create\_organizer\_event\_atomic.sql}. Contrastar el esquema real con
+las migraciones antes de modificarlas; documentar respaldo y resultado. Registrar cada
+versión aplicada en \code{supabase\_migrations}: una función puede desplegarse pero fallar
+en ejecución si su migración dependiente no está aplicada.
+\item El bucket \code{avatars} se crea con \code{20261024000200\_avatars\_bucket.sql}:
+bucket público de lectura y políticas que limitan inserción, actualización y borrado a la
+carpeta del propio usuario (primera carpeta de la ruta igual a \code{auth.uid()}).
 No conceder escritura global para resolver un error de permisos.
 \item Desplegar las funciones presentes en \code{supabase/functions/} mediante el
 procedimiento del proyecto y verificar su configuración de autenticación:
 \code{registrar-cuenta}, \code{admin-account}, \code{publicar-evento},
-\code{admin-eventos}, \code{reset-password-request},
-\code{reset-password-confirm}, \code{recomendaciones-semanal}.
+\code{admin-eventos}, \code{admin-fuentes}, \code{reset-password-request},
+\code{reset-password-confirm}, \code{recomendaciones-semanal}. Al 22-11-2026
+\code{publicar-evento} está en la versión 8 y depende de las RPC atómicas de creación y
+edición; si se publica sin esas migraciones, la creación responde 500.
 \end{itemize}
 
 Los secretos se configuran en el entorno del servidor, nunca en Angular ni Git:
@@ -112,6 +122,25 @@ Verificar el cron real en el workflow: no prometer ejecución puntual a las 23:3
 America/Santiago, especialmente ante cambios horarios y retrasos de GitHub Actions.
 NVIDIA y la clave de servicio permanecen fuera del cliente.
 Docker no forma parte de la estrategia adoptada.
+
+\section{Estado de despliegue verificado al 22-11-2026}
+
+\begin{longtable}{@{}L{5.2cm}L{9.6cm}@{}}
+\toprule
+\textbf{Componente} & \textbf{Estado comprobado} \\
+\midrule
+\endhead
+Proyecto Supabase & \code{ngwkehuewmjykiiujqic}; migraciones de avatars, visibilidad de fuentes y RPC atómicas aplicadas y registradas. \\
+Storage \code{avatars} & Bucket público con cuatro políticas por carpeta; subida, actualización y borrado solo del propio usuario. \\
+Edge \code{publicar-evento} & Versión 8 desplegada: rechaza categorías vacías (400), crea el borrador válido (201) y permite editar y eliminar lo propio. \\
+Frontend & Correcciones locales de publicación, perfil y administración; el despliegue de Vercel no se actualizó en esta revisión. \\
+Evidencia & \code{docs/evidencias\_prf003\_2026-11-22/} (perfil con avatar propio y rechazo de archivo inválido) y \code{scripts/qa\_fase3\_avatar\_pub.py}. \\
+\bottomrule
+\end{longtable}
+
+Lo anterior no acredita el frontend publicado: hasta subir el build corregido, la web de
+producción conserva la versión anterior aunque Supabase ya tenga el esquema y las
+funciones nuevas. Registrar SHA y URL al publicar.
 
 \section{Diagnóstico y entrega}
 \begin{itemize}

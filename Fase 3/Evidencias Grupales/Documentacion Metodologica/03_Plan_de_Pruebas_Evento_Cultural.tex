@@ -273,6 +273,32 @@ preferencias, seguridad/RLS, accesibilidad exhaustiva, compatibilidad entre nave
 Core Web Vitals y regresión posterior a las correcciones permanecen planificados para la
 Fase 3; no se declaran ejecutados en este ciclo.
 
+\section{Cierre de casos y correcciones del 22-11-2026}
+
+La matriz única de Fase 3 mantiene los 221 casos con veredicto: \textbf{207 aprobados,
+7 parciales, 1 no aplica y 6 bloqueados}, con 61 ejecuciones registradas. Los resultados
+históricos de las secciones anteriores no se modifican.
+
+\begin{longtable}{@{}L{2.4cm}L{12.4cm}@{}}
+\toprule
+\textbf{Caso} & \textbf{Resultado y evidencia} \\
+\midrule
+\endhead
+CP-F3-PUB-002 & Aprobado. Se redesplegó \code{publicar-evento} (v8) con la validación de
+categorías y se aplicaron las RPC atómicas que la función publicada exige. Categorías
+vacías, en blanco o no textuales responden 400 sin crear filas; el borrador válido responde
+201 y se elimina. Evidencia: \code{scripts/qa\_fase3\_avatar\_pub.py}. \\
+CP-F3-PRF-003 & Parcial. Bucket \code{avatars} creado con políticas por carpeta; la subida
+real responde 200 y la imagen se ve en perfil y navegación, persiste tras recargar y un
+archivo inválido se rechaza con aviso. Falta la alternativa con una cuenta Google real.
+Evidencia: \code{docs/evidencias\_prf003\_2026-11-22/}. \\
+\bottomrule
+\end{longtable}
+
+Los seis casos bloqueados dependen de lector de pantalla, sesiones moderadas y un
+despliegue fallido inducido; los seis parciales restantes, de buzón real, cuenta Google o
+dispositivo físico. No se aprueban por código ni por infraestructura desplegada.
+
 \section{Roles y responsabilidades}
 
 \begin{longtable}{@{}L{3.7cm}L{11.1cm}@{}}
