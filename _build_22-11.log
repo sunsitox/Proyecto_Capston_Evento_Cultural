@@ -1,0 +1,34 @@
+
+> evento-cultural@0.0.1 build
+> ng build
+
+❯ Building...
+✔ Building...
+Initial chunk files | Names                       |  Raw size | Estimated transfer size
+main-2HZXXY62.js    | main                        |   1.61 MB |               305.69 kB
+styles-RLRSBHQN.css | styles                      |  65.38 kB |                 9.71 kB
+
+                    | Initial total               |   1.67 MB |               315.41 kB
+
+Lazy chunk files    | Names                       |  Raw size | Estimated transfer size
+chunk-C9wPxJlD.js   | -                           | 150.77 kB |                37.77 kB
+chunk-uaTnpupP.js   | mapa-page                   |  36.94 kB |                 9.85 kB
+chunk-CdkMu7qG.js   | admin-eventos-page          |  35.40 kB |                 7.84 kB
+chunk-DsbqIVtp.js   | detalle-evento-page         |  32.92 kB |                 7.88 kB
+chunk-YlFBLKhZ.js   | login-page                  |  31.71 kB |                 7.08 kB
+chunk-Cekhl8b_.js   | perfil-page                 |  31.65 kB |                 7.11 kB
+chunk-Dx7wBxSU.js   | publicar-evento-page        |  27.90 kB |                 7.08 kB
+chunk-DUYWjRQ0.js   | calendario-page             |  21.06 kB |                 5.52 kB
+chunk-Vp-nwYR0.js   | home-page                   |  19.59 kB |                 5.06 kB
+chunk-UOI-o4LN.js   | -                           |  16.84 kB |                 3.89 kB
+chunk-CaSFyQSL.js   | admin-dashboard-page        |  15.03 kB |                 4.45 kB
+chunk-WyArHvV-.js   | restablecer-contrasena-page |  13.97 kB |                 4.00 kB
+chunk-DTdIiNzN.js   | admin-paginas-page          |  13.06 kB |                 3.66 kB
+chunk-KdXcHksi.js   | -                           |  11.33 kB |                 2.61 kB
+chunk-L0fKq86e.js   | p-Dvyv9SMk                  |  10.06 kB |                 2.59 kB
+...and 16 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [22.410 seconds] - 2026-11-22T04:29:44.293Z
+
+Output location: C:\CAPSTONE -20260924T184555Z-1-001\EventoCultural_Integrado\EventoCultural_Integrado\www
+

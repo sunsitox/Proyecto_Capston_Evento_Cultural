@@ -51,9 +51,12 @@ Verificación del CSS compilado: `node verify-css.js` (requiere `ng serve` en el
 ```
 evento-cultural/
 ├── install.bat / run.bat       # Scripts de entorno para Windows
-├── package.json
+├── package.json                # Incluye `npm run build:android` (bundle nativo sin APK embebido)
 ├── angular.json
 ├── ionic.config.json
+├── capacitor.config.ts         # webDir: www-native (ver scripts/prepare-native.mjs)
+├── scripts/prepare-native.mjs  # Copia www/ → www-native/ excluyendo assets/apk/
+└── docs/GUIA-PRUEBA-APK-ANDROID.md  # Checklist verificable en un Android real
 ├── supabase/functions/         # Edge Functions Deno/TS (admin-account, registrar-cuenta, publicar-evento, admin-eventos, reset-password-*, recomendaciones-semanal)
 ├── .env                        # Referencia de credenciales (no compartido)
 └── src/
@@ -76,6 +79,7 @@ evento-cultural/
         │   ├── admin-auth.service.ts       # Sesión del panel admin (rol admin verificado en BD)
         │   ├── admin-eventos.service.ts    # Moderación del catálogo (Edge admin-eventos)
         │   ├── geocodificacion.service.ts  # Coordenadas por recinto (Nominatim + caché)
+        │   ├── plataforma.service.ts     # Detección web vs. app nativa (guarda el CTA de descarga APK)
         │   ├── view-preferences.service.ts # Vista y orden (localStorage)
         │   └── toast.service.ts
         ├── data/mock-eventos.ts            # Respaldo si la API no responde + constantes
@@ -167,6 +171,15 @@ npm test                                  # Vitest
 node verify-css.js                        # Tokens presentes en el CSS compilado (requiere ng serve en :8100)
 ```
 
+### 5. App móvil Android (APK)
+
+```bat
+npm run build:android                    :: build web + www-native (sin APK) + cap sync
+cd android && gradlew assembleDebug      :: genera app/build/outputs/apk/debug/app-debug.apk
+```
+
+Después: copiar ese APK a `src/assets/apk/evento-cultural-debug.apk` y `npm run build` para que la web sirva el APK fresco. Comprobación rápida de que el APK no se incrusta: `unzip -l android/app/build/outputs/apk/debug/app-debug.apk | grep .apk` no debe listar ningún APK anidado (ver la guía de prueba completa en `docs/GUIA-PRUEBA-APK-ANDROID.md`).
+
 ## Notas importantes
 
 - **Integración activa:** catálogo real directo desde Supabase (supabase-js, lotes en paralelo y Leaflet bajo demanda); los mocks son respaldo de emergencia cargado con import() dinámico. Sesión y perfil con Supabase Auth.
@@ -174,5 +187,5 @@ node verify-css.js                        # Tokens presentes en el CSS compilado
 - **Señales de interés persistidas:** "Me interesa", "No me interesa" y "Ver similares" se guardan en `user_event_interactions` (RLS por usuario) y las preferencias declaradas en `user_metadata.recomendaciones`: «Para ti» sigue a la cuenta entre dispositivos. Vista y orden siguen en `localStorage` (`ViewPreferencesService`).
 - **Panel de administración:** ingreso ofuscado en `/v00/admin` (sin enlaces públicos); exige sesión por correo con rol `admin` consultado en la BD en cada navegación, rechaza cuentas OAuth y cierra sesión por inactividad (10 min).
 - **OAuth preparado:** el flujo completo está implementado (`/login` → `signInWithOAuth` → consentimiento de Supabase → regreso PKCE en `/auth/callback`); solo falta activar el proveedor y las URLs de redirección en Supabase Dashboard (`OAUTH_SETUP.md`).
-- **App móvil:** la compilación con **Capacitor 8 + Android Studio** está definida como estrategia, pero se ejecutará cuando la web esté completamente estabilizada (decisión del equipo, Fase 2).
+- **App móvil (Capacitor 8 + Android, implementada):** `capacitor.config.ts` apunta `webDir` a `www-native/` (no a `www/`), porque el APK descargable de `assets/apk/` queda **fuera** del bundle nativo vía `scripts/prepare-native.mjs` (si no, el APK se incrusta dentro de la app y crecía en cada build: de 8,3 MB a 14 MB). La web (Vercel) sigue sirviendo `www/` con el APK. Flujo: `npm run build:android` (build + prepare + `cap sync`), luego `./gradlew assembleDebug` en `android/` y copiar el APK resultante a `src/assets/apk/` + rebuild web. La detección web/app vive en `PlataformaService` (`mostrarDescargaApk = !Capacitor.isNativePlatform()`): los CTA «Descargar APK» (footer, banner móvil, Perfil) solo existen en la web. Guía de prueba en un Android real: `docs/GUIA-PRUEBA-APK-ANDROID.md`.
 - La documentación técnica completa (arquitectura, servicios, pantallas y control de cambios) está en `docs/documentacion-frontend.tex` / `.pdf`, y la documentación formal de Fase 2 en `../CAPSTONE_/Fase 2/Evidencias Proyecto/Documentacion Tecnica/`.

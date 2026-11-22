@@ -1,0 +1,7 @@
+PASS handler: único RPC, 4 categorías, término, dueño JWT y lista blanca
+PASS handler: error XX000 → 500 sin éxito/fallback
+PASS handler: error 22023 → 400 sin éxito/fallback
+PASS handler: error 42501 → 403 sin éxito/fallback
+PASS handler: error P0002 → 404 sin éxito/fallback
+PASS handler: error PGRST202 → 500 sin éxito/fallback
+PASS handler: categorías inválidas abortan antes de escribir

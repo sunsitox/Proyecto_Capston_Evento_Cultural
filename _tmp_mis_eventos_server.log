@@ -1,0 +1,41 @@
+Environment variable "PORT" detected. Using port 4217.
+❯ Building...
+✔ Building...
+Initial chunk files                     | Names                       |  Raw size
+main.js                                 | main                        | 164.43 kB | 
+styles.css                              | styles                      |  79.38 kB | 
+chunk-ITCTEOGV.js                       | -                           |  59.38 kB | 
+chunk-OYNBSLXM.js                       | -                           |  51.34 kB | 
+chunk-GWLOIWY6.js                       | -                           |  37.43 kB | 
+chunk-6KF3LPRE.js                       | -                           |  26.82 kB | 
+chunk-PJ5INMCR.js                       | -                           |  21.12 kB | 
+chunk-U7E44MJC.js                       | -                           |   9.18 kB | 
+chunk-QTEQLBBF.js                       | -                           |   6.38 kB | 
+chunk-P7LCW6NO.js                       | -                           |   3.01 kB | 
+chunk-VUJOFXKG.js                       | -                           | 938 bytes | 
+
+                                        | Initial total               | 459.38 kB
+
+Lazy chunk files                        | Names                       |  Raw size
+detalle-evento.page-DK4F4UCZ.js         | detalle-evento-page         |  98.56 kB | 
+mapa.page-LREL5X3R.js                   | mapa-page                   |  97.27 kB | 
+admin-eventos.page-GP3NEBDN.js          | admin-eventos-page          |  92.44 kB | 
+perfil.page-PNELRFSZ.js                 | perfil-page                 |  86.43 kB | 
+login.page-ZZ6TWE3L.js                  | login-page                  |  84.07 kB | 
+publicar-evento.page-NBYOIXRW.js        | publicar-evento-page        |  79.62 kB | 
+calendario.page-34AI6IP4.js             | calendario-page             |  57.93 kB | 
+home.page-X5LQZ7OW.js                   | home-page                   |  57.68 kB | 
+chunk-YAGMYJQG.js                       | -                           |  53.66 kB | 
+admin-dashboard.page-O7EVMGQL.js        | admin-dashboard-page        |  42.45 kB | 
+restablecer-contrasena.page-JGX3F7EV.js | restablecer-contrasena-page |  39.48 kB | 
+admin-paginas.page-663UZWJV.js          | admin-paginas-page          |  33.55 kB | 
+chunk-CVMNGC5F.js                       | -                           |  30.14 kB | 
+admin-organizadores.page-NK3RK6SR.js    | admin-organizadores-page    |  21.85 kB | 
+chunk-E6GEXD3T.js                       | -                           |  17.49 kB | 
+...and 6 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [15.388 seconds] - 2026-11-21T04:19:02.749Z
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m4217[22m/[39m

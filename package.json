@@ -7,6 +7,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:android": "npm run build && node scripts/prepare-native.mjs && npx cap sync android",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint"

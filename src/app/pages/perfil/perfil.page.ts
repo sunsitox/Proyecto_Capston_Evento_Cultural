@@ -6,6 +6,7 @@ import { RecomendacionService } from '../../core/services/recomendacion.service'
 import { ApiService } from '../../core/services/api.service';
 import { PasswordRulesValidator } from '../../shared/validators/password-rules.validator';
 import { RecommendationEmptyStateComponent } from '../../shared/components/recommendation-empty-state/recommendation-empty-state.component';
+import { PlataformaService } from '../../core/services/plataforma.service';
 
 /**
  * Perfil de usuario (invitado o registrado).
@@ -21,6 +22,13 @@ export class PerfilPage {
   readonly recomendacion = inject(RecomendacionService);
   readonly api = inject(ApiService);
   private readonly router = inject(Router);
+
+  /**
+   * Alias al servicio compartido de plataforma: la descarga del APK
+   * solo se ofrece en la web; dentro de la app nativa es redundante y
+   * se oculta el bloque `.ec-perfil-apk`.
+   */
+  readonly mostrarDescargaApk = inject(PlataformaService).mostrarDescargaApk;
 
   /** Estado del flujo de "eliminar cuenta" (doble confirmación). */
   readonly zonaPeligroAbierta = signal(false);

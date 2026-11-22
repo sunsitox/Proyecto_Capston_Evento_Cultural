@@ -267,20 +267,22 @@
     </div>
   }
 
-  <div class="ec-perfil-nota ec-perfil-apk">
-    <ion-icon name="phone-portrait-outline" aria-hidden="true"></ion-icon>
-    <div>
-      <p><strong>¿Usas Android?</strong> Descarga la app nativa (versión de prueba, ~8 MB).</p>
-      <a
-        href="/assets/apk/evento-cultural-debug.apk"
-        download="evento-cultural-debug.apk"
-        class="ec-perfil-apk__cta"
-      >
-        <ion-icon name="cloud-download-outline" aria-hidden="true"></ion-icon>
-        Descargar APK
-      </a>
+  @if (mostrarDescargaApk()) {
+    <div class="ec-perfil-nota ec-perfil-apk">
+      <ion-icon name="phone-portrait-outline" aria-hidden="true"></ion-icon>
+      <div>
+        <p><strong>¿Usas Android?</strong> Descarga la app nativa (versión de prueba, ~8 MB).</p>
+        <a
+          href="/assets/apk/evento-cultural-debug.apk"
+          download="evento-cultural-debug.apk"
+          class="ec-perfil-apk__cta"
+        >
+          <ion-icon name="cloud-download-outline" aria-hidden="true"></ion-icon>
+          Descargar APK
+        </a>
+      </div>
     </div>
-  </div>
+  }
 
   <p class="ec-perfil-nota">
     <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>

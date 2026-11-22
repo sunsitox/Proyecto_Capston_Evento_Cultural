@@ -164,11 +164,13 @@
             <h3>Plataforma</h3>
             <a routerLink="/perfil">Mi perfil</a>
             <a routerLink="/login">Ingresar o registrarse</a>
-            <span class="ec-footer__note">App móvil (Android):</span>
-            <a href="/assets/apk/evento-cultural-debug.apk" download="evento-cultural-debug.apk">
-              <ion-icon name="cloud-download-outline" aria-hidden="true"></ion-icon>
-              Descargar APK
-            </a>
+            @if (mostrarDescargaApk()) {
+              <span class="ec-footer__note">App móvil (Android):</span>
+              <a href="/assets/apk/evento-cultural-debug.apk" download="evento-cultural-debug.apk">
+                <ion-icon name="cloud-download-outline" aria-hidden="true"></ion-icon>
+                Descargar APK
+              </a>
+            }
             <span class="ec-footer__note ec-footer__note--demo">Piloto · datos de referencia</span>
           </nav>
         </div>
@@ -184,6 +186,20 @@
        SHELL MÓVIL (< 992px) - Tab bar
        ============================================ -->
   <div class="ec-mobile-layout">
+    @if (mostrarDescargaApk()) {
+      <div class="ec-apk-banner" role="note" aria-label="Descargar la app móvil">
+        <ion-icon name="phone-portrait-outline" aria-hidden="true"></ion-icon>
+        <span class="ec-apk-banner__texto">¿Usas Android? Descarga la app nativa</span>
+        <a
+          href="/assets/apk/evento-cultural-debug.apk"
+          download="evento-cultural-debug.apk"
+          class="ec-apk-banner__cta"
+        >
+          <ion-icon name="cloud-download-outline" aria-hidden="true"></ion-icon>
+          Descargar
+        </a>
+      </div>
+    }
     <ion-content [fullscreen]="true" class="ec-mobile-content">
       <main class="ec-main" [class.ec-vt-detalle]="esFichaActiva()">
         <router-outlet></router-outlet>

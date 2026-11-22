@@ -402,6 +402,56 @@
   --overflow: auto;
 }
 
+/* Banner de descarga del APK — solo web móvil (< 992px).
+     En la app nativa no se renderiza (mostrarDescargaApk).
+     En escritorio el mismo CTA vive en el footer. */
+.ec-apk-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 12px 0;
+  padding: 10px 12px;
+  background: var(--ec-surface);
+  border: var(--ec-border-width) solid var(--ec-border-light);
+  border-radius: var(--ec-radius-md);
+  box-shadow: var(--ec-shadow-xs);
+  flex-shrink: 0;
+
+  > ion-icon:first-child {
+    font-size: 1.2rem;
+    color: var(--ec-primary);
+    flex-shrink: 0;
+  }
+
+  &__texto {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.82rem;
+    line-height: 1.35;
+    color: var(--ec-text-muted);
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--ec-touch-target, 44px);
+    padding: 6px 14px;
+    border: var(--ec-border-width) solid var(--ec-primary);
+    border-radius: var(--ec-radius-full);
+    color: var(--ec-primary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:focus-visible {
+      outline: var(--ec-focus-ring-width, 3px) solid var(--ec-focus);
+      outline-offset: 2px;
+    }
+  }
+}
+
 /* DEF-QA-002: el fullscreeen de ion-content expande su contenido por
    detrás de la tab bar; con la variable medida, ya ningún borde inferior
    (mapa, calendario o perfil) queda bajo la barra. */

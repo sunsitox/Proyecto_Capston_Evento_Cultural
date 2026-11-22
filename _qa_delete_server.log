@@ -1,0 +1,302 @@
+Environment variable "PORT" detected. Using port 0.
+❯ Building...
+✔ Building...
+Initial chunk files                     | Names                       |  Raw size
+main.js                                 | main                        | 164.43 kB | 
+styles.css                              | styles                      |  79.38 kB | 
+chunk-ITCTEOGV.js                       | -                           |  59.38 kB | 
+chunk-OYNBSLXM.js                       | -                           |  51.34 kB | 
+chunk-GWLOIWY6.js                       | -                           |  37.43 kB | 
+chunk-6KF3LPRE.js                       | -                           |  26.82 kB | 
+chunk-PJ5INMCR.js                       | -                           |  21.12 kB | 
+chunk-U7E44MJC.js                       | -                           |   9.18 kB | 
+chunk-QTEQLBBF.js                       | -                           |   6.38 kB | 
+chunk-P7LCW6NO.js                       | -                           |   3.01 kB | 
+chunk-VUJOFXKG.js                       | -                           | 938 bytes | 
+
+                                        | Initial total               | 459.38 kB
+
+Lazy chunk files                        | Names                       |  Raw size
+detalle-evento.page-DK4F4UCZ.js         | detalle-evento-page         |  98.56 kB | 
+mapa.page-LREL5X3R.js                   | mapa-page                   |  97.27 kB | 
+admin-eventos.page-GP3NEBDN.js          | admin-eventos-page          |  92.44 kB | 
+perfil.page-PNELRFSZ.js                 | perfil-page                 |  86.43 kB | 
+login.page-ZZ6TWE3L.js                  | login-page                  |  84.07 kB | 
+publicar-evento.page-GHIAVG45.js        | publicar-evento-page        |  78.07 kB | 
+calendario.page-34AI6IP4.js             | calendario-page             |  57.93 kB | 
+home.page-X5LQZ7OW.js                   | home-page                   |  57.68 kB | 
+chunk-YAGMYJQG.js                       | -                           |  53.66 kB | 
+admin-dashboard.page-O7EVMGQL.js        | admin-dashboard-page        |  42.45 kB | 
+restablecer-contrasena.page-JGX3F7EV.js | restablecer-contrasena-page |  39.48 kB | 
+admin-paginas.page-663UZWJV.js          | admin-paginas-page          |  33.55 kB | 
+chunk-CVMNGC5F.js                       | -                           |  30.14 kB | 
+admin-organizadores.page-NK3RK6SR.js    | admin-organizadores-page    |  21.85 kB | 
+chunk-E6GEXD3T.js                       | -                           |  17.49 kB | 
+...and 6 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [18.267 seconds] - 2026-11-21T03:42:15.431Z
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m65025[22m/[39m
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files                     | Names                       |  Raw size
+main.js                                 | main                        | 164.43 kB | 
+styles.css                              | styles                      |  79.38 kB | 
+chunk-ITCTEOGV.js                       | -                           |  59.38 kB | 
+chunk-OYNBSLXM.js                       | -                           |  51.34 kB | 
+chunk-GWLOIWY6.js                       | -                           |  37.43 kB | 
+chunk-6KF3LPRE.js                       | -                           |  26.82 kB | 
+chunk-PJ5INMCR.js                       | -                           |  21.12 kB | 
+chunk-U7E44MJC.js                       | -                           |   9.18 kB | 
+chunk-QTEQLBBF.js                       | -                           |   6.38 kB | 
+chunk-P7LCW6NO.js                       | -                           |   3.01 kB | 
+chunk-VUJOFXKG.js                       | -                           | 938 bytes | 
+
+                                        | Initial total               | 459.38 kB
+
+Lazy chunk files                        | Names                       |  Raw size
+detalle-evento.page-DK4F4UCZ.js         | detalle-evento-page         |  98.56 kB | 
+mapa.page-LREL5X3R.js                   | mapa-page                   |  97.27 kB | 
+admin-eventos.page-GP3NEBDN.js          | admin-eventos-page          |  92.44 kB | 
+perfil.page-PNELRFSZ.js                 | perfil-page                 |  86.43 kB | 
+login.page-ZZ6TWE3L.js                  | login-page                  |  84.07 kB | 
+publicar-evento.page-GHIAVG45.js        | publicar-evento-page        |  78.07 kB | 
+calendario.page-34AI6IP4.js             | calendario-page             |  57.93 kB | 
+home.page-X5LQZ7OW.js                   | home-page                   |  57.68 kB | 
+chunk-YAGMYJQG.js                       | -                           |  53.66 kB | 
+admin-dashboard.page-O7EVMGQL.js        | admin-dashboard-page        |  42.45 kB | 
+restablecer-contrasena.page-JGX3F7EV.js | restablecer-contrasena-page |  39.48 kB | 
+admin-paginas.page-663UZWJV.js          | admin-paginas-page          |  33.55 kB | 
+chunk-CVMNGC5F.js                       | -                           |  30.14 kB | 
+admin-organizadores.page-NK3RK6SR.js    | admin-organizadores-page    |  21.85 kB | 
+chunk-E6GEXD3T.js                       | -                           |  17.49 kB | 
+...and 6 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [0.044 seconds] - 2026-11-21T03:43:10.445Z
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [17.438 seconds] - 2026-11-21T04:14:35.800Z
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2488: Type 'WritableSignal<string[]>' must have a '[Symbol.iterator]()' method that returns an iterator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/publicar-evento/publicar-evento.page.html:311:35:
+[37m      311 │                 @for (categoria of [32mcategorias[37m; track categoria) {
+          ╵                                    [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component PublicarEventoPage.
+
+    src/app/pages/publicar-evento/publicar-evento.page.ts:59:15:
+[37m      59 │   templateUrl: [32m'./publicar-evento.page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files                     | Names                       |  Raw size
+main.js                                 | main                        | 164.43 kB | 
+styles.css                              | styles                      |  79.38 kB | 
+chunk-ITCTEOGV.js                       | -                           |  59.38 kB | 
+chunk-OYNBSLXM.js                       | -                           |  51.34 kB | 
+chunk-GWLOIWY6.js                       | -                           |  37.43 kB | 
+chunk-6KF3LPRE.js                       | -                           |  26.82 kB | 
+chunk-PJ5INMCR.js                       | -                           |  21.12 kB | 
+chunk-U7E44MJC.js                       | -                           |   9.18 kB | 
+chunk-QTEQLBBF.js                       | -                           |   6.38 kB | 
+chunk-P7LCW6NO.js                       | -                           |   3.01 kB | 
+chunk-VUJOFXKG.js                       | -                           | 938 bytes | 
+
+                                        | Initial total               | 459.38 kB
+
+Lazy chunk files                        | Names                       |  Raw size
+detalle-evento.page-DK4F4UCZ.js         | detalle-evento-page         |  98.56 kB | 
+mapa.page-LREL5X3R.js                   | mapa-page                   |  97.27 kB | 
+admin-eventos.page-GP3NEBDN.js          | admin-eventos-page          |  92.44 kB | 
+perfil.page-PNELRFSZ.js                 | perfil-page                 |  86.43 kB | 
+login.page-ZZ6TWE3L.js                  | login-page                  |  84.07 kB | 
+publicar-evento.page-NBYOIXRW.js        | publicar-evento-page        |  79.62 kB | 
+calendario.page-34AI6IP4.js             | calendario-page             |  57.93 kB | 
+home.page-X5LQZ7OW.js                   | home-page                   |  57.68 kB | 
+chunk-YAGMYJQG.js                       | -                           |  53.66 kB | 
+admin-dashboard.page-O7EVMGQL.js        | admin-dashboard-page        |  42.45 kB | 
+restablecer-contrasena.page-JGX3F7EV.js | restablecer-contrasena-page |  39.48 kB | 
+admin-paginas.page-663UZWJV.js          | admin-paginas-page          |  33.55 kB | 
+chunk-CVMNGC5F.js                       | -                           |  30.14 kB | 
+admin-organizadores.page-NK3RK6SR.js    | admin-organizadores-page    |  21.85 kB | 
+chunk-E6GEXD3T.js                       | -                           |  17.49 kB | 
+...and 6 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [2.766 seconds] - 2026-11-21T04:14:38.583Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 164.67 kB | 
+
+Application bundle generation complete. [7.909 seconds] - 2026-11-22T01:19:02.823Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files     | Names       |  Raw size
+main.js                 | main        | 164.67 kB | 
+
+Lazy chunk files        | Names       |  Raw size
+perfil.page-BBLTC7V7.js | perfil-page |  86.67 kB | 
+
+Application bundle generation complete. [7.267 seconds] - 2026-11-22T01:19:11.210Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 166.71 kB | 
+
+Application bundle generation complete. [4.313 seconds] - 2026-11-22T01:19:17.145Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files     | Names       |  Raw size
+main.js                 | main        | 166.71 kB | 
+
+Lazy chunk files        | Names       |  Raw size
+perfil.page-ESHWLVHD.js | perfil-page |  86.97 kB | 
+
+Application bundle generation complete. [5.327 seconds] - 2026-11-22T01:19:28.542Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 168.97 kB | 
+
+Application bundle generation complete. [5.851 seconds] - 2026-11-22T01:19:36.938Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 170.00 kB | 
+
+Application bundle generation complete. [5.573 seconds] - 2026-11-22T01:22:31.985Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files     | Names       |  Raw size
+main.js                 | main        | 168.86 kB | 
+chunk-AM2GXH6H.js       | -           |   1.24 kB | 
+
+Lazy chunk files        | Names       |  Raw size
+perfil.page-MJNHIDZE.js | perfil-page |  86.86 kB | 
+
+Application bundle generation complete. [5.713 seconds] - 2026-11-22T01:22:38.409Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files                     | Names                       |  Raw size
+main.js                                 | main                        | 168.86 kB | 
+styles.css                              | styles                      |  79.38 kB | 
+chunk-ITCTEOGV.js                       | -                           |  59.38 kB | 
+chunk-OYNBSLXM.js                       | -                           |  51.34 kB | 
+chunk-GWLOIWY6.js                       | -                           |  37.43 kB | 
+chunk-6KF3LPRE.js                       | -                           |  26.82 kB | 
+chunk-PJ5INMCR.js                       | -                           |  21.12 kB | 
+chunk-U7E44MJC.js                       | -                           |   9.18 kB | 
+chunk-QTEQLBBF.js                       | -                           |   6.38 kB | 
+chunk-P7LCW6NO.js                       | -                           |   3.01 kB | 
+chunk-AM2GXH6H.js                       | -                           |   1.24 kB | 
+chunk-VUJOFXKG.js                       | -                           | 938 bytes | 
+
+                                        | Initial total               | 465.05 kB
+
+Lazy chunk files                        | Names                       |  Raw size
+detalle-evento.page-DK4F4UCZ.js         | detalle-evento-page         |  98.56 kB | 
+mapa.page-LREL5X3R.js                   | mapa-page                   |  97.27 kB | 
+admin-eventos.page-GP3NEBDN.js          | admin-eventos-page          |  92.44 kB | 
+perfil.page-MJNHIDZE.js                 | perfil-page                 |  86.86 kB | 
+login.page-ZZ6TWE3L.js                  | login-page                  |  84.07 kB | 
+publicar-evento.page-NBYOIXRW.js        | publicar-evento-page        |  79.62 kB | 
+calendario.page-34AI6IP4.js             | calendario-page             |  57.93 kB | 
+home.page-X5LQZ7OW.js                   | home-page                   |  57.68 kB | 
+chunk-YAGMYJQG.js                       | -                           |  53.66 kB | 
+admin-dashboard.page-O7EVMGQL.js        | admin-dashboard-page        |  42.45 kB | 
+restablecer-contrasena.page-JGX3F7EV.js | restablecer-contrasena-page |  39.48 kB | 
+admin-paginas.page-663UZWJV.js          | admin-paginas-page          |  33.55 kB | 
+chunk-CVMNGC5F.js                       | -                           |  30.14 kB | 
+admin-organizadores.page-NK3RK6SR.js    | admin-organizadores-page    |  21.85 kB | 
+chunk-E6GEXD3T.js                       | -                           |  17.49 kB | 
+...and 6 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [0.010 seconds] - 2026-11-22T01:33:19.179Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files                     | Names                       |  Raw size
+main.js                                 | main                        | 168.86 kB | 
+styles.css                              | styles                      |  79.38 kB | 
+chunk-ITCTEOGV.js                       | -                           |  59.38 kB | 
+chunk-OYNBSLXM.js                       | -                           |  51.34 kB | 
+chunk-GWLOIWY6.js                       | -                           |  37.43 kB | 
+chunk-6KF3LPRE.js                       | -                           |  26.82 kB | 
+chunk-PJ5INMCR.js                       | -                           |  21.12 kB | 
+chunk-U7E44MJC.js                       | -                           |   9.18 kB | 
+chunk-QTEQLBBF.js                       | -                           |   6.38 kB | 
+chunk-P7LCW6NO.js                       | -                           |   3.01 kB | 
+chunk-AM2GXH6H.js                       | -                           |   1.24 kB | 
+chunk-VUJOFXKG.js                       | -                           | 938 bytes | 
+
+                                        | Initial total               | 465.05 kB
+
+Lazy chunk files                        | Names                       |  Raw size
+detalle-evento.page-DK4F4UCZ.js         | detalle-evento-page         |  98.56 kB | 
+mapa.page-LREL5X3R.js                   | mapa-page                   |  97.27 kB | 
+admin-eventos.page-GP3NEBDN.js          | admin-eventos-page          |  92.44 kB | 
+perfil.page-MJNHIDZE.js                 | perfil-page                 |  86.86 kB | 
+login.page-ZZ6TWE3L.js                  | login-page                  |  84.07 kB | 
+publicar-evento.page-NBYOIXRW.js        | publicar-evento-page        |  79.62 kB | 
+calendario.page-34AI6IP4.js             | calendario-page             |  57.93 kB | 
+home.page-X5LQZ7OW.js                   | home-page                   |  57.68 kB | 
+chunk-YAGMYJQG.js                       | -                           |  53.66 kB | 
+admin-dashboard.page-O7EVMGQL.js        | admin-dashboard-page        |  42.45 kB | 
+restablecer-contrasena.page-JGX3F7EV.js | restablecer-contrasena-page |  39.48 kB | 
+admin-paginas.page-663UZWJV.js          | admin-paginas-page          |  33.55 kB | 
+chunk-CVMNGC5F.js                       | -                           |  30.14 kB | 
+admin-organizadores.page-NK3RK6SR.js    | admin-organizadores-page    |  21.85 kB | 
+chunk-E6GEXD3T.js                       | -                           |  17.49 kB | 
+...and 6 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [0.024 seconds] - 2026-11-22T02:06:50.650Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files                  | Names                    |  Raw size
+main.js                              | main                     | 168.86 kB | 
+chunk-NVOKYUWU.js                    | -                        |  59.38 kB | 
+chunk-7TA7ORDL.js                    | -                        |  51.34 kB | 
+chunk-D4HWLQPC.js                    | -                        |  38.89 kB | 
+
+Lazy chunk files                     | Names                    |  Raw size
+detalle-evento.page-BCA5JU4C.js      | detalle-evento-page      |  98.56 kB | 
+mapa.page-RDCAMPXD.js                | mapa-page                |  97.27 kB | 
+admin-eventos.page-5O2FC2SS.js       | admin-eventos-page       |  92.44 kB | 
+perfil.page-OP3ME63S.js              | perfil-page              |  86.86 kB | 
+publicar-evento.page-OBUGVAIT.js     | publicar-evento-page     |  79.62 kB | 
+calendario.page-G6FJ6PXS.js          | calendario-page          |  57.93 kB | 
+home.page-WFACU3PF.js                | home-page                |  57.68 kB | 
+chunk-XWPSRIGE.js                    | -                        |  53.66 kB | 
+admin-dashboard.page-WZNAMYFQ.js     | admin-dashboard-page     |  42.45 kB | 
+admin-paginas.page-OPXQDVOK.js       | admin-paginas-page       |  33.55 kB | 
+admin-organizadores.page-VTGE6VQ2.js | admin-organizadores-page |  21.85 kB | 
+para-ti.page-DLBK7TJI.js             | para-ti-page             |  16.64 kB | 
+
+Application bundle generation complete. [18.526 seconds] - 2026-11-22T04:20:01.731Z
+
+Page reload sent to client(s).

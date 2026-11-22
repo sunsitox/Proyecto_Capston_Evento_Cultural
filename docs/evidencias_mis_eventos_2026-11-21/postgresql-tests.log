@@ -1,0 +1,11 @@
+PASS conservación 4 categorías, término y campos protegidos
+PASS rechazo sin cambios: comuna desconocida
+PASS rechazo sin cambios: dueño ajeno
+PASS rechazo sin cambios: evento inexistente
+PASS rechazo sin cambios: categorías vacías
+PASS rollback: communes SELECT
+PASS rollback: event_categories DELETE
+PASS rollback: categories INSERT
+PASS rollback: event_categories INSERT
+PASS reemplazo explícito y deduplicación
+PASS RPC denegado a authenticated

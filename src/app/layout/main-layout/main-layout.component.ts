@@ -27,6 +27,7 @@ import {
 } from '@ionic/angular';
 import { DiscoverLayoutComponent } from '../../features/home/discover/discover-layout.component';
 import { ApiService } from '../../core/services/api.service';
+import { PlataformaService } from '../../core/services/plataforma.service';
 
 /**
  * Shell principal con dos presentaciones según viewport:
@@ -94,6 +95,14 @@ export class MainLayoutComponent {
 
   /** true cuando el viewport corresponde al shell web (>= 992px) */
   readonly esEscritorio = signal(this.calcularEscritorio());
+
+  /**
+   * Detectado desde el servicio compartido de plataforma:
+   * la descarga del APK solo se ofrece en la web (no en la app nativa,
+   * donde es redundante). Alias al signal del servicio para no tocar
+   * la plantilla.
+   */
+  readonly mostrarDescargaApk = inject(PlataformaService).mostrarDescargaApk;
 
   /** true en rutas de descubrimiento, donde el shell web muestra Descubrir */
   readonly esVistaDescubrir = signal(this.esUrlDescubrir(this.router.url));

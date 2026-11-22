@@ -115,6 +115,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
     auth: { autoRefreshToken: false, persistSession: false }
   });
 
+  // Consentimiento opt-in (CP-F3-NOT-001): solo envía a quien activó el
+  // correo en Perfil (user_metadata.recomendaciones.correoSemanal === true).
+  // Ausente o false = no enviar (ni siquiera con lista explícita).
+  const aceptaCorreo = (u: { user_metadata?: Record<string, unknown> | null }): boolean => {
+    const recs = (u.user_metadata ?? {}) as Record<string, unknown>;
+    const prefs = recs['recomendaciones'] as Record<string, unknown> | undefined;
+    return prefs?.['correoSemanal'] === true;
+  };
+
   try {
     // ---- 1. Destinatarios ---------------------------------------------------
     let destinatarios: { id: string; email: string; nombre: string }[] = [];
@@ -125,7 +134,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         if (error) break;
         for (const u of data.users ?? []) {
           const correo = String(u.email ?? '').trim().toLowerCase();
-          if (pedidos.includes(correo)) {
+          if (pedidos.includes(correo) && aceptaCorreo(u)) {
             const meta = (u.user_metadata ?? {}) as Record<string, any>;
             const nombre = String(
               meta.nombre || meta.nombre_display || correo.split('@')[0]
@@ -141,7 +150,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: MAX_USUARIOS });
       if (error) return json(500, { error: 'No se pudo listar usuarios: ' + error.message });
       for (const u of data.users ?? []) {
-        if (!u.email) continue;
+        if (!u.email || !aceptaCorreo(u)) continue;
         const meta = (u.user_metadata ?? {}) as Record<string, any>;
         destinatarios.push({
           id: u.id,

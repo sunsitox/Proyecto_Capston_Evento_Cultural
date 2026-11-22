@@ -1,0 +1,15 @@
+PASS handler: único RPC, 4 categorías, término, dueño JWT y lista blanca
+PASS handler: error XX000 → 500 sin éxito/fallback
+PASS handler: error 22023 → 400 sin éxito/fallback
+PASS handler: error 42501 → 403 sin éxito/fallback
+PASS handler: error P0002 → 404 sin éxito/fallback
+PASS handler: error PGRST202 → 500 sin éxito/fallback
+PASS handler: categorías inválidas abortan antes de escribir
+PASS creación: 4 categorías íntegras, hora final y único RPC
+publicar-evento: insert del evento { code: 'XX000', message: 'Fallo controlado' }
+PASS creación: fallo XX000 sin éxito parcial
+publicar-evento: insert del evento { code: '22023', message: 'Fallo controlado' }
+PASS creación: fallo 22023 sin éxito parcial
+publicar-evento: insert del evento { code: 'PGRST202', message: 'Fallo controlado' }
+PASS creación: fallo PGRST202 sin éxito parcial
+PASS creación: categorías inválidas rechazadas antes del RPC

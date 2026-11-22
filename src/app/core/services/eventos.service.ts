@@ -78,6 +78,13 @@ export const FILTROS_INICIALES: FiltrosEventos = {
 /** Llave en localStorage con las páginas/fuentes ocultas desde el panel. */
 const EVENTOS_FUENTES_OCULTAS = 'ec_fuentes_ocultas_v1';
 
+/**
+ * Llave en localStorage con los filtros de Descubrir.
+ * Persistirlos hace que la vista se restaure al volver del detalle,
+ * incluso tras una recarga completa (CP-RSP-007).
+ */
+const EVENTOS_FILTROS = 'ec:filtros:v1';
+
 /** Opción de filtro con la cantidad de eventos que quedarían al elegirla. */
 export interface OpcionFiltro {
   valor: string;
@@ -110,7 +117,9 @@ export class EventosService {
   private readonly supabase = inject(SupabaseService);
   private readonly recomendacion = inject(RecomendacionService);
   private readonly _eventos = signal<Evento[]>([]);
-  private readonly _filtros = signal<FiltrosEventos>({ ...FILTROS_INICIALES });
+  private readonly _filtros = signal<FiltrosEventos>(
+    EventosService.leerFiltrosPersistidos()
+  );
   private readonly _ordenPor = signal<OrdenEventos>('fecha');
   private readonly _cargando = signal<boolean>(false);
   /** Carga progresiva en curso: el primer lote ya pintó pero faltan lotes.
@@ -387,11 +396,52 @@ export class EventosService {
 
   actualizarFiltros(parciales: Partial<FiltrosEventos>): void {
     this._filtros.update((actuales) => ({ ...actuales, ...parciales }));
+    this.persistirFiltros();
   }
 
   /** Reemplaza el estado completo de filtros (bottom sheet "Aplicar"). */
   reemplazarFiltros(filtros: FiltrosEventos): void {
     this._filtros.set({ ...filtros });
+    this.persistirFiltros();
+  }
+
+  /** Guarda los filtros actuales para restaurarlos al volver (CP-RSP-007). */
+  private persistirFiltros(): void {
+    try {
+      localStorage.setItem(EVENTOS_FILTROS, JSON.stringify(this._filtros()));
+    } catch {
+      /* sin almacenamiento disponible: el estado vive solo en memoria */
+    }
+  }
+
+  /** Lee los filtros persistidos validando tipos; si no hay, los iniciales. */
+  private static leerFiltrosPersistidos(): FiltrosEventos {
+    const base: FiltrosEventos = { ...FILTROS_INICIALES };
+    try {
+      const raw = localStorage.getItem(EVENTOS_FILTROS);
+      if (!raw) return base;
+      const p = JSON.parse(raw) as Partial<FiltrosEventos>;
+      if (typeof p.texto === 'string') base.texto = p.texto;
+      if (Array.isArray(p.categorias)) {
+        base.categorias = p.categorias.filter(
+          (c): c is string => typeof c === 'string'
+        );
+      }
+      const textoONull = (v: unknown): string | null =>
+        typeof v === 'string' ? v : null;
+      base.region = textoONull(p.region);
+      base.comuna = textoONull(p.comuna);
+      base.fechaDesde = textoONull(p.fechaDesde);
+      base.fechaHasta = textoONull(p.fechaHasta);
+      base.modalidad = textoONull(p.modalidad);
+      base.publico = textoONull(p.publico);
+      base.gratuito =
+        typeof p.gratuito === 'boolean' ? p.gratuito : null;
+      base.accesible = typeof p.accesible === 'boolean' ? p.accesible : false;
+    } catch {
+      return { ...FILTROS_INICIALES };
+    }
+    return base;
   }
 
   /** Quita UN filtro individual (chips activos) */
@@ -441,6 +491,7 @@ export class EventosService {
 
   limpiarFiltros(): void {
     this._filtros.set({ ...FILTROS_INICIALES });
+    this.persistirFiltros();
   }
 
   /**
@@ -458,6 +509,7 @@ export class EventosService {
       )[clave];
     }
     this._filtros.set(actuales);
+    this.persistirFiltros();
   }
 
   setOrden(orden: OrdenEventos): void {

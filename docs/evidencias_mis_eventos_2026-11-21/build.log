@@ -1,0 +1,30 @@
+❯ Building...
+✔ Building...
+Initial chunk files | Names                       |  Raw size | Estimated transfer size
+main-PVN2E5G6.js    | main                        |   1.61 MB |               305.20 kB
+styles-RLRSBHQN.css | styles                      |  65.38 kB |                 9.71 kB
+
+                    | Initial total               |   1.67 MB |               314.91 kB
+
+Lazy chunk files    | Names                       |  Raw size | Estimated transfer size
+chunk-UJaa4SOO.js   | -                           | 150.77 kB |                37.82 kB
+chunk-h5FxCYth.js   | mapa-page                   |  36.95 kB |                 9.88 kB
+chunk-5GI-8Pdc.js   | admin-eventos-page          |  35.40 kB |                 7.85 kB
+chunk-DFjM8kL_.js   | detalle-evento-page         |  32.92 kB |                 7.89 kB
+chunk-BXxTFAot.js   | login-page                  |  31.71 kB |                 7.09 kB
+chunk-CDF33Nju.js   | perfil-page                 |  31.52 kB |                 7.11 kB
+chunk-d6JX9SjR.js   | publicar-evento-page        |  27.90 kB |                 7.08 kB
+chunk-SAICyHKx.js   | calendario-page             |  21.06 kB |                 5.52 kB
+chunk-DB5wInRv.js   | home-page                   |  19.59 kB |                 5.06 kB
+chunk-DEEhrzKt.js   | -                           |  16.83 kB |                 3.89 kB
+chunk-BylUuUnb.js   | admin-dashboard-page        |  15.02 kB |                 4.47 kB
+chunk-B_5JaOsy.js   | restablecer-contrasena-page |  13.97 kB |                 4.00 kB
+chunk-DJu2SBNH.js   | admin-paginas-page          |  13.05 kB |                 3.67 kB
+chunk-Z-J1WLRk.js   | -                           |  11.33 kB |                 2.62 kB
+chunk-BZpnr3FJ.js   | p-Dvyv9SMk                  |  10.06 kB |                 2.59 kB
+...and 16 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [38.634 seconds] - 2026-11-21T04:18:25.851Z
+
+Output location: C:\CAPSTONE -20260924T184555Z-1-001\EventoCultural_Integrado\EventoCultural_Integrado\www
+

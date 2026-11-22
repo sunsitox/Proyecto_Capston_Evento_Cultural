@@ -86,13 +86,117 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return json(403, { error: 'Tu cuenta es de usuario. Activa el perfil de organizador para publicar eventos.' });
     }
 
-    // ---- 2. Validación del borrador (misma regla que la UI) ---------------
-    let cuerpo: Partial<Draft>;
+    let cuerpo: (Partial<Draft> & { accion?: string; evento_id?: string }) | null = null;
     try {
       cuerpo = await req.json();
     } catch {
       return json(400, { error: 'Se requiere JSON' });
     }
+    if (!cuerpo) return json(400, { error: 'Se requiere JSON' });
+
+    // ---- Mis eventos: listar / actualizar / eliminar propios --------------
+    // (CP-F3-OWN-001). La titularidad vive en external_key = org:<uid>:…
+    // escrita al crear. Cualquier otro evento (scraper u otro organizador)
+    // responde 403: nadie edita ni borra lo ajeno.
+    const esMio = (externalKey: unknown) =>
+      typeof externalKey === 'string' &&
+      externalKey.startsWith(`org:${usuario.id}:`);
+
+    if (cuerpo.accion === 'listar_mios') {
+      const { data, error } = await admin
+        .from('events')
+        .select(
+          'id,title,description,status,start_at,end_at,venue,address,is_free,price_text,' +
+            'image_url,official_url,audience,location_precision,created_at,' +
+            'communes(name),event_categories(categories(name))'
+        )
+        .like('external_key', `org:${usuario.id}:%`)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) return json(500, { error: 'No se pudieron listar tus eventos.' });
+      return json(200, { eventos: data ?? [] });
+    }
+
+    if (cuerpo.accion === 'actualizar' || cuerpo.accion === 'eliminar') {
+      const eventoId = limpia(cuerpo.evento_id, 80);
+      if (!eventoId) return json(400, { error: 'Falta el identificador del evento.' });
+      const { data: previo, error: errPrevio } = await admin
+        .from('events')
+        .select('id,external_key')
+        .eq('id', eventoId)
+        .maybeSingle();
+      if (errPrevio) return json(500, { error: 'No se pudo consultar el evento.' });
+      if (!previo) return json(404, { error: 'El evento no existe.' });
+      if (!esMio((previo as { external_key: unknown }).external_key)) {
+        return json(403, { error: 'Solo puedes editar o eliminar tus propios eventos.' });
+      }
+      if (cuerpo.accion === 'eliminar') {
+        await admin.from('event_categories').delete().eq('event_id', eventoId);
+        const { error: errDel } = await admin.from('events').delete().eq('id', eventoId);
+        if (errDel) return json(500, { error: 'No se pudo eliminar el evento.' });
+        return json(200, { mensaje: 'Evento eliminado.' });
+      }
+      // Editar: mismas reglas que crear, sin tocar status ni external_key.
+      const tit = limpia(cuerpo.titulo);
+      const des = limpia(cuerpo.descripcion, 20_000);
+      const ven = limpia(cuerpo.venue);
+      const dir = limpia(cuerpo.address);
+      const ini = limpia(cuerpo.start_at, 40);
+      const fin = limpia(cuerpo.end_at, 40) || null;
+      if (tit.length < 4) return json(400, { error: 'El nombre debe tener al menos 4 caracteres.' });
+      if (des.length < 20) return json(400, { error: 'La descripción debe tener al menos 20 caracteres.' });
+      if (!ven) return json(400, { error: 'Indica la dirección o lugar de referencia.' });
+      if (Number.isNaN(Date.parse(ini)) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(ini)) {
+        return json(400, { error: 'Fecha del evento inválida.' });
+      }
+      if (fin && Number.isNaN(Date.parse(fin))) {
+        return json(400, { error: 'Fecha de término inválida.' });
+      }
+      const comunaUp = limpia(cuerpo.comuna, 120);
+      if (!Array.isArray(cuerpo.categories) || !cuerpo.categories.length ||
+          cuerpo.categories.some(c => typeof c !== 'string' || !c.trim() || c.trim().length > 80)) {
+        return json(400, { error: 'Selecciona categorías válidas.' });
+      }
+      // Modalidad: no se guarda como columna; se deriva en los campos de ubicación.
+      const modalidadUp = limpia(cuerpo.modalidad, 30);
+      const esOnlineUp = /online|virtual|stream/i.test(modalidadUp);
+      const locationUp = esOnlineUp ? comunaUp || 'Online' : dir || ven;
+      const precisionUp = esOnlineUp ? 'online' : dir ? 'exact' : 'venue';
+      const sourceUp = esOnlineUp ? 'source-default' : 'source-data';
+      const precioLibreUp = cuerpo.is_free === true || limpia(cuerpo.price_text, 120) === '';
+      // Un único RPC: evento, catálogos y relaciones se confirman o revierten juntos.
+      const { error: errUp } = await admin.rpc('update_organizer_event_atomic', {
+        p_event_id: eventoId,
+        p_owner_id: usuario.id,
+        p_commune: comunaUp || null,
+        p_categories: [...new Set(cuerpo.categories.map(c => c.trim()))],
+        p_changes: {
+          title: tit,
+          description: des,
+          start_at: ini,
+          end_at: fin,
+          venue: ven,
+          address: dir || ven,
+          location: locationUp,
+          location_precision: precisionUp,
+          location_source: sourceUp,
+          audience: limpia(cuerpo.audience, 60) || 'Todo público',
+          is_free: precioLibreUp,
+          price_text: precioLibreUp ? null : limpia(cuerpo.price_text, 120),
+          image_url: limpia(cuerpo.image_url, 2_000) || null,
+          official_url: limpia(cuerpo.official_url, 2_000) || null
+        }
+      });
+      if (errUp) {
+        const status = errUp.code === '22023' ? 400 : errUp.code === '42501' ? 403 : errUp.code === 'P0002' ? 404 : 500;
+        return json(status, { error: status === 500
+          ? 'No se pudo guardar el cambio completo. No se aplicaron cambios.'
+          : errUp.message });
+      }
+      return json(200, { mensaje: 'Evento actualizado.' });
+    }
+
+    // ---- 2. Validación del borrador (misma regla que la UI) ---------------
 
     const titulo = limpia(cuerpo.titulo);
     const descripcion = limpia(cuerpo.descripcion, 20_000);
@@ -111,82 +215,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return json(400, { error: 'Fecha de término inválida.' });
     }
 
-    // ---- 3. source_id obligatorio: fila estable del catálogo --------------
-    const NOMBRE_FUENTE = 'Publicación de organizador';
-    let { data: fuente } = await admin
-      .from('sources')
-      .select('id')
-      .eq('name', NOMBRE_FUENTE)
-      .maybeSingle();
-    if (!fuente) {
-      const { data: creada, error: errFuente } = await admin
-        .from('sources')
-        .insert({ id: crypto.randomUUID(), name: NOMBRE_FUENTE, is_active: true })
-        .select('id')
-        .single();
-      if (errFuente) {
-        // Carrera con otra creación: reintentar lectura antes de fallar.
-        const reintento = await admin.from('sources').select('id').eq('name', NOMBRE_FUENTE).maybeSingle();
-        if (!reintento.data) {
-          console.error('publicar-evento: no se pudo crear la fuente', errFuente);
-          return json(500, { error: 'No se pudo preparar la publicación. Intenta de nuevo.' });
-        }
-        fuente = reintento.data;
-      } else {
-        fuente = creada;
-      }
+    if (!Array.isArray(cuerpo.categories) || !cuerpo.categories.length ||
+        cuerpo.categories.some(c => typeof c !== 'string' || !c.trim() || c.trim().length > 80)) {
+      return json(400, { error: 'Selecciona categorías válidas.' });
     }
-
-    // ---- 4. organizer_id: entidad por nombre del organizador --------------
     const meta = (usuario.user_metadata ?? {}) as Record<string, any>;
     const nombreOrg = limpia(meta.nombre || meta.nombre_display || usuario.email, 120);
-    let { data: organizador } = await admin
-      .from('organizers')
-      .select('id')
-      .eq('name', nombreOrg)
-      .maybeSingle();
-    if (!organizador) {
-      const { data: creado, error: errOrg } = await admin
-        .from('organizers')
-        .insert({ id: crypto.randomUUID(), name: nombreOrg })
-        .select('id')
-        .single();
-      if (errOrg) {
-        const reintento = await admin.from('organizers').select('id').eq('name', nombreOrg).maybeSingle();
-        if (!reintento.data) {
-          console.error('publicar-evento: no se pudo registrar el organizador', errOrg);
-          organizador = null; // Evento queda con organizer_id NULL (opcional en el schema).
-        } else {
-          organizador = reintento.data;
-        }
-      } else {
-        organizador = creado;
-      }
-    }
-
-    // ---- 5. commune_id + region por nombre de comuna ----------------------
-    // Sin case/acento-dependencia del seed: se pliegan ambos lados
-    // (minúsculas + sin diacríticos) sobre la lista completa de comunas.
-    const pliega = (s: string): string =>
-      s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    let communeId: string | null = null;
-    let region: string | null = null;
     const comuna = limpia(cuerpo.comuna, 120);
-    if (comuna) {
-      const { data: filas, error: errComunas } = await admin
-        .from('communes')
-        .select('id, name, region');
-      const objetivo = pliega(comuna);
-      const fila = (filas ?? []).find(
-        (c: { name: string }) => pliega(c.name) === objetivo
-      );
-      if (errComunas) console.error('publicar-evento: listando comunas', errComunas);
-      if (fila) {
-        communeId = fila.id as string;
-        region = (fila.region as string) ?? null;
-      }
-    }
-
     // ---- 6. INSERT del evento --------------------------------------------
     const precioLibre = cuerpo.is_free === true || limpia(cuerpo.price_text, 120) === '';
     const imagen = limpia(cuerpo.image_url, 2_000) ||
@@ -204,21 +239,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const precision = esOnline ? 'online' : address ? 'exact' : 'venue';
     const source = esOnline ? 'source-default' : 'source-data';
 
-    const { data: evento, error: errInsert } = await admin
-      .from('events')
-      .insert({
-        id: crypto.randomUUID(),
-        external_key: `org:${usuario.id}:${Date.now()}:${crypto.randomUUID().slice(0, 8)}`,
-        source_id: (fuente as { id: string }).id,
-        organizer_id: organizador ? (organizador as { id: string }).id : null,
-        commune_id: communeId,
+    // Creación y categorías también deben ser indivisibles: sin recorte ni
+    // éxito parcial cuando falla una asociación o el catálogo.
+    const { data: evento, error: errInsert } = await admin.rpc('create_organizer_event_atomic', {
+      p_owner_id: usuario.id,
+      p_organizer_name: nombreOrg,
+      p_commune: comuna || null,
+      p_categories: [...new Set(cuerpo.categories.map(c => c.trim()))],
+      p_changes: {
         title: titulo,
         start_at: startAt,
         end_at: endAtRaw,
         venue,
         address: address || venue,
         city: null,
-        region,
         country: 'Chile',
         location,
         location_precision: precision,
@@ -240,40 +274,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
         extraction_method: 'app_organizador',
         scraped_at: new Date().toISOString(),
         last_seen_at: new Date().toISOString()
-      })
-      .select('id, external_key')
-      .single();
+      }
+    });
     if (errInsert || !evento) {
       console.error('publicar-evento: insert del evento', errInsert);
-      return json(500, {
-        error: 'No se pudo guardar el evento. Intenta de nuevo.',
-        detalle: errInsert?.message ?? 'sin datos'
+      return json(errInsert?.code === '22023' ? 400 : 500, {
+        error: 'No se pudo guardar el evento completo. No se aplicaron cambios.'
       });
-    }
-
-    // ---- 7. Categorías (N:M): buscar por nombre o crearla -----------------
-    const categoriasPedidas = Array.isArray(cuerpo.categories) ? cuerpo.categories.slice(0, 3) : [];
-    for (const cruda of categoriasPedidas) {
-      const nombre = limpia(cruda, 80);
-      if (!nombre) continue;
-      const { data: cat } = await admin
-        .from('categories')
-        .select('id')
-        .eq('name', nombre)
-        .maybeSingle();
-      const catId =
-        (cat as { id: string } | null)?.id ??
-        ((
-          await admin
-            .from('categories')
-            .insert({ id: crypto.randomUUID(), name: nombre })
-            .select('id')
-            .single()
-        ).data as { id: string } | null)?.id;
-      if (!catId) continue;
-      await admin
-        .from('event_categories')
-        .upsert({ event_id: evento.id, category_id: catId }, { onConflict: 'event_id,category_id' });
     }
 
     return json(201, {

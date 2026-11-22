@@ -1,0 +1,17 @@
+PASS conservación 4 categorías, término y campos protegidos
+PASS rechazo sin cambios: comuna desconocida
+PASS rechazo sin cambios: dueño ajeno
+PASS rechazo sin cambios: evento inexistente
+PASS rechazo sin cambios: categorías vacías
+PASS rollback: communes SELECT
+PASS rollback: event_categories DELETE
+PASS rollback: categories INSERT
+PASS rollback: event_categories INSERT
+PASS reemplazo explícito y deduplicación
+PASS índice lower(name): reutilización y deduplicación case-insensitive
+PASS creación service_role: 4 categorías, FK/NOT NULL/checks/RLS/triggers originales
+PASS rollback creación: categories
+PASS rollback creación: event_categories
+PASS creación comuna inválida: sin evento ni relaciones parciales
+PASS comuna ambigua: rechazo sin elegir fila arbitraria
+PASS ambos RPC denegados a authenticated
