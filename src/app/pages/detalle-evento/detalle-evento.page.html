@@ -90,10 +90,14 @@
               <ion-icon [name]="iconoDe(ev.modalidad)" aria-hidden="true"></ion-icon>
               {{ ev.modalidad }}
             </span>
-            @if (ev.gratuito) {
+            @if (ev.gratuito === true) {
               <span class="ec-detail-chip ec-detail-chip--gratis">Entrada gratuita</span>
             } @else if (ev.precio) {
               <span class="ec-detail-chip">{{ ev.precio }}</span>
+            } @else if (ev.gratuito === null) {
+              <span class="ec-detail-chip">Precio no informado</span>
+            } @else {
+              <span class="ec-detail-chip">Con costo</span>
             }
           </div>
 
@@ -138,7 +142,11 @@
 
             <div class="ec-ficha__fila">
               <dt>Precio o gratuidad</dt>
-              <dd>{{ ev.gratuito ? 'Entrada gratuita' : ev.precio || 'Con costo' }}</dd>
+              <dd>
+                {{ ev.gratuito === true
+                  ? 'Entrada gratuita'
+                  : ev.precio || (ev.gratuito === null ? 'Precio no informado' : 'Con costo') }}
+              </dd>
             </div>
 
             <div class="ec-ficha__fila">
@@ -241,7 +249,9 @@
               <div>
                 <span class="ec-info-label">Entrada</span>
                 <span class="ec-info-value">
-                  {{ ev.gratuito ? 'Gratuita' : ev.precio || 'Con costo' }}
+                  {{ ev.gratuito === true
+                    ? 'Gratuita'
+                    : ev.precio || (ev.gratuito === null ? 'Precio no informado' : 'Con costo') }}
                 </span>
               </div>
             </div>
@@ -256,7 +266,7 @@
                   (click)="registrarFuente()"
                 >
                   <ion-icon name="ticket-outline" aria-hidden="true"></ion-icon>
-                  {{ ev.gratuito ? 'Inscribirme' : 'Ver fuente oficial' }}
+                  {{ ev.gratuito === true ? 'Inscribirme' : 'Ver fuente oficial' }}
                 </a>
               } @else {
                 <span class="ec-btn-accent-link ec-btn-accent-link--mudo">

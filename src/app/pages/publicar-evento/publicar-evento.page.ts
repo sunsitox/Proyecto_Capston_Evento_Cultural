@@ -151,7 +151,7 @@ export class PublicarEventoPage {
       imagenUrl: evento.image_url ?? '',
       enlaceInscripcion: '',
       paginaOficial: evento.official_url ?? '',
-      gratuito: evento.is_free !== false
+      gratuito: evento.is_free === true
     });
     this.enviado.set(false);
     this.errorServidor.set(null);

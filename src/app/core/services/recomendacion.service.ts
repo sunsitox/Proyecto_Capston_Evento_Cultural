@@ -312,14 +312,42 @@ export class RecomendacionService {
 
     // Sin fecha (espacio permanente) ordena al final: la agenda concreta manda.
     const claveFecha = (e: Evento): string => e.fecha || '9999-12-31';
+    const ordenadas = puntuadas.sort(
+      (a, b) =>
+        b.puntaje - a.puntaje ||
+        claveFecha(a.evento).localeCompare(claveFecha(b.evento))
+    );
 
-    return puntuadas
-      .sort(
-        (a, b) =>
-          b.puntaje - a.puntaje ||
-          claveFecha(a.evento).localeCompare(claveFecha(b.evento))
-      )
-      .slice(0, max);
+    // CP-REC-007: no repetir el mismo evento (título + fecha + comuna) y
+    // repartir el cupo entre categorías. Si el catálogo no alcanza para ser
+    // diverso, se completa igual: el tope cede ante la falta de variedad.
+    const MAX_POR_CATEGORIA = 3;
+    const elegidas: typeof ordenadas = [];
+    const reserva: typeof ordenadas = [];
+    const vistas = new Set<string>();
+    const porCategoria = new Map<string, number>();
+
+    for (const item of ordenadas) {
+      if (elegidas.length >= max) break;
+      const clave = claveDiversidad(item.evento);
+      if (vistas.has(clave)) continue;
+      const categoria = item.evento.categoria;
+      if ((porCategoria.get(categoria) ?? 0) >= MAX_POR_CATEGORIA) {
+        reserva.push(item);
+        continue;
+      }
+      vistas.add(clave);
+      porCategoria.set(categoria, (porCategoria.get(categoria) ?? 0) + 1);
+      elegidas.push(item);
+    }
+    for (const item of reserva) {
+      if (elegidas.length >= max) break;
+      const clave = claveDiversidad(item.evento);
+      if (vistas.has(clave)) continue;
+      vistas.add(clave);
+      elegidas.push(item);
+    }
+    return elegidas;
   }
 
   /**
@@ -499,6 +527,20 @@ export class RecomendacionService {
     }
     return { tipo: 'editorial', etiqueta: 'De la agenda cultural de esta semana' };
   }
+}
+
+/**
+ * Clave de diversidad de CP-REC-007: dos recomendaciones con el mismo
+ * título (sin tildes ni mayúsculas), fecha y comuna son la misma oferta.
+ */
+export function claveDiversidad(evento: Evento): string {
+  const titulo = (evento.titulo || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+  return [titulo, evento.fecha || '', evento.comuna || ''].join('|');
 }
 
 /** yyyy-mm-dd en horario local. */

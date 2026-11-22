@@ -717,7 +717,8 @@ export class SupabaseService {
     end_at: string | null;
     address: string;
     venue: string;
-    is_free: boolean;
+    /** NULL = gratuidad desconocida (no se fuerza a "con costo"). */
+    is_free: boolean | null;
     price_text: string | null;
     image_url: string;
     audience: string;

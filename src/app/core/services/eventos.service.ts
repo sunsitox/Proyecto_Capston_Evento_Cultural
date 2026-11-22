@@ -62,6 +62,22 @@ export function esCoordenadaChile(lat: number, lng: number): boolean {
   );
 }
 
+/**
+ * CP-DAT-010: la gratuidad ausente (`is_free` NULL) se conserva como
+ * desconocida. Solo un texto de precio explícitamente gratuito la resuelve;
+ * un monto numérico no convierte el catálogo en "con costo" por sí solo.
+ */
+export function gratuidadDesdeApi(
+  isFree: boolean | null | undefined,
+  priceText?: string | null
+): boolean | null {
+  if (typeof isFree === 'boolean') return isFree;
+  const precio = (priceText || '').trim().toLowerCase();
+  return /^(gratis|gratuit[oa]s?|entrada liberada|sin costo|acceso libre)$/.test(precio)
+    ? true
+    : null;
+}
+
 export const FILTROS_INICIALES: FiltrosEventos = {
   texto: '',
   categorias: [],
@@ -334,8 +350,8 @@ export class EventosService {
       comunas: contarOpciones(base(['comuna']), (e) => [e.comuna]),
       modalidades: contarOpciones(base(['modalidad']), (e) => [e.modalidad]),
       publicos: contarOpciones(base(['publico']), (e) => [e.publico]),
-      gratuitos: sinPrecio.filter((e) => e.gratuito).length,
-      conCosto: sinPrecio.filter((e) => !e.gratuito).length,
+      gratuitos: sinPrecio.filter((e) => e.gratuito === true).length,
+      conCosto: sinPrecio.filter((e) => e.gratuito === false).length,
       accesibles: base(['accesible']).filter((e) => !!e.accesibilidad).length
     };
   }
@@ -564,7 +580,8 @@ export class EventosService {
     end_at: string | null;
     address: string;
     venue: string;
-    is_free: boolean;
+    /** NULL = gratuidad desconocida (no se fuerza a "con costo"). */
+    is_free: boolean | null;
     price_text: string | null;
     image_url: string;
     audience: string;
@@ -781,7 +798,7 @@ export class EventosService {
       categorias: categorias as CategoriaEvento[],
       organizador: 'Organizador no informado',
       precio: e.price_text || '',
-      gratuito: !!e.is_free,
+      gratuito: gratuidadDesdeApi(e.is_free, e.price_text),
       publico: (e.audience || '').trim() || 'Todo público',
       accesibilidad: undefined,
       fuente: dominioDe(enlace),

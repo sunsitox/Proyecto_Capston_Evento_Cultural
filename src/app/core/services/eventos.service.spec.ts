@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { esCoordenadaChile } from './eventos.service';
+import { esCoordenadaChile, gratuidadDesdeApi } from './eventos.service';
+
+describe('gratuidadDesdeApi (CP-DAT-010)', () => {
+  it('respeta el booleano declarado por la fuente', () => {
+    expect(gratuidadDesdeApi(true)).toBe(true);
+    expect(gratuidadDesdeApi(false)).toBe(false);
+  });
+
+  it('deja NULL como desconocido: no lo convierte en "con costo"', () => {
+    expect(gratuidadDesdeApi(null, '')).toBeNull();
+    expect(gratuidadDesdeApi(undefined, null)).toBeNull();
+    expect(gratuidadDesdeApi(null, '$5.000')).toBeNull();
+  });
+
+  it('resuelve gratis solo con un texto explícito de gratuidad', () => {
+    expect(gratuidadDesdeApi(null, 'Gratis')).toBe(true);
+    expect(gratuidadDesdeApi(null, 'entrada liberada')).toBe(true);
+  });
+});
 
 describe('esCoordenadaChile (CP-MAP-008)', () => {
   it('acepta Santiago (-33,4 / -70,7)', () => {

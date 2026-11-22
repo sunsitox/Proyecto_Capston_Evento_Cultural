@@ -314,8 +314,42 @@ export class DetalleEventoPage {
         this.enlaceCopiado.set(true);
         return;
       } catch {
-        /* sin permisos de clipboard, lo dejamos silencioso */
+        /* sin permiso de clipboard: se intenta el respaldo clásico */
       }
+    }
+
+    if (this.copiarConSeleccion(url)) {
+      this.enlaceCopiado.set(true);
+      return;
+    }
+
+    // Último recurso: el enlace queda visible para copiarlo a mano.
+    await this.alertas.create({
+      header: 'Compartir evento',
+      message: url,
+      buttons: ['Cerrar']
+    });
+  }
+
+  /**
+   * Respaldo de copiado sin Clipboard API (navegadores sin permiso o sin
+   * contexto seguro). No lanza: informa si pudo copiar.
+   */
+  private copiarConSeleccion(texto: string): boolean {
+    if (typeof document === 'undefined' || !texto) return false;
+    const area = document.createElement('textarea');
+    area.value = texto;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    try {
+      area.select();
+      return document.execCommand('copy');
+    } catch {
+      return false;
+    } finally {
+      area.remove();
     }
   }
 

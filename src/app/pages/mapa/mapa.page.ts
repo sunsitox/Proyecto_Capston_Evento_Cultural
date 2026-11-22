@@ -56,6 +56,7 @@ import { GeocodificacionService } from '../../core/services/geocodificacion.serv
 import { EventoCardComponent } from '../../shared/components/evento-card/evento-card.component';
 import { EventoCardSkeletonComponent } from '../../shared/components/evento-card-skeleton/evento-card-skeleton.component';
 import { Evento } from '../../core/models/evento.model';
+import { agruparPines } from './clustering';
 import {
   BottomSheetComponent
 } from '../../shared/components/bottom-sheet/bottom-sheet.component';
@@ -415,10 +416,12 @@ export class MapaPage implements OnDestroy {
    */
   /** Umbral de zoom: por debajo → puntos canvas; igual o mayor → gota. */
   private static readonly UMBRAL_ARTES = 12;
+  /** Umbral de agrupación: por debajo los pines cercanos forman un cluster. */
+  private static readonly UMBRAL_CLUSTER = 14;
 
   private readonly cachePines = new Map<
     string,
-    { kind: ModoPin; capa: L.Marker | L.CircleMarker }
+    { kind: ModoPin | 'cluster'; capa: L.Marker | L.CircleMarker }
   >();
   private firmaPines = '';
   private modoPines: ModoPin = 'marker';
@@ -429,52 +432,92 @@ export class MapaPage implements OnDestroy {
     const icono = MapaPage.pinIcon;
     if (!mapa || !this.capaPines || !libr || !icono) return;
 
-    const modo: ModoPin =
-      (mapa.getZoom() ?? 0) < MapaPage.UMBRAL_ARTES ? 'canvas' : 'marker';
-    const firma = lista.map((e) => e.id).join('|');
+    const zoom = mapa.getZoom() ?? 0;
+    const modo: ModoPin = zoom < MapaPage.UMBRAL_ARTES ? 'canvas' : 'marker';
 
-    // SKIP total: mismos ids Y mismo modo (paneo corto estable).
+    // CP-MAP-006: en vista alejada los pines de una misma celda se agrupan
+    // en un solo marcador con el número de eventos. Acercar separa el grupo.
+    const grupos = zoom < MapaPage.UMBRAL_CLUSTER
+      ? agruparPines(lista, zoom)
+      : lista.map((evento) => ({
+          id: evento.id,
+          lat: evento.coordenadas!.lat,
+          lng: evento.coordenadas!.lng,
+          eventos: [evento]
+        }));
+    const firma = grupos.map((grupo) => grupo.id).join('|');
+
+    // SKIP total: mismos grupos Y mismo modo (paneo corto estable).
     if (firma === this.firmaPines && modo === this.modoPines) return;
     this.firmaPines = firma;
     this.modoPines = modo;
 
     this.zona.runOutsideAngular(() => {
-      const presentes = new Set(lista.map((e) => e.id));
+      const esperados = new Map<string, ModoPin | 'cluster'>(
+        grupos.map((grupo) => [
+          grupo.id,
+          grupo.eventos.length > 1 ? 'cluster' : modo
+        ])
+      );
 
       // 1) Retirar lo que salió de vista O cambió de representación
-      //    (punto ↔ gota al cruzar el umbral de zoom).
+      //    (punto ↔ gota ↔ cluster al cruzar los umbrales de zoom).
       for (const [id, entrada] of this.cachePines) {
-        if (!presentes.has(id) || entrada.kind !== modo) {
+        if (!esperados.has(id) || entrada.kind !== esperados.get(id)) {
           this.capaPines!.removeLayer(entrada.capa);
           this.cachePines.delete(id);
         }
       }
 
       // 2) Crear sólo los nuevos (los demás se reutilizan intactos).
-      for (const evento of lista) {
-        if (this.cachePines.has(evento.id)) continue;
-        const c = evento.coordenadas!;
-        const capa: L.Marker | L.CircleMarker =
-          modo === 'marker'
-            ? libr.marker([c.lat, c.lng], {
-                icon: icono,
-                title: evento.titulo,
-                keyboard: false,
-                riseOnHover: true
-              })
-            : libr.circleMarker([c.lat, c.lng], {
-                radius: 7,
-                color: '#fffdf9',
-                weight: 2,
-                fillColor: '#7a4f2e',
-                fillOpacity: 0.95
-              });
+      for (const grupo of grupos) {
+        if (this.cachePines.has(grupo.id)) continue;
+        const agrupado = grupo.eventos.length > 1;
+        let capa: L.Marker | L.CircleMarker;
+        if (agrupado) {
+          const tamano =
+            grupo.eventos.length >= 100 ? 54 : grupo.eventos.length >= 10 ? 46 : 40;
+          capa = libr.marker([grupo.lat, grupo.lng], {
+            icon: libr.divIcon({
+              className: 'ec-mapa__cluster',
+              html: `<span class="ec-mapa__cluster-num">${grupo.eventos.length}</span>`,
+              iconSize: [tamano, tamano],
+              iconAnchor: [tamano / 2, tamano / 2]
+            }),
+            title: `${grupo.eventos.length} eventos en esta zona`,
+            keyboard: true,
+            riseOnHover: true
+          });
+          capa.on('click', () => {
+            mapa.setView([grupo.lat, grupo.lng], Math.min(zoom + 2, 17));
+          });
+        } else {
+          const evento = grupo.eventos[0];
+          capa =
+            modo === 'marker'
+              ? libr.marker([grupo.lat, grupo.lng], {
+                  icon: icono,
+                  title: evento.titulo,
+                  keyboard: false,
+                  riseOnHover: true
+                })
+              : libr.circleMarker([grupo.lat, grupo.lng], {
+                  radius: 7,
+                  color: '#fffdf9',
+                  weight: 2,
+                  fillColor: '#7a4f2e',
+                  fillOpacity: 0.95
+                });
+          capa.on('click', () => {
+            this.zona.run(() => this.destacado.set(evento.id));
+            this.abrirPopup(evento);
+          });
+        }
         capa.addTo(this.capaPines!);
-        capa.on('click', () => {
-          this.zona.run(() => this.destacado.set(evento.id));
-          this.abrirPopup(evento);
+        this.cachePines.set(grupo.id, {
+          kind: agrupado ? 'cluster' : modo,
+          capa
         });
-        this.cachePines.set(evento.id, { kind: modo, capa });
       }
     });
   }

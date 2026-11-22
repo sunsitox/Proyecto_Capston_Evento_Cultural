@@ -50,7 +50,11 @@ export interface Evento {
   organizador: string;
   /** Precio en texto ('' si gratuito) */
   precio: string;
-  gratuito: boolean;
+  /**
+   * Gratuidad declarada por la fuente. `null` = sin dato: no se muestra
+   * "con costo" por inferencia (CP-DAT-010).
+   */
+  gratuito: boolean | null;
   /** Público objetivo recomendado */
   publico: string;
   /** Datos de accesibilidad ('' si no hay información) */

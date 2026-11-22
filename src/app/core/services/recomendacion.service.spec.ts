@@ -197,6 +197,74 @@ describe('RecomendacionService', () => {
     expect(recomendacion.motivo.etiqueta).not.toContain('revisaste');
   });
 
+  it('no repite la misma oferta con otro id (CP-REC-007)', () => {
+    const catalogo = [
+      evento({
+        id: 'copia-1',
+        titulo: 'Expo Ñuñoa',
+        fecha: '2030-02-01',
+        comuna: 'Ñuñoa'
+      }),
+      evento({
+        id: 'copia-2',
+        titulo: 'EXPO NUNOA',
+        fecha: '2030-02-01',
+        comuna: 'Ñuñoa'
+      }),
+      evento({ id: 'distinto', titulo: 'Concierto distinto' })
+    ];
+
+    const recomendaciones = servicio.recomendar(catalogo, { fechaRef: REF });
+
+    expect(recomendaciones).toHaveLength(2);
+    expect(
+      recomendaciones.filter((r) => r.evento.titulo.toLowerCase().includes('expo'))
+    ).toHaveLength(1);
+  });
+
+  it('reparte el cupo entre categorías cuando hay variedad (CP-REC-007)', () => {
+    const musica = Array.from({ length: 5 }, (_, i) =>
+      evento({
+        id: `musica-${i}`,
+        titulo: `Música ${i}`,
+        categoria: 'Música',
+        categorias: ['Música']
+      })
+    );
+    const arte = Array.from({ length: 4 }, (_, i) =>
+      evento({
+        id: `arte-${i}`,
+        titulo: `Arte ${i}`,
+        categoria: 'Arte y Cultura',
+        categorias: ['Arte y Cultura']
+      })
+    );
+
+    const recomendaciones = servicio.recomendar([...musica, ...arte], {
+      fechaRef: REF,
+      max: 6
+    });
+
+    expect(recomendaciones).toHaveLength(6);
+    expect(recomendaciones.filter((r) => r.evento.categoria === 'Música')).toHaveLength(3);
+    expect(
+      recomendaciones.filter((r) => r.evento.categoria === 'Arte y Cultura')
+    ).toHaveLength(3);
+  });
+
+  it('completa el cupo cuando el catálogo no alcanza para diversificar (CP-REC-007)', () => {
+    const musica = Array.from({ length: 6 }, (_, i) =>
+      evento({ id: `solo-${i}`, titulo: `Música ${i}` })
+    );
+
+    const recomendaciones = servicio.recomendar(musica, {
+      fechaRef: REF,
+      max: 5
+    });
+
+    expect(recomendaciones).toHaveLength(5);
+  });
+
   it('explica la recomendación por la categoría explorada', () => {
     const visto = evento({ id: 'visto' });
     const otro = evento({ id: 'otro' });
