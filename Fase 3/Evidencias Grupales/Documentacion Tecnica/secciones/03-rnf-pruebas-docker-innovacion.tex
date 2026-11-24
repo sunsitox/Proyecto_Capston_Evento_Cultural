@@ -89,8 +89,8 @@ Las brechas de definición se señalan explícitamente; no se agregan propuestas
 \textbf{Categoría / prioridad:} Portabilidad / Must have.\par
 \textbf{Enunciado:} El proyecto debe poder desplegarse de forma reproducible usando el stack definido (GitHub, GitHub Actions, Vercel, Capacitor/Android Studio), facilitando la integración continua entre los integrantes.\par
 \textbf{Criterio de aceptación existente:} El repositorio debe incluir Dockerfile(s), docker-compose, variables de entorno documentadas e instrucciones reproducibles de levantamiento para los componentes aplicables.\par
-\textbf{Método y límite:} Instalación y despliegue limpio según manual, y contraste con criterio Docker. Excepción docente no documentada; no cambiar el criterio para declarar cumplimiento.\par
-\textbf{Evidencia local / estado registrado:} Parcial (decisión docente pendiente). Criterio original exige Dockerfile y compose, ausentes por decisión del equipo. No se elimina para simular cumplimiento: acordar excepción docente o implementar artefactos; comprobar despliegue reproducible.\par
+\textbf{Método y límite:} Instalación y despliegue limpio según manual, y contraste con criterio Docker. El criterio original se conserva sin modificar; la aceptación es por estándar documental según consulta docente verbal del 24-11-2026 (pendiente acta).\par
+\textbf{Evidencia local / estado registrado:} Aceptado por estándar documental (consulta docente verbal 24-11-2026, pendiente acta): el docente no exigió implementación. Criterio original exige Dockerfile y compose, ausentes por decisión del equipo; el despliegue reproducible se acredita con GitHub Actions + Vercel + Capacitor, .env.example y manual. No se simula cumplimiento.\par
 \textbf{Referencia de implementación:} package.json; capacitor.config.ts; supabase/functions/; supabase/migrations/\par
 
 \subsection{RNF-12 — Buenas prácticas de accesibilidad web}
@@ -149,13 +149,15 @@ sanitizados. Cantidad de pruebas no es cobertura; compilación no prueba RLS, OA
 correo, moderación ni Android. Los casos incrementales F3-01 a F3-10 y la revisión de
 199 casos de la matriz no se convierten aquí en aprobados por existir implementación.
 
-\section{Despliegue sin Docker y brecha de aceptación}
+\section{Despliegue sin Docker y aceptación por estándar documental}
 \label{sec:docker}
 La estrategia documentada usa GitHub Actions para scraper, Vercel para SPA,
 Supabase administrado y Capacitor para Android. RNF-11 conserva un criterio que exige
 Dockerfile(s) y docker-compose para componentes aplicables. No se encontraron esos
-artefactos en las fuentes revisadas: hay una \textbf{brecha documental de aceptación},
-no una excepción docente demostrada. No se añade Docker ni se cambia código funcional.
+artefactos en las fuentes revisadas. Tras la consulta docente verbal del 24-11-2026
+(el docente no exigió implementación; pendiente dejarlo en acta), la exigencia queda
+\textbf{aceptada por estándar documental}: basta la estrategia documentada
+(Actions/Vercel/Capacitor + env + manual). No se añade Docker ni se cambia código funcional.
 Despliegue efectivo, configuración de correo, RLS/Storage y funcionamiento nativo
 requieren evidencias independientes del build.
 

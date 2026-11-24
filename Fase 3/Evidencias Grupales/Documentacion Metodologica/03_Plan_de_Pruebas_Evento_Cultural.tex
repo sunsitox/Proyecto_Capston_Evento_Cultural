@@ -275,9 +275,31 @@ Fase 3; no se declaran ejecutados en este ciclo.
 
 \section{Cierre de casos y correcciones del 22-11-2026}
 
-La matriz única de Fase 3 mantiene los 221 casos con veredicto: \textbf{207 aprobados,
+La matriz única de Fase 3 mantenía al 22-11-2026 los 221 casos con veredicto: \textbf{207 aprobados,
 7 parciales, 1 no aplica y 6 bloqueados}, con 61 ejecuciones registradas. Los resultados
 históricos de las secciones anteriores no se modifican.
+
+\subsection*{Verificación de registro del 24-11-2026}
+
+El 24-11-2026 se recompilaron los cinco PDF de Fase 3 (exit 0) y se verificó el registro
+con cuenta temporal en producción (proyecto \code{ngwkehuewmjykiiujqic}):
+\code{POST /functions/v1/registrar-cuenta} responde \textbf{404 NOT\_FOUND}
+(función en el repositorio, no desplegada); el alta directa quedó bloqueada
+(\code{example.com} 400 \code{email\_address\_invalid}; dominios reales 429
+\code{over\_email\_send\_rate\_limit}). No se creó cuenta temporal. Por ello
+\code{CP-F3-REG-001} y \textbf{CP-AUT-001} pasan a \textbf{Parcial} (solo código +
+unit test) y se registra \code{DEF-REG-001}; \code{CP-F3-REG-002} (respaldo legacy
+404 $\rightarrow$ signUp) y \code{CP-AUT-002} (400/422) quedan aprobados con evidencia
+en vivo. La matriz queda en \textbf{205 aprobados, 9 parciales, 1 no aplica y 6 bloqueados},
+con 65 ejecuciones (EJ-241126-001 a 004). Vercel \code{/home} 200 operativo.
+
+\textbf{Cierre nocturno 24-11-2026:} se desplegó \code{registrar-cuenta} (v4,
+\code{verify\_jwt=false}, funcionalmente equivalente al repositorio) y se repitió la
+prueba con cuenta temporal desechable hasta eliminarla: inválido 400, débil 400,
+válido 201 (\code{email\_confirm}), duplicado 409, login 200, perfil 200, eliminación
+200 y login post-borrado 400. \code{CP-F3-REG-001} y \code{CP-AUT-001} vuelven a
+\textbf{Aprobado}; \code{DEF-REG-001} cerrada. La matriz queda en \textbf{207 aprobados,
+7 parciales, 1 no aplica y 6 bloqueados}, con 67 ejecuciones (EJ-241126-005/006).
 
 \begin{longtable}{@{}L{2.4cm}L{12.4cm}@{}}
 \toprule
